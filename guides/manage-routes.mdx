@@ -1,0 +1,184 @@
+---
+title: "Add and Manage Routes on Your API Gateway"
+sidebarTitle: "Manage Routes"
+description: "Define, update, and delete routes on your Mysoleas gateway to control how incoming requests are matched and forwarded to your upstream services."
+---
+
+Routes are the core of your gateway configuration — they tell Mysoleas which incoming requests to accept, how to match them, and where to forward them. Each route maps a path and a set of HTTP methods to an upstream URL, giving you fine-grained control over traffic without touching your backend services. This guide covers adding your first route, testing it, and keeping your route configuration up to date as your API evolves.
+
+## Add a route
+
+<Steps>
+
+  <Step title="Open the Routes tab">
+    In the [Mysoleas dashboard](https://mysoleas.com), click **Gateways** in the sidebar, select your gateway, and navigate to the **Routes** tab. Click the **Add Route** button in the top-right corner.
+  </Step>
+
+  <Step title="Configure route settings">
+    Fill in the route configuration form:
+
+    | Field | Example | Description |
+    |---|---|---|
+    | **Path** | `/api/v1` | The URL path the gateway listens on |
+    | **Methods** | `GET`, `POST` | HTTP methods this route accepts |
+    | **Upstream URL** | `https://api.example.com` | The backend service to forward requests to |
+    | **Strip path** | On | Remove the matched path prefix before forwarding |
+    | **Preserve host** | Off | Forward the original `Host` header to the upstream |
+
+    **Strip path** is especially useful when your upstream service uses a different path structure than your public API. With it enabled, a request to `/api/v1/users` forwards to `https://api.example.com/users`.
+  </Step>
+
+  <Step title="Save the route">
+    Click **Save**. The route appears in your routes list with a status of `active` within seconds.
+  </Step>
+
+  <Step title="Create a route via the management API (alternative)">
+    To create routes programmatically, send a `POST` request to the routes endpoint for your gateway:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST https://api.mysoleas.io/v1/gateways/{gateway_id}/routes \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "main-api",
+        "path": "/api/v1",
+        "methods": ["GET", "POST", "PUT", "DELETE"],
+        "upstream": "https://api.example.com",
+        "strip_path": true
+      }'
+    ```
+
+    ```javascript Node.js
+    const response = await fetch(
+      `https://api.mysoleas.io/v1/gateways/${gatewayId}/routes`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer YOUR_API_KEY",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: "main-api",
+          path: "/api/v1",
+          methods: ["GET", "POST", "PUT", "DELETE"],
+          upstream: "https://api.example.com",
+          strip_path: true,
+        }),
+      }
+    );
+
+    const route = await response.json();
+    console.log(route);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post(
+        f"https://api.mysoleas.io/v1/gateways/{gateway_id}/routes",
+        headers={
+            "Authorization": "Bearer YOUR_API_KEY",
+            "Content-Type": "application/json",
+        },
+        json={
+            "name": "main-api",
+            "path": "/api/v1",
+            "methods": ["GET", "POST", "PUT", "DELETE"],
+            "upstream": "https://api.example.com",
+            "strip_path": True,
+        },
+    )
+
+    print(response.json())
+    ```
+
+    </CodeGroup>
+
+    A successful response returns the created route object:
+
+    ```json
+    {
+      "id": "rt_xyz789",
+      "name": "main-api",
+      "path": "/api/v1",
+      "upstream": "https://api.example.com",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "strip_path": true,
+      "status": "active"
+    }
+    ```
+
+    <ParamField body="name" type="string" required>
+      A unique label for this route within the gateway.
+    </ParamField>
+
+    <ParamField body="path" type="string" required>
+      The path prefix the gateway matches against incoming request URLs.
+    </ParamField>
+
+    <ParamField body="methods" type="array" required>
+      List of HTTP methods this route handles. Accepted values: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`, `HEAD`.
+    </ParamField>
+
+    <ParamField body="upstream" type="string" required>
+      The full URL of the backend service to forward matched requests to.
+    </ParamField>
+
+    <ParamField body="strip_path" type="boolean">
+      When `true`, removes the matched path prefix from the request before forwarding it upstream. Defaults to `false`.
+    </ParamField>
+
+    <ParamField body="preserve_host" type="boolean">
+      When `true`, forwards the original `Host` header from the client to the upstream. Defaults to `false`.
+    </ParamField>
+
+  </Step>
+
+</Steps>
+
+## Test your route
+
+After adding a route, send a request through your gateway to confirm traffic is flowing to your upstream:
+
+```bash
+curl -i https://gw_abc123.mysoleas.io/api/v1/health
+```
+
+If your upstream returns a `200 OK`, the route is working correctly. If you receive a `502 Bad Gateway`, verify that the upstream URL is reachable from the public internet and that the path is correct.
+
+<Tip>
+  Use wildcard paths like `/api/v1/*` to match all sub-paths under a prefix. This lets a single route handle your entire API surface without needing one route per endpoint.
+</Tip>
+
+## Update a route
+
+To modify an existing route — for example, to change the upstream URL or add a new HTTP method — send a `PUT` request with the updated fields:
+
+```bash
+curl -X PUT https://api.mysoleas.io/v1/routes/rt_xyz789 \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "upstream": "https://api-v2.example.com",
+    "methods": ["GET", "POST", "PUT", "PATCH", "DELETE"]
+  }'
+```
+
+Only the fields you include in the request body are updated. All other route settings remain unchanged.
+
+## Delete a route
+
+To remove a route from your gateway, send a `DELETE` request using the route ID:
+
+```bash
+curl -X DELETE https://api.mysoleas.io/v1/routes/rt_xyz789 \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+A `204 No Content` response confirms the route has been deleted.
+
+<Warning>
+  Deleting a route immediately stops the gateway from accepting requests that match that path and method combination. Any in-flight requests that matched the route are dropped. If the route is handling live production traffic, consider updating the upstream URL to a maintenance service before deleting it.
+</Warning>

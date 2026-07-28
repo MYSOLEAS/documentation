@@ -1,0 +1,140 @@
+---
+title: "List All Gateways — GET /gateways"
+sidebarTitle: "List Gateways"
+description: "Retrieve a paginated list of all gateways in your account. Filter by environment or status to narrow results to exactly what you need."
+---
+
+The List Gateways endpoint returns all gateways associated with your account, ordered by creation date descending. You can paginate through results using the `page` and `per_page` query parameters, and optionally filter by `environment` or `status` to target a specific subset of gateways.
+
+**Endpoint**
+
+```
+GET https://api.mysoleas.io/v1/gateways
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default={1}>
+  The page number to retrieve. Pages are 1-indexed, so the first page is `page=1`.
+</ParamField>
+
+<ParamField query="per_page" type="integer" default={20}>
+  The number of results to return per page. Accepts values between `1` and `100`. Defaults to `20`.
+</ParamField>
+
+<ParamField query="environment" type="string">
+  Filter gateways by environment. Accepted values: `development`, `staging`, `production`. When omitted, gateways from all environments are returned.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter gateways by status. Accepted values: `active`, `inactive`. When omitted, gateways of both statuses are returned.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request GET \
+  --url "https://api.mysoleas.io/v1/gateways?page=1&per_page=20&environment=production&status=active" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "gw_abc123",
+      "name": "my-gateway",
+      "description": "Primary production gateway for the payments service.",
+      "status": "active",
+      "environment": "production",
+      "endpoint": "https://gw_abc123.mysoleas.io",
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "gw_def456",
+      "name": "auth-gateway",
+      "description": "Handles all authentication flows for production.",
+      "status": "active",
+      "environment": "production",
+      "endpoint": "https://gw_def456.mysoleas.io",
+      "created_at": "2024-01-10T08:30:00Z",
+      "updated_at": "2024-01-12T14:22:00Z"
+    }
+  ],
+  "meta": {
+    "current_page": 1,
+    "per_page": 20,
+    "total_pages": 1,
+    "total_count": 2
+  }
+}
+```
+
+## Response Fields
+
+<ResponseField name="data" type="array">
+  An array of gateway objects matching your query parameters.
+
+  <Expandable title="Gateway object fields">
+    <ResponseField name="id" type="string">
+      The unique identifier for the gateway, prefixed with `gw_`.
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      The user-defined name of the gateway.
+    </ResponseField>
+
+    <ResponseField name="description" type="string | null">
+      An optional description for the gateway. Returns `null` if no description was set.
+    </ResponseField>
+
+    <ResponseField name="status" type="string">
+      The current status of the gateway. One of `active` or `inactive`.
+    </ResponseField>
+
+    <ResponseField name="environment" type="string">
+      The environment the gateway belongs to. One of `development`, `staging`, or `production`.
+    </ResponseField>
+
+    <ResponseField name="endpoint" type="string">
+      The publicly accessible URL for the gateway. Traffic is routed through this endpoint.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      The ISO 8601 timestamp indicating when the gateway was created.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="string">
+      The ISO 8601 timestamp indicating when the gateway was last updated.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Meta object fields">
+    <ResponseField name="current_page" type="integer">
+      The page number of the current result set.
+    </ResponseField>
+
+    <ResponseField name="per_page" type="integer">
+      The number of results returned per page.
+    </ResponseField>
+
+    <ResponseField name="total_pages" type="integer">
+      The total number of pages available given the current `per_page` value.
+    </ResponseField>
+
+    <ResponseField name="total_count" type="integer">
+      The total number of gateways matching your filter criteria.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<Tip>
+  Use the `environment` filter alongside `status=active` to quickly retrieve only the gateways serving live traffic in a specific environment.
+</Tip>

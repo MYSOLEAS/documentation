@@ -1,0 +1,63 @@
+---
+title: What Is a Gateway in Mysoleas API Gateway?
+sidebarTitle: Gateways
+description: Learn what a gateway is in Mysoleas, how it routes traffic to your upstream APIs, and how to manage its lifecycle from creation to activation.
+---
+
+A gateway is the core resource in Mysoleas — it acts as the entry point that receives all incoming traffic and routes it to your upstream APIs. Every API you expose through Mysoleas lives behind a gateway, giving you a single, controllable surface for authentication, rate limiting, and observability.
+
+## Key Properties
+
+Each gateway has a set of properties that define its identity and behavior:
+
+<AccordionGroup>
+  <Accordion title="Name">
+    A human-readable label you assign to identify the gateway in your dashboard and API calls. Choose a name that reflects the product or environment it serves (for example, `payments-api-prod`).
+  </Accordion>
+  <Accordion title="Endpoint URL">
+    Mysoleas auto-generates a unique public URL for each gateway when you create it — for example, `https://gw_abc123.mysoleas.io`. All routes defined on the gateway are accessible under this base URL. You cannot change this URL after creation, but you can point a custom domain at it.
+  </Accordion>
+  <Accordion title="Status">
+    A gateway is either **active** or **inactive**. Inactive gateways reject all incoming requests with a `503 Service Unavailable` response. Use this to safely disable a gateway without deleting its configuration.
+  </Accordion>
+  <Accordion title="Environment">
+    Tag your gateway with an environment label — `dev`, `staging`, or `production` — to keep configurations organized and apply environment-specific defaults in the dashboard.
+  </Accordion>
+</AccordionGroup>
+
+## How a Gateway Handles Traffic
+
+When a request arrives at your gateway endpoint, Mysoleas processes it through a predictable pipeline before it ever reaches your upstream service.
+
+<Tip>
+  **Request flow:** `Client` → `Gateway Endpoint (https://gw_abc123.mysoleas.io)` → `Route matching` → `Policy evaluation` → `Upstream API`
+
+  Every request enters through the gateway's public URL. Mysoleas then inspects the request path and method to find a matching route, runs any policies attached to that route (such as authentication or rate limiting), and finally forwards the request to your configured upstream service.
+</Tip>
+
+Because all traffic flows through this single endpoint, you gain a consistent point of control: one place to enforce security, collect metrics, and adjust behavior without touching your upstream code.
+
+## Gateway Lifecycle
+
+Follow these steps to get a gateway from creation to serving live traffic:
+
+<Steps>
+  <Step title="Create the gateway">
+    Provision a new gateway from the dashboard or via the API. Mysoleas generates your unique endpoint URL immediately. See [Create a Gateway](/guides/create-gateway) for a step-by-step walkthrough.
+  </Step>
+  <Step title="Configure routes">
+    Define one or more routes that map URL patterns to your upstream services. Without at least one active route, the gateway returns `404` for all requests.
+  </Step>
+  <Step title="Apply policies">
+    Attach authentication, rate limiting, or transformation policies to the gateway or to individual routes. Policies are enforced before traffic reaches your upstream.
+  </Step>
+  <Step title="Activate the gateway">
+    Set the gateway status to **active**. Mysoleas begins accepting and routing live traffic through your endpoint URL.
+  </Step>
+</Steps>
+
+## Plan Limits
+
+<Note>
+  The **free plan** supports **one gateway**. Paid plans unlock multiple gateways, letting you isolate environments, teams, or products behind separate endpoints with independent configurations.
+</Note>

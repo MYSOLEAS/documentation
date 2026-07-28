@@ -1,0 +1,132 @@
+---
+title: "Authenticate with Mysoleas API Gateway Securely"
+sidebarTitle: Authentication
+description: "Generate and manage API keys to authenticate requests to the Mysoleas management API, understand key scopes, and keep your credentials secure."
+---
+
+Mysoleas uses API keys to authenticate every request to the management API. Each key is scoped to a set of permissions and tied to your account, so you can issue different keys for different environments or team members without sharing a single credential.
+
+<Warning>
+  Never expose your API key in client-side code, frontend repositories, or public version control. Anyone with your key can make management API calls on your behalf. Store it in environment variables or a secrets manager.
+</Warning>
+
+## Getting your API key
+
+Generate a new API key from the Mysoleas dashboard in a few clicks.
+
+<Steps>
+  <Step title="Log in to the dashboard">
+    Go to [dashboard.mysoleas.io](https://dashboard.mysoleas.io) and sign in to your account.
+  </Step>
+  <Step title="Open API Keys settings">
+    Navigate to **Settings → API Keys** in the left sidebar.
+  </Step>
+  <Step title="Generate a new key">
+    Click **Generate Key**, give it a descriptive name (for example, `ci-pipeline` or `local-dev`), and select the appropriate scope.
+  </Step>
+  <Step title="Copy and store your key">
+    Your key is shown **only once**. Copy it immediately and store it in a secure location such as a secrets manager or encrypted environment variable. If you lose it, you'll need to generate a new one.
+  </Step>
+</Steps>
+
+Your API key will look like this:
+
+```text
+msk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ
+```
+
+## Using your API key
+
+Pass your API key as a Bearer token in the `Authorization` header of every management API request.
+
+<CodeGroup>
+  ```bash cURL
+  curl --request GET \
+    --url https://api.mysoleas.io/v1/gateways \
+    --header 'Authorization: Bearer msk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ'
+  ```
+
+  ```python Python
+  import requests
+
+  headers = {
+      "Authorization": "Bearer msk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ"
+  }
+
+  response = requests.get("https://api.mysoleas.io/v1/gateways", headers=headers)
+  print(response.json())
+  ```
+
+  ```javascript Node.js
+  const response = await fetch("https://api.mysoleas.io/v1/gateways", {
+    method: "GET",
+    headers: {
+      Authorization: "Bearer msk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+    },
+  });
+
+  const data = await response.json();
+  console.log(data);
+  ```
+</CodeGroup>
+
+## API key scopes
+
+When you generate a key, you assign it one of three scopes that control what the key can do.
+
+<Tabs>
+  <Tab title="read">
+    **Read-only access.** The key can list and retrieve resources — gateways, routes, consumers, analytics — but cannot create, update, or delete anything. Use this scope for monitoring tools, dashboards, or read-only CI checks.
+
+    ```text Example use case
+    Pulling analytics data into an internal observability platform.
+    ```
+  </Tab>
+  <Tab title="write">
+    **Read and write access.** The key can create, update, and delete routes, consumers, and plugins in addition to all read operations. Use this scope for deployment pipelines and automation scripts that manage gateway configuration.
+
+    ```text Example use case
+    A CI/CD pipeline that provisions routes on each deploy.
+    ```
+  </Tab>
+  <Tab title="admin">
+    **Full administrative access.** The key can perform all read and write operations plus manage API keys, billing settings, team members, and account-level configuration. Restrict this scope to trusted administrators only.
+
+    ```text Example use case
+    Bootstrapping a new environment or managing team access.
+    ```
+  </Tab>
+</Tabs>
+
+## Rotating API keys
+
+Rotate your keys regularly or immediately if you suspect a key has been compromised.
+
+<Steps>
+  <Step title="Generate a replacement key">
+    In **Settings → API Keys**, click **Generate Key** and assign it the same scope as the key you're replacing.
+  </Step>
+  <Step title="Update your services">
+    Replace the old key value in all services, environment variables, and secrets managers that use it.
+  </Step>
+  <Step title="Revoke the old key">
+    Once all services are updated, click **Revoke** next to the old key. Revocation is immediate — any request still using the old key will receive a `401 Unauthorized` response.
+  </Step>
+</Steps>
+
+## OAuth 2.0
+
+In addition to API keys, Mysoleas supports OAuth 2.0 as an authentication policy for **consumer-facing** routes — protecting the APIs you expose through your gateway. See [Security Policies](/guides/security) for a full guide on configuring OAuth 2.0, JWT validation, and other consumer authentication methods.
+
+<Note>
+  Management API keys (described on this page) and consumer API keys are separate credential types. Consumer keys protect the APIs you expose through your gateway and are managed through the **Consumers** section of the dashboard. Learn more in [Consumers](/concepts/consumers).
+</Note>
+
+## Error reference
+
+If authentication fails, the API returns one of the following errors:
+
+| Status code | Error | Cause |
+|---|---|---|
+| `401 Unauthorized` | `missing_or_invalid_key` | The `Authorization` header is absent, malformed, or the key does not exist. |
+| `403 Forbidden` | `insufficient_scope` | The key exists but does not have the scope required to perform the requested action. |

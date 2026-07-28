@@ -1,0 +1,128 @@
+---
+title: "List All Consumers — GET /consumers"
+sidebarTitle: "List Consumers"
+description: "Retrieve a paginated list of every consumer registered on your Mysoleas account, with optional filtering by tag to narrow results."
+---
+
+Consumers are the applications or users you have registered on the Mysoleas API Gateway. This endpoint returns every consumer on your account in pages, so you can iterate through large sets without fetching everything at once. Use the `tags` filter to pull back only the consumers relevant to a particular environment or team.
+
+## Endpoint
+
+```
+GET https://api.mysoleas.io/v1/consumers
+```
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default={1}>
+  The page number to retrieve. Starts at `1`.
+</ParamField>
+
+<ParamField query="per_page" type="integer" default={20}>
+  The number of consumers to return per page. Accepts values between `1` and `100`.
+</ParamField>
+
+<ParamField query="tags" type="string">
+  A comma-separated list of tags to filter by. Only consumers that carry **all** of the specified tags are returned. For example, `tags=mobile,production` returns consumers tagged with both `mobile` and `production`.
+</ParamField>
+
+## Request Example
+
+```bash
+curl --request GET \
+  --url "https://api.mysoleas.io/v1/consumers?page=1&per_page=20&tags=mobile,production" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+Returns a paginated envelope containing an array of consumer objects.
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  An array of consumer objects matching your query.
+
+  <Expandable title="Consumer object fields">
+    <ResponseField name="id" type="string">
+      The unique identifier for this consumer, prefixed with `con_`.
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      The unique name you assigned to this consumer when it was created.
+    </ResponseField>
+
+    <ResponseField name="description" type="string">
+      An optional human-readable description of the consumer.
+    </ResponseField>
+
+    <ResponseField name="tags" type="array of strings">
+      The list of tags associated with this consumer.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp recording when the consumer was created.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp recording when the consumer was last modified.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Pagination fields">
+    <ResponseField name="page" type="integer">
+      The current page number.
+    </ResponseField>
+
+    <ResponseField name="per_page" type="integer">
+      The number of results returned per page.
+    </ResponseField>
+
+    <ResponseField name="total" type="integer">
+      The total number of consumers matching your query across all pages.
+    </ResponseField>
+
+    <ResponseField name="total_pages" type="integer">
+      The total number of pages available.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "con_123abc",
+      "name": "mobile-app",
+      "description": "iOS mobile application",
+      "tags": ["mobile", "production"],
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "con_456def",
+      "name": "web-dashboard",
+      "description": "Internal admin dashboard",
+      "tags": ["web", "production"],
+      "created_at": "2024-01-10T08:30:00Z",
+      "updated_at": "2024-01-12T14:22:00Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 20,
+    "total": 2,
+    "total_pages": 1
+  }
+}
+```
+
+<Note>
+  If no consumers match your `tags` filter, the `data` array will be empty and `meta.total` will be `0`. This is not an error condition.
+</Note>

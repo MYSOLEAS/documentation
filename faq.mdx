@@ -1,0 +1,81 @@
+---
+title: Frequently Asked Questions about Mysoleas Gateway
+sidebarTitle: FAQ
+description: Quick answers to common questions about Mysoleas API Gateway — how it works, pricing, WebSocket support, consumer key management, and more.
+---
+
+Quick answers to the most common questions about Mysoleas API Gateway. If you do not find what you are looking for here, check the [Troubleshooting](/troubleshooting) page or reach out to [support@mysoleas.com](mailto:support@mysoleas.com).
+
+<AccordionGroup>
+  <Accordion title="What is Mysoleas API Gateway?">
+    Mysoleas is a managed API gateway that sits in front of your backend services and handles the cross-cutting concerns of API traffic. You point your clients at a Mysoleas gateway URL instead of directly at your server, and Mysoleas handles authentication, rate limiting, routing, and analytics before forwarding each request upstream.
+
+    Because Mysoleas is fully managed, there is no infrastructure to deploy or maintain — you configure routes and policies through the dashboard or API and your gateway is live in seconds.
+  </Accordion>
+
+  <Accordion title="How is Mysoleas different from building a custom proxy?">
+    Building and operating a custom API proxy requires significant ongoing investment: writing auth middleware, implementing rate limiting correctly, standing up log aggregation, managing failover, and keeping everything patched and scaled. Mysoleas gives you all of that out of the box so your team can focus on your product.
+
+    Mysoleas also provides purpose-built analytics, a consumer management system, a plugin ecosystem, and a dashboard that non-engineers can use — features that would each take weeks to build from scratch and months to operate reliably.
+  </Accordion>
+
+  <Accordion title="How do I get an API key?">
+    Your Mysoleas account API key (used to call the Mysoleas management API) is generated when you create your account. You can view and rotate it at any time under **Account → API Keys** in the dashboard.
+
+    Consumer API keys — the keys you issue to clients who call your gateway — are separate. You create them per consumer in **Consumers → [consumer name] → API Keys → Add Key**. For full details on both key types, see the [Authentication](/authentication) page.
+  </Accordion>
+
+  <Accordion title="Can I use Mysoleas with any backend?">
+    Yes. Mysoleas forwards requests to any HTTP or HTTPS upstream that is reachable from the internet or from within your private network if you have set up a private link. Your backend can be a cloud function, a containerised service, a bare-metal server, a third-party API, or anything else that speaks HTTP.
+
+    The only requirement is that your upstream returns standard HTTP responses. Mysoleas does not require any SDK or agent to be installed on your backend.
+  </Accordion>
+
+  <Accordion title="Does Mysoleas support WebSocket or gRPC?">
+    WebSocket support is available on the **Growth** plan and above. Mysoleas transparently upgrades HTTP connections to WebSocket and maintains the persistent connection to your upstream, so your clients connect as they normally would.
+
+    gRPC proxying is on the roadmap and is currently in private beta. If you need gRPC support, contact [support@mysoleas.com](mailto:support@mysoleas.com) to join the beta program.
+  </Accordion>
+
+  <Accordion title="How are API keys for my consumers managed?">
+    Each consumer in your gateway has its own set of API keys. Keys are environment-scoped — a key issued under your production gateway cannot be used against your development gateway. You can create, rotate, and revoke individual keys at any time without affecting other keys belonging to the same consumer.
+
+    Consumers can also be organized into **consumer groups**, which lets you apply shared rate limit and access policies to multiple consumers at once rather than configuring each one individually.
+  </Accordion>
+
+  <Accordion title="What happens if my upstream goes down?">
+    If Mysoleas cannot reach your upstream, it returns a `502 Bad Gateway` to the client. If you have the `circuit-breaker` plugin enabled on the route, Mysoleas trips the circuit after your configured error threshold and returns a fast `503 Service Unavailable` for subsequent requests until the upstream recovers — this prevents Mysoleas from queuing up requests against an unavailable backend.
+
+    You can configure a **custom error response body** for both 502 and 503 errors in **Route Settings → Error Responses** so clients receive a meaningful message rather than a generic error. For proactive alerting, subscribe to the `circuit_breaker.tripped` webhook event.
+  </Accordion>
+
+  <Accordion title="Is there a free plan?">
+    Yes. The free plan includes one active gateway, up to five routes, and one million requests per month. It is designed for individual developers evaluating Mysoleas or running hobby projects.
+
+    Paid plans add more gateways, higher request volumes, advanced analytics, WebSocket support, SLA guarantees, and priority support. Visit the [pricing page](https://mysoleas.io/pricing) for a full comparison.
+  </Accordion>
+
+  <Accordion title="How do I delete a gateway?">
+    Open the gateway in the dashboard, go to **Settings → Danger Zone**, and click **Delete Gateway**. You will be asked to type the gateway name to confirm. Deletion is permanent — all routes, policies, consumers, and API keys belonging to that gateway are removed immediately and cannot be recovered.
+
+    If you want to preserve the configuration before deleting, export it first using **Settings → Export Configuration** or the [`GET /gateways/{id}/export`](/configuration/environments#promoting-configuration-between-environments) API endpoint.
+  </Accordion>
+
+  <Accordion title="Where can I view my request logs?">
+    Go to **Analytics → Logs** in your gateway dashboard. You can filter logs by route, consumer, status code, time range, and request ID. Each log entry includes the full request path, response status, upstream latency, and — if the `request-id` plugin is enabled — the `X-Request-ID` value for cross-referencing with your own service logs.
+
+    For long-term log retention or integration with your own observability stack, enable the `logging` plugin on your gateway and point it at an external endpoint such as a log aggregation service.
+  </Accordion>
+
+  <Accordion title="What regions is Mysoleas available in?">
+    Mysoleas currently operates gateway nodes in the following regions: **US East**, **US West**, **EU West (Ireland)**, **EU Central (Frankfurt)**, **Asia Pacific (Singapore)**, and **Asia Pacific (Tokyo)**. When you create a gateway, choose the region closest to your upstream service to minimize forwarding latency.
+
+    Additional regions are added regularly. Check the [status and region page](https://status.mysoleas.io) for the latest list and real-time availability.
+  </Accordion>
+
+  <Accordion title="How do I contact support?">
+    Email the support team at [support@mysoleas.com](mailto:support@mysoleas.com). To help the team respond faster, include your **gateway ID**, the **affected route**, a **sample request** (with sensitive headers redacted), and the **full error response**.
+
+    Before reaching out, check the [Troubleshooting](/troubleshooting) page — it covers the most common issues with step-by-step fixes and may resolve your problem immediately. Users on paid plans also have access to live chat support from within the dashboard.
+  </Accordion>
+</AccordionGroup>

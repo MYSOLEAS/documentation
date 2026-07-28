@@ -1,0 +1,43 @@
+---
+title: "Delete a Gateway — DELETE /gateways/{id}"
+sidebarTitle: "Delete Gateway"
+description: "Permanently delete a gateway and all its associated routes, policies, and consumer API keys. This action is immediate and cannot be undone."
+---
+
+The Delete Gateway endpoint permanently removes a gateway from your account along with all of its associated configuration — including routes, policies, and any consumer API keys scoped to that gateway. Deletion takes effect immediately, so active traffic to the gateway's endpoint will begin failing right away.
+
+**Endpoint**
+
+```
+DELETE https://api.mysoleas.io/v1/gateways/{id}
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique ID of the gateway you want to delete. Gateway IDs are prefixed with `gw_` (e.g. `gw_abc123`). Double-check this value before sending the request — deletion is permanent and cannot be reversed.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request DELETE \
+  --url "https://api.mysoleas.io/v1/gateways/gw_abc123" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+A successful deletion returns HTTP `204 No Content` with an empty response body. If the specified gateway does not exist or does not belong to your account, the API returns `404 Not Found`.
+
+```
+HTTP/1.1 204 No Content
+```
+
+<Warning>
+  Deleting a gateway **permanently removes all associated routes, policies, and consumer API keys** linked to that gateway. This action cannot be undone. If you only want to stop traffic temporarily, consider setting the gateway's `status` to `inactive` using the [Update Gateway](/api-reference/gateways/update) endpoint instead.
+</Warning>
+
+<Note>
+  Active traffic directed at the deleted gateway's endpoint will immediately begin receiving `503 Service Unavailable` responses. Ensure you update or decommission any clients or integrations that reference the gateway's endpoint URL before deleting it.
+</Note>

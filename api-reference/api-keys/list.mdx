@@ -1,0 +1,140 @@
+---
+title: "List API Keys for a Consumer — GET /consumers/{id}/api-keys"
+sidebarTitle: "List API Keys"
+description: "Retrieve all API keys issued to a specific consumer, with optional filtering by status. The key value itself is always masked in list responses."
+---
+
+Every API key that has been issued to a consumer — whether active or revoked — is retrievable through this endpoint. This is useful for auditing access, checking which keys are still active, or finding the ID of a key you need to revoke. Because the raw key value is a secret, it is never returned in list responses; only the metadata is exposed.
+
+## Endpoint
+
+```
+GET https://api.mysoleas.io/v1/consumers/{id}/api-keys
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique ID of the consumer whose API keys you want to list. This is the `id` field returned when you created the consumer (e.g., `con_123abc`).
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="page" type="integer" default={1}>
+  The page number to retrieve. Starts at `1`.
+</ParamField>
+
+<ParamField query="per_page" type="integer" default={20}>
+  The number of API keys to return per page. Accepts values between `1` and `100`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter results by key status. Accepted values are `active` or `revoked`. Omit this parameter to return keys of all statuses.
+</ParamField>
+
+## Request Example
+
+```bash
+curl --request GET \
+  --url "https://api.mysoleas.io/v1/consumers/con_123abc/api-keys?page=1&per_page=20&status=active" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+Returns a paginated envelope containing an array of API key objects for the specified consumer.
+
+<Note>
+  The `key` value is only returned once — at creation time. All other responses, including this one, always return `"key": null` to protect the secret.
+</Note>
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  An array of API key objects belonging to the consumer.
+
+  <Expandable title="API key object fields">
+    <ResponseField name="id" type="string">
+      The unique identifier for this API key, prefixed with `key_`.
+    </ResponseField>
+
+    <ResponseField name="consumer_id" type="string">
+      The ID of the consumer this key belongs to.
+    </ResponseField>
+
+    <ResponseField name="key" type="null">
+      Always `null` in list responses. The actual key value is only returned in the [create response](/api-reference/api-keys/create).
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      The label you assigned to this key when it was created.
+    </ResponseField>
+
+    <ResponseField name="status" type="string">
+      The current status of the key. Either `active` or `revoked`.
+    </ResponseField>
+
+    <ResponseField name="last_used_at" type="string">
+      ISO 8601 timestamp recording the last time this key was used to authenticate a request, or `null` if it has never been used.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp recording when this key was created.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="meta" type="object">
+  Pagination metadata for the current response.
+
+  <Expandable title="Pagination fields">
+    <ResponseField name="page" type="integer">
+      The current page number.
+    </ResponseField>
+
+    <ResponseField name="per_page" type="integer">
+      The number of results returned per page.
+    </ResponseField>
+
+    <ResponseField name="total" type="integer">
+      The total number of API keys matching your query across all pages.
+    </ResponseField>
+
+    <ResponseField name="total_pages" type="integer">
+      The total number of pages available.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "data": [
+    {
+      "id": "key_def456",
+      "consumer_id": "con_123abc",
+      "key": null,
+      "name": "production-key",
+      "status": "active",
+      "last_used_at": "2024-01-15T09:55:00Z",
+      "created_at": "2024-01-15T10:00:00Z"
+    },
+    {
+      "id": "key_ghi789",
+      "consumer_id": "con_123abc",
+      "key": null,
+      "name": "staging-key",
+      "status": "revoked",
+      "last_used_at": "2024-01-10T14:30:00Z",
+      "created_at": "2024-01-08T09:00:00Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 20,
+    "total": 2,
+    "total_pages": 1
+  }
+}
+```

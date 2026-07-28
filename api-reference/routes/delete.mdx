@@ -1,0 +1,41 @@
+---
+title: "Delete a Route — DELETE /routes/{id}"
+sidebarTitle: "Delete Route"
+description: "Permanently remove a route from a gateway by its ID. Deleting a route also removes all policies attached to it immediately."
+---
+
+Deleting a route permanently removes it from the gateway along with any policies attached to it. This action cannot be undone. If you want to stop a route from matching requests without losing its configuration, consider setting its status to `inactive` using the [Update Route](/api-reference/routes/update) endpoint instead.
+
+**Endpoint**
+
+```
+DELETE https://api.mysoleas.io/v1/routes/{id}
+```
+
+<Warning>
+  Deleting a route removes **all policies attached to it**. Any requests that previously matched the route's path will receive a `404` response from the gateway immediately after deletion. This action is permanent and cannot be reversed.
+</Warning>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the route you want to delete (e.g., `rt_xyz789`).
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request DELETE \
+  --url "https://api.mysoleas.io/v1/routes/rt_xyz789" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+Returns `204 No Content` with an empty response body on success.
+
+```
+HTTP/1.1 204 No Content
+```
+
+There is no JSON body in the response. A `204` status confirms the route has been permanently deleted.

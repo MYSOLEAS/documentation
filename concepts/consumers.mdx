@@ -1,0 +1,91 @@
+---
+title: Managing API Consumers and Access Control
+sidebarTitle: Consumers
+description: Learn what consumers are in Mysoleas, how they differ from API keys, and how to use consumer groups to apply per-identity policies and track usage.
+---
+
+A consumer represents any application, service, or user that calls your APIs through the gateway. Consumers are the identities you issue credentials to, enforce rate limits against, and track usage for — giving you fine-grained control over exactly who can call your API and under what conditions.
+
+## Consumer Properties
+
+Each consumer record carries the following fields:
+
+| Property | Description |
+| --- | --- |
+| `name` | A unique, human-readable label identifying this consumer (for example, `mobile-app` or `partner-service-acme`). |
+| `description` | A free-text note describing what this consumer is or who owns it. |
+| `api_keys` | The list of API keys issued to this consumer. A single consumer can hold multiple active keys. |
+| `rate_limit_overrides` | Per-consumer rate limits that override any gateway or route-level defaults. Leave empty to inherit defaults. |
+| `tags` | Arbitrary string labels (for example, `mobile`, `production`, `free-tier`) to help organize and filter consumers in the dashboard. |
+
+## Consumers vs. API Keys
+
+It's important to understand the distinction between a consumer and an API key:
+
+- A **consumer** is the **identity** — the named entity representing an application or user.
+- An **API key** is a **credential** — a secret token issued to a consumer that proves their identity on each request.
+
+<Tip>
+  One consumer can have multiple API keys. This lets you rotate credentials without downtime: issue a new key, deploy it to your application, then revoke the old one — all without creating a new consumer or losing historical usage data tied to that identity.
+</Tip>
+
+## Why Consumers Matter
+
+Tracking traffic at the consumer level — rather than at the key or IP level — unlocks several important capabilities:
+
+- **Per-consumer rate limits** — set a higher quota for a premium partner and a lower one for a free-tier user, independent of which API key they present.
+- **Per-consumer analytics** — view request volume, error rates, and latency broken down by consumer identity in the dashboard.
+- **Targeted access revocation** — disable or delete a single consumer to cut off all their API keys at once, without affecting any other consumer's access.
+
+## Consumer Groups
+
+Group related consumers together to manage policies at scale. Assign a consumer to one or more groups — such as `premium` or `free-tier` — and then apply rate limiting, access control, or caching policies to the entire group rather than to each consumer individually.
+
+<Note>
+  When a consumer belongs to a group, group-level policies apply on top of any gateway or route-level policies. If a consumer also has individual overrides (such as a custom rate limit), those take precedence over the group policy.
+</Note>
+
+Common group patterns include:
+
+- `free-tier` — stricter rate limits, no access to premium endpoints
+- `premium` — elevated quotas, access to all routes
+- `internal` — no rate limits, restricted to internal IP ranges via an access control policy
+
+## Consumer Lifecycle
+
+<Steps>
+  <Step title="Create the consumer">
+    Define the consumer with a name, description, and optional tags. The consumer record is created but cannot yet make API calls. See [Create a Consumer](/api-reference/consumers/create).
+  </Step>
+  <Step title="Issue API keys">
+    Generate one or more API keys for the consumer. Share these credentials with the application or team that owns this consumer identity.
+  </Step>
+  <Step title="Apply policies">
+    Assign the consumer to a consumer group or configure individual rate limit overrides and access control rules to match your requirements.
+  </Step>
+  <Step title="Monitor usage">
+    Track request volume, errors, and rate limit events per consumer from the Analytics dashboard to understand usage patterns and detect anomalies.
+  </Step>
+</Steps>
+
+## Example Consumer Record
+
+The following is a representative consumer object as returned by the Mysoleas API:
+
+```json
+{
+  "id": "con_123abc",
+  "name": "mobile-app",
+  "description": "iOS mobile application",
+  "tags": ["mobile", "production"],
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+
+<Note>
+  API keys associated with a consumer are returned as a separate resource under `/consumers/{id}/keys` and are never included in the base consumer object to avoid accidental exposure in logs or responses.
+</Note>
+
+## Next Steps
+
+To create your first consumer and issue API keys through the API, see the [Create Consumer](/api-reference/consumers/create) reference.

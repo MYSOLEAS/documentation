@@ -1,20 +1,11 @@
 {
-  "$schema": "https://mintlify.com/docs.json",
-  "name": "Mysoleas API Gateway",
+  "projectType": "api-service",
+  "projectName": "Mysoleas API Gateway",
+  "projectDescription": "A managed API gateway that enables developers to route, secure, and manage API traffic with authentication, rate limiting, and analytics.",
   "theme": "luma",
-  "colors": {
-    "primary": "#ef7025",
-    "light": "#eec9bc",
-    "dark": "#4fa1ab"
-  },
-  "favicon": "/favicon.svg",
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://mysoleas.com/dashboard"
-    }
-  },
+  "primaryColor": "#ef7025",
+  "lightColor": "#eec9bc",
+  "darkColor": "#4fa1ab",
   "navigation": {
     "tabs": [
       {
@@ -108,7 +99,31 @@
       }
     ]
   },
-  "footer": {
-    "socials": {}
-  }
+  "keyFeatures": [
+    "API routing and load balancing",
+    "Authentication and authorization (API keys, OAuth 2.0, JWT)",
+    "Rate limiting and throttling policies",
+    "Request and response transformation",
+    "Traffic analytics and monitoring",
+    "Plugin and middleware system",
+    "Webhook event notifications",
+    "Multi-environment support (development, staging, production)",
+    "Consumer management and access control"
+  ],
+  "publicApiSurface": [
+    "GET /gateways — list all gateways",
+    "POST /gateways — create a gateway",
+    "GET /gateways/{id} — get gateway details",
+    "PUT /gateways/{id} — update a gateway",
+    "DELETE /gateways/{id} — delete a gateway",
+    "GET /gateways/{id}/routes — list routes",
+    "POST /gateways/{id}/routes — create a route",
+    "GET /routes/{id} — get route details",
+    "PUT /routes/{id} — update a route",
+    "DELETE /routes/{id} — delete a route",
+    "GET /consumers — list consumers",
+    "POST /consumers — create a consumer",
+    "GET /consumers/{id}/api-keys — list API keys for a consumer",
+    "POST /consumers/{id}/api-keys — create an API key"
+  ]
 }

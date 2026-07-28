@@ -1,0 +1,199 @@
+---
+title: Receive Real-Time Gateway Events via Webhooks
+sidebarTitle: Webhooks
+description: Configure Mysoleas webhooks to push rate limit alerts, circuit breaker trips, and lifecycle events to your own HTTP endpoint in real time.
+---
+
+Mysoleas can push real-time event notifications to your webhook endpoint whenever key events occur on your gateway. Instead of polling the API for status changes, you register a URL and Mysoleas delivers a signed HTTP `POST` payload the moment the event fires. This is especially useful for alerting, audit logging, and automating operational responses.
+
+## Supported events
+
+| Event | Description |
+|---|---|
+| `gateway.created` | A new gateway was created in your account. |
+| `gateway.updated` | A gateway's configuration was changed. |
+| `gateway.deleted` | A gateway was permanently deleted. |
+| `route.created` | A route was added to a gateway. |
+| `route.updated` | A route's configuration was changed. |
+| `route.deleted` | A route was removed from a gateway. |
+| `consumer.created` | A new consumer was created. |
+| `consumer.deleted` | A consumer was removed from a gateway. |
+| `rate_limit.exceeded` | A consumer hit their configured rate limit threshold. |
+| `circuit_breaker.tripped` | A circuit breaker transitioned from closed to open. |
+| `alert.triggered` | An analytics alert crossed its configured threshold. |
+
+## Creating a webhook
+
+You can register a webhook from the dashboard or directly via the API.
+
+<Steps>
+  <Step title="Open the Webhooks settings page">
+    In the Mysoleas dashboard, navigate to **Settings → Webhooks**, then click **New Webhook**.
+  </Step>
+  <Step title="Configure the endpoint">
+    Enter your endpoint URL, select the events you want to subscribe to, and click **Save**. Mysoleas immediately sends a test ping to verify the endpoint is reachable.
+  </Step>
+  <Step title="Register via the API (optional)">
+    If you prefer to automate webhook registration, use the API instead:
+
+    <CodeGroup>
+    ```bash Request
+    curl -X POST https://api.mysoleas.io/v1/webhooks \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "url": "https://your-app.com/webhooks/mysoleas",
+        "events": ["rate_limit.exceeded", "alert.triggered"],
+        "secret": "your-signing-secret"
+      }'
+    ```
+
+    ```json Response
+    {
+      "id": "wh_abc123",
+      "url": "https://your-app.com/webhooks/mysoleas",
+      "events": ["rate_limit.exceeded", "alert.triggered"],
+      "status": "active",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+    ```
+    </CodeGroup>
+  </Step>
+</Steps>
+
+<Note>
+You can register up to 10 webhook endpoints per account. Each endpoint can subscribe to any combination of the supported events.
+</Note>
+
+## Verifying webhook signatures
+
+Every webhook request Mysoleas delivers includes an `X-Mysoleas-Signature` header. This header contains an HMAC-SHA256 digest of the raw request body, signed with the secret you provided when creating the webhook. Always verify this signature before processing the payload — it confirms the request genuinely came from Mysoleas and has not been tampered with.
+
+The signature format is `sha256=<hex_digest>`.
+
+<CodeGroup>
+```javascript Node.js
+const crypto = require("crypto");
+
+function verifyWebhookSignature(rawBody, signatureHeader, secret) {
+  const expectedSignature =
+    "sha256=" +
+    crypto
+      .createHmac("sha256", secret)
+      .update(rawBody) // rawBody must be the raw Buffer, not a parsed object
+      .digest("hex");
+
+  // Use timingSafeEqual to prevent timing attacks
+  const sigBuffer = Buffer.from(signatureHeader);
+  const expectedBuffer = Buffer.from(expectedSignature);
+
+  if (sigBuffer.length !== expectedBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(sigBuffer, expectedBuffer);
+}
+
+// Express example
+app.post("/webhooks/mysoleas", express.raw({ type: "application/json" }), (req, res) => {
+  const signature = req.headers["x-mysoleas-signature"];
+  const isValid = verifyWebhookSignature(req.body, signature, process.env.MYSOLEAS_WEBHOOK_SECRET);
+
+  if (!isValid) {
+    return res.status(401).send("Invalid signature");
+  }
+
+  const event = JSON.parse(req.body);
+  // Handle event...
+  res.status(200).send("OK");
+});
+```
+
+```python Python
+import hmac
+import hashlib
+
+def verify_webhook_signature(raw_body: bytes, signature_header: str, secret: str) -> bool:
+    expected = "sha256=" + hmac.new(
+        secret.encode("utf-8"),
+        raw_body,
+        hashlib.sha256
+    ).hexdigest()
+    return hmac.compare_digest(expected, signature_header)
+
+# Flask example
+from flask import Flask, request, abort
+import json
+
+app = Flask(__name__)
+
+@app.route("/webhooks/mysoleas", methods=["POST"])
+def webhook():
+    signature = request.headers.get("X-Mysoleas-Signature", "")
+    if not verify_webhook_signature(request.get_data(), signature, WEBHOOK_SECRET):
+        abort(401)
+
+    event = request.get_json()
+    # Handle event...
+    return "OK", 200
+```
+</CodeGroup>
+
+<Warning>
+Always compute the HMAC against the **raw request body bytes** — not a re-serialized JSON object. Whitespace differences during re-serialization will cause the digest to mismatch and every legitimate request will be rejected.
+</Warning>
+
+## Webhook payload structure
+
+All webhook payloads share a common envelope with the event-specific data nested in the `data` field. Below is an example `rate_limit.exceeded` payload:
+
+```json
+{
+  "event": "rate_limit.exceeded",
+  "timestamp": "2024-01-15T10:05:00Z",
+  "gateway_id": "gw_abc123",
+  "route_id": "rt_xyz789",
+  "consumer_id": "con_123abc",
+  "data": {
+    "limit": 100,
+    "window": "per_minute"
+  }
+}
+```
+
+And a `circuit_breaker.tripped` example:
+
+```json
+{
+  "event": "circuit_breaker.tripped",
+  "timestamp": "2024-01-15T10:06:30Z",
+  "gateway_id": "gw_abc123",
+  "route_id": "rt_xyz789",
+  "consumer_id": null,
+  "data": {
+    "error_rate_percent": 62,
+    "window_seconds": 60,
+    "recovery_seconds": 30
+  }
+}
+```
+
+## Retry behavior
+
+<Warning>
+Your endpoint must respond with HTTP `200` within **5 seconds**. If Mysoleas does not receive a `200` response in time — whether due to a non-200 status code, a timeout, or a network error — it marks the delivery as failed and schedules a retry.
+</Warning>
+
+Mysoleas retries failed deliveries up to **3 times** with exponential backoff:
+
+| Attempt | Delay after previous failure |
+|---|---|
+| 1st retry | 30 seconds |
+| 2nd retry | 5 minutes |
+| 3rd retry | 30 minutes |
+
+After the third retry, the delivery is marked as permanently failed. You can view failed deliveries and manually replay them from **Settings → Webhooks → [your endpoint] → Delivery Logs** in the dashboard.
+
+<Tip>
+If your handler performs time-consuming work, respond with `200` immediately and process the payload asynchronously using a queue or background job. This prevents Mysoleas from treating a slow-but-successful handler as a failure.
+</Tip>

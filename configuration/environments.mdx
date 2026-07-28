@@ -1,0 +1,158 @@
+---
+title: Manage Dev, Staging, and Production Environments
+sidebarTitle: Environments
+description: Isolate your API configurations across development, staging, and production environments so you can test changes safely before they reach real traffic.
+---
+
+Mysoleas supports multiple environments — development, staging, and production — so you can safely test changes before shipping. Each environment gets its own gateway endpoint, route configuration, and policies, meaning a misconfiguration in development can never accidentally affect your live traffic.
+
+## What environments give you
+
+Running separate environments through Mysoleas keeps every layer of your gateway stack isolated:
+
+- **Separate gateway endpoints** — each environment has a unique host that your clients call (e.g., `dev.gw.mysoleas.io` vs. `prod.gw.mysoleas.io`), so traffic never crosses environment boundaries.
+- **Separate route configurations** — routes, upstream URLs, and path rewrites are configured independently per gateway, letting you point dev traffic at a staging backend without touching production routes.
+- **Separate policies** — authentication requirements, rate limits, IP allowlists, and plugin settings are all scoped to their gateway. You can run relaxed limits in development while enforcing strict quotas in production.
+- **Separate consumers and API keys** — every consumer and the API keys you issue them belong to one environment. A developer testing against the dev gateway cannot inadvertently exhaust production quota.
+
+## Creating gateways per environment
+
+Create one gateway for each environment, either from the Mysoleas dashboard (**Gateways → New Gateway**) or via the API. Pass the `"environment"` field to tag the gateway correctly.
+
+<CodeGroup>
+```bash Development
+curl -X POST https://api.mysoleas.io/v1/gateways \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-api-dev",
+    "environment": "development"
+  }'
+```
+
+```bash Staging
+curl -X POST https://api.mysoleas.io/v1/gateways \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-api-staging",
+    "environment": "staging"
+  }'
+```
+
+```bash Production
+curl -X POST https://api.mysoleas.io/v1/gateways \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "my-api-prod",
+    "environment": "production"
+  }'
+```
+</CodeGroup>
+
+<Tip>
+Use a consistent naming convention such as `my-api-dev`, `my-api-staging`, and `my-api-prod`. Consistent names make it immediately clear which gateway you are editing in the dashboard, in API responses, and in log output.
+</Tip>
+
+## Promoting configuration between environments
+
+Once your development or staging gateway is configured correctly, promote that configuration to the next environment rather than rebuilding it by hand.
+
+**Using the dashboard**
+
+1. Open the gateway you want to promote from.
+2. Click **Settings → Duplicate Gateway**.
+3. Choose a target environment and a new name, then click **Duplicate**.
+
+Mysoleas copies all routes, policies, and plugin settings into a new gateway. API keys and consumers are not copied because they are environment-scoped.
+
+**Using the API (export and re-import)**
+
+Export a configuration snapshot from the source gateway:
+
+```bash
+curl -X GET https://api.mysoleas.io/v1/gateways/{id}/export \
+  -H "Authorization: Bearer YOUR_API_KEY"
+```
+
+The response is a self-contained JSON document describing all routes, policies, and plugins:
+
+```json
+{
+  "gateway_id": "gw_abc123",
+  "name": "my-api-staging",
+  "environment": "staging",
+  "exported_at": "2024-01-15T09:00:00Z",
+  "routes": [
+    {
+      "path": "/v1/users",
+      "methods": ["GET", "POST"],
+      "upstream": "https://users-service.internal",
+      "policies": {
+        "authentication": { "type": "api_key" },
+        "rate_limit": { "requests": 500, "window": "per_minute" }
+      }
+    }
+  ],
+  "plugins": [
+    { "name": "request-id", "enabled": true },
+    { "name": "cors", "config": { "origins": ["*"] } }
+  ]
+}
+```
+
+Save the JSON to a file, update any environment-specific values (upstream URLs, rate limit thresholds, and so on), then import it into the target gateway:
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/gateways/{id}/import \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @my-api-prod-config.json
+```
+
+## API key separation
+
+API keys are **environment-scoped**. A key issued under the development gateway is rejected by the staging or production gateway with a `401 Unauthorized` response. This is intentional — it prevents test credentials from reaching production and makes key rotation easier because each environment's keyspace is independent.
+
+When you onboard a new consumer, issue them a separate key for each environment they need access to.
+
+<Note>
+If you are building CI pipelines, store environment-specific API keys as separate secrets (e.g., `MYSOLEAS_DEV_KEY`, `MYSOLEAS_PROD_KEY`) and inject the correct one based on the deployment target.
+</Note>
+
+## Environment-specific policies
+
+Different environments often need different policy thresholds. Development might not need authentication at all, while production should enforce strict rate limits and IP allowlists. Configure policies on each gateway independently.
+
+**Example — tighter production rate limits**
+
+```bash
+curl -X PATCH https://api.mysoleas.io/v1/gateways/{prod_gateway_id}/policies/rate_limit \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requests": 1000,
+    "window": "per_minute",
+    "burst_multiplier": 1.2
+  }'
+```
+
+```bash
+curl -X PATCH https://api.mysoleas.io/v1/gateways/{dev_gateway_id}/policies/rate_limit \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "requests": 10000,
+    "window": "per_minute"
+  }'
+```
+
+Common per-environment policy patterns:
+
+| Policy | Development | Staging | Production |
+|---|---|---|---|
+| Authentication | Optional | Required | Required |
+| Rate limit | Very high / disabled | Mirrors production | Enforced strictly |
+| IP allowlist | Disabled | Internal CIDRs only | Tightly scoped |
+| Circuit breaker | Disabled | Enabled | Enabled |

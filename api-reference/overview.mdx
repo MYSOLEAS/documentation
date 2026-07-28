@@ -1,0 +1,127 @@
+---
+title: "Mysoleas Management API Reference Overview"
+sidebarTitle: "Overview"
+description: "Explore the Mysoleas Management API: base URL, authentication, request and response formats, pagination, rate limits, and versioning."
+---
+
+The Mysoleas Management API is a RESTful API that lets you programmatically create and manage gateways, routes, consumers, and API keys. All interactions follow standard HTTP conventions — you send JSON request bodies and receive JSON responses, making it straightforward to integrate with any language or HTTP client.
+
+## Base URL
+
+Send all API requests to the following base URL:
+
+```
+https://api.mysoleas.io/v1
+```
+
+Append the resource path to this base URL for every request. For example, to list your gateways, call `GET https://api.mysoleas.io/v1/gateways`.
+
+## Authentication
+
+Authenticate every request by passing your API key in the `Authorization` header using the Bearer scheme:
+
+```http
+Authorization: Bearer YOUR_API_KEY
+```
+
+<Warning>
+  Never expose your API key in client-side code or public repositories. Rotate any key you suspect has been compromised immediately from your dashboard.
+</Warning>
+
+To learn how to generate and manage API keys, see the [Authentication guide](/authentication).
+
+## Request Format
+
+Send all request bodies as JSON and include the `Content-Type` header on every request that has a body:
+
+```http
+Content-Type: application/json
+```
+
+<Note>
+  Requests that omit `Content-Type: application/json` on a body-bearing method (POST, PUT, PATCH) will receive a `400 bad_request` response.
+</Note>
+
+## Response Format
+
+Every response — success or error — is returned as JSON.
+
+**Successful responses** return the resource object directly. For example, a successful call to retrieve a gateway returns:
+
+```json
+{
+  "id": "gw_abc123",
+  "name": "my-gateway",
+  "status": "active"
+}
+```
+
+**Error responses** always include three fields: `error` (a machine-readable code), `message` (a human-readable explanation), and `status_code` (the HTTP status code):
+
+```json
+{
+  "error": "not_found",
+  "message": "Gateway gw_abc123 not found",
+  "status_code": 404
+}
+```
+
+For a full list of error codes and how to handle them, see the [Errors reference](/api-reference/errors).
+
+## Pagination
+
+All list endpoints return paginated results. Control pagination with the following query parameters:
+
+| Parameter  | Default | Maximum | Description                        |
+|------------|---------|---------|------------------------------------|
+| `page`     | `1`     | —       | The page number to retrieve        |
+| `per_page` | `20`    | `100`   | The number of results per page     |
+
+Every paginated response wraps the result set in a `data` array and includes a `meta` object with totals:
+
+```json
+{
+  "data": [...],
+  "meta": {
+    "total": 42,
+    "page": 1,
+    "per_page": 20,
+    "total_pages": 3
+  }
+}
+```
+
+<Tip>
+  Use `meta.total_pages` to detect the last page and stop paginating rather than checking for an empty `data` array.
+</Tip>
+
+## Rate Limits
+
+The Management API enforces a limit of **1,000 requests per minute per API key**. If you exceed this limit, the API returns a `429 rate_limit_exceeded` response. Implement exponential backoff and retry logic in your client to handle bursts gracefully.
+
+<Note>
+  Rate limits apply to Management API calls only. Traffic flowing through your deployed gateways is governed by the per-gateway rate limit policies you configure separately.
+</Note>
+
+## Versioning
+
+The current stable version of the Management API is **v1**, reflected in the base URL path. Mysoleas follows a compatibility-first policy — no breaking changes are introduced within a major version.
+
+When breaking changes are necessary, a new version (e.g., `v2`) will be released with advance notice and a migration guide. The previous version will remain available for a deprecation period to give you time to migrate.
+
+## Explore Resources
+
+<CardGroup cols={2}>
+  <Card title="Gateways" icon="server" href="/api-reference/gateways/list">
+    Create and manage your API gateway instances, configure upstream targets, and control gateway lifecycle.
+  </Card>
+  <Card title="Routes" icon="route" href="/api-reference/routes/list">
+    Define routing rules that map incoming requests to the correct upstream services.
+  </Card>
+  <Card title="Consumers" icon="users" href="/api-reference/consumers/list">
+    Register and manage consumers (applications or users) that access your APIs through Mysoleas.
+  </Card>
+  <Card title="API Keys" icon="key" href="/api-reference/api-keys/list">
+    Issue, rotate, and revoke API keys scoped to individual consumers or gateway resources.
+  </Card>
+</CardGroup>

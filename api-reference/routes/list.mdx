@@ -1,0 +1,137 @@
+---
+title: "List Routes for a Gateway — GET /gateways/{gateway_id}/routes"
+sidebarTitle: "List Routes"
+description: "Retrieve a paginated list of all routes configured on a specific gateway, with optional filters by status."
+---
+
+Fetching all routes attached to a gateway gives you a full picture of how incoming traffic is being matched and forwarded to your upstream services. You can filter the results by route status and control pagination using the query parameters below.
+
+**Endpoint**
+
+```
+GET https://api.mysoleas.io/v1/gateways/{gateway_id}/routes
+```
+
+## Path Parameters
+
+<ParamField path="gateway_id" type="string" required>
+  The unique identifier of the gateway whose routes you want to list. You can find this value in your gateway object (e.g., `gw_abc123`).
+</ParamField>
+
+## Query Parameters
+
+<ParamField query="page" type="integer">
+  The page number to retrieve. Defaults to `1`.
+</ParamField>
+
+<ParamField query="per_page" type="integer">
+  The number of routes to return per page. Defaults to `20`. Maximum value is `100`.
+</ParamField>
+
+<ParamField query="status" type="string">
+  Filter routes by their current status. Accepted values: `active`, `inactive`. Omit this parameter to return routes of all statuses.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request GET \
+  --url "https://api.mysoleas.io/v1/gateways/gw_abc123/routes?page=1&per_page=20&status=active" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Response
+
+Returns a paginated object containing a `data` array of route objects and top-level pagination metadata.
+
+```json
+{
+  "data": [
+    {
+      "id": "rt_xyz789",
+      "gateway_id": "gw_abc123",
+      "name": "main-api",
+      "path": "/api/v1",
+      "methods": ["GET", "POST", "PUT", "DELETE"],
+      "upstream": "https://api.example.com",
+      "strip_path": true,
+      "preserve_host": false,
+      "status": "active",
+      "priority": 1,
+      "created_at": "2024-01-15T10:00:00Z",
+      "updated_at": "2024-01-15T10:00:00Z"
+    }
+  ],
+  "page": 1,
+  "per_page": 20,
+  "total": 1
+}
+```
+
+## Response Fields
+
+<ResponseField name="data" type="array">
+  An array of route objects belonging to the specified gateway.
+
+  <Expandable title="Route object fields">
+    <ResponseField name="id" type="string">
+      The unique identifier of the route (e.g., `rt_xyz789`).
+    </ResponseField>
+
+    <ResponseField name="gateway_id" type="string">
+      The identifier of the gateway this route belongs to.
+    </ResponseField>
+
+    <ResponseField name="name" type="string">
+      The human-readable name assigned to the route.
+    </ResponseField>
+
+    <ResponseField name="path" type="string">
+      The URL path prefix this route matches against incoming requests.
+    </ResponseField>
+
+    <ResponseField name="methods" type="array of strings">
+      The list of HTTP methods this route accepts (e.g., `GET`, `POST`).
+    </ResponseField>
+
+    <ResponseField name="upstream" type="string">
+      The HTTPS URL of the upstream service requests are forwarded to.
+    </ResponseField>
+
+    <ResponseField name="strip_path" type="boolean">
+      Whether the matched path prefix is stripped before forwarding the request to the upstream.
+    </ResponseField>
+
+    <ResponseField name="preserve_host" type="boolean">
+      Whether the original `Host` header from the client request is passed to the upstream.
+    </ResponseField>
+
+    <ResponseField name="status" type="string">
+      The current status of the route. Either `active` or `inactive`.
+    </ResponseField>
+
+    <ResponseField name="priority" type="integer">
+      The route matching priority. Lower numbers indicate higher priority.
+    </ResponseField>
+
+    <ResponseField name="created_at" type="string">
+      ISO 8601 timestamp of when the route was created.
+    </ResponseField>
+
+    <ResponseField name="updated_at" type="string">
+      ISO 8601 timestamp of when the route was last updated.
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="page" type="integer">
+  The current page number returned.
+</ResponseField>
+
+<ResponseField name="per_page" type="integer">
+  The number of results per page.
+</ResponseField>
+
+<ResponseField name="total" type="integer">
+  The total number of routes matching the request (across all pages).
+</ResponseField>

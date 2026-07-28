@@ -1,0 +1,167 @@
+---
+title: Extend Gateway Behavior with Plugins
+sidebarTitle: Plugins
+description: Add CORS, caching, bot detection, circuit breaking, and more to any route or gateway using Mysoleas's built-in plugin system.
+---
+
+Plugins let you extend gateway functionality beyond built-in policies — add custom headers, integrate third-party services, or implement business-specific logic without modifying your upstream application. You can enable plugins at the route level for surgical control or at the gateway level to apply them to all traffic at once.
+
+## Available built-in plugins
+
+Mysoleas ships with the following plugins out of the box:
+
+| Plugin | Description |
+|---|---|
+| `cors` | Adds Cross-Origin Resource Sharing headers to responses so browser clients on different origins can call your API. |
+| `bot-detection` | Blocks requests from known bot and crawler user-agents based on a continuously updated blocklist. |
+| `request-id` | Injects a unique `X-Request-ID` header into every request and response, making distributed tracing straightforward. |
+| `response-cache` | Caches successful upstream responses for a configurable TTL so repeat requests are served without hitting your backend. |
+| `logging` | Forwards structured access logs to an external HTTP endpoint of your choice in real time. |
+| `circuit-breaker` | Tracks upstream error rates and trips the circuit after a configurable threshold, returning fast errors to clients until the upstream recovers. |
+
+## Enabling a plugin on a route
+
+Attach a plugin to a specific route when you want its behavior to apply only to a subset of your traffic. Send a `POST` to `/routes/{id}/plugins` with the plugin name and its configuration object.
+
+<CodeGroup>
+```bash Request
+curl -X POST https://api.mysoleas.io/v1/routes/{id}/plugins \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "cors",
+    "config": {
+      "origins": ["https://app.example.com"],
+      "methods": ["GET", "POST", "OPTIONS"],
+      "headers": ["Authorization", "Content-Type"]
+    }
+  }'
+```
+
+```json Response
+{
+  "id": "plg_abc123",
+  "name": "cors",
+  "route_id": "rt_xyz789",
+  "enabled": true,
+  "config": {
+    "origins": ["https://app.example.com"],
+    "methods": ["GET", "POST", "OPTIONS"],
+    "headers": ["Authorization", "Content-Type"]
+  },
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+</CodeGroup>
+
+### Plugin configuration reference
+
+<AccordionGroup>
+  <Accordion title="cors">
+    <ParamField body="origins" type="string[]" required>
+      List of allowed origin URLs. Use `["*"]` to allow all origins (not recommended for production).
+    </ParamField>
+    <ParamField body="methods" type="string[]" required>
+      HTTP methods to allow. Always include `OPTIONS` to support preflight requests.
+    </ParamField>
+    <ParamField body="headers" type="string[]">
+      Request headers your clients are permitted to send. Defaults to `["Content-Type"]`.
+    </ParamField>
+    <ParamField body="max_age" type="integer">
+      How long (in seconds) browsers may cache the preflight response. Defaults to `86400`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="response-cache">
+    <ParamField body="ttl" type="integer" required>
+      Time-to-live in seconds for cached responses. For example, `300` caches responses for five minutes.
+    </ParamField>
+    <ParamField body="cache_by" type="string[]">
+      Request attributes used to build the cache key. Accepts `"path"`, `"query"`, `"headers"`. Defaults to `["path", "query"]`.
+    </ParamField>
+    <ParamField body="status_codes" type="integer[]">
+      HTTP status codes to cache. Defaults to `[200, 301]`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="circuit-breaker">
+    <ParamField body="error_threshold_percent" type="integer" required>
+      Percentage of requests that must fail within the rolling window before the circuit trips. For example, `50` trips at 50% error rate.
+    </ParamField>
+    <ParamField body="window_seconds" type="integer" required>
+      Rolling time window (in seconds) over which errors are counted.
+    </ParamField>
+    <ParamField body="recovery_seconds" type="integer">
+      How long (in seconds) the circuit stays open before allowing probe requests through. Defaults to `30`.
+    </ParamField>
+  </Accordion>
+
+  <Accordion title="logging">
+    <ParamField body="endpoint" type="string" required>
+      URL of the external HTTP endpoint that receives log payloads.
+    </ParamField>
+    <ParamField body="method" type="string">
+      HTTP method used to deliver logs. Accepts `"POST"` or `"PUT"`. Defaults to `"POST"`.
+    </ParamField>
+    <ParamField body="include_body" type="boolean">
+      Whether to include request and response bodies in log payloads. Defaults to `false`. Enable with caution — bodies may contain sensitive data.
+    </ParamField>
+  </Accordion>
+</AccordionGroup>
+
+## Enabling a plugin at gateway level
+
+Apply a plugin to the entire gateway so it runs on every route automatically. Use `POST /gateways/{id}/plugins` with the same request body format.
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/gateways/{id}/plugins \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "request-id",
+    "config": {}
+  }'
+```
+
+<Note>
+A plugin enabled at both the gateway level and the route level runs twice — once in each position in the execution order. Avoid duplicating plugins unless you intentionally need different configurations at each level.
+</Note>
+
+## Disabling a plugin
+
+Disable a plugin without deleting it by sending a `PATCH` request with `"enabled": false`. This preserves the plugin's configuration so you can re-enable it later without reconfiguring it.
+
+```bash
+curl -X PATCH https://api.mysoleas.io/v1/routes/{id}/plugins/{plugin_id} \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "enabled": false
+  }'
+```
+
+To re-enable it, send the same request with `"enabled": true`.
+
+## Plugin execution order
+
+Mysoleas runs plugins in a fixed order on every request. Understanding this order helps you predict how plugins interact — for example, a request blocked by `bot-detection` never reaches the rate limiter.
+
+| Order | Plugin / Phase |
+|---|---|
+| 1 | `cors` |
+| 2 | `bot-detection` |
+| 3 | Auth policies (API key, JWT, OAuth) |
+| 4 | Rate limiting |
+| 5 | `request-id` |
+| 6 | Transform / request rewrite |
+| 7 | Forward to upstream |
+| 8 | `response-cache` (serve or store) |
+| 9 | `logging` |
+
+<Warning>
+The `circuit-breaker` plugin wraps the upstream forwarding phase (step 7). If the circuit is open, Mysoleas returns a `503 Service Unavailable` immediately and skips the upstream call entirely.
+</Warning>
+
+<Tip>
+Enable `request-id` at the gateway level rather than per route. Every request and response will carry an `X-Request-ID` header that you can correlate across your upstream logs, Mysoleas analytics, and webhook payloads.
+</Tip>

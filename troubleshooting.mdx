@@ -1,0 +1,186 @@
+---
+title: Troubleshoot Common Mysoleas Gateway Issues
+sidebarTitle: Troubleshooting
+description: Diagnose and fix the most common Mysoleas API Gateway errors, from 502s and auth failures to slow response times and missing webhook deliveries.
+---
+
+When something goes wrong with your gateway, the error response usually points directly to the cause. Use the sections below to identify the issue, understand why it occurs, and apply the right fix. Each section describes what triggers the error, what to check, and the steps to resolve it.
+
+<AccordionGroup>
+  <Accordion title="502 Bad Gateway">
+    A `502 Bad Gateway` response means Mysoleas successfully received the client's request but could not get a valid response from your upstream service. The upstream is either unreachable, refusing connections, or returning a malformed response.
+
+    **Common causes**
+
+    - The upstream URL configured on your route is incorrect or has changed.
+    - A firewall or security group is blocking outbound connections from Mysoleas to the upstream host.
+    - The upstream service has crashed or is not listening on the expected port.
+    - A TLS certificate on the upstream is expired or self-signed and not trusted.
+
+    **How to diagnose**
+
+    First, verify the upstream URL is correct by fetching it directly from a host that should have access:
+
+    ```bash
+    curl -v https://your-upstream.example.com/health
+    ```
+
+    If that succeeds, the issue is network-level access between Mysoleas and your upstream. Check that your firewall or security group allows inbound connections from Mysoleas IP ranges (available in your dashboard under Settings → IP Ranges) on the relevant port.
+
+    Check the **Logs** tab in your gateway dashboard — the detailed error row will include the upstream connection error message (e.g., `connection refused`, `timeout`, `SSL handshake failed`).
+
+    **Fix**
+
+    Correct the upstream URL in your route configuration, open the required firewall port, or restore the upstream service. If you are using a self-signed certificate, upload it as a trusted CA in **Gateway Settings → Upstream TLS**.
+  </Accordion>
+
+  <Accordion title="401 Unauthorized">
+    A `401 Unauthorized` response means the request reached the gateway but the authentication check failed. The consumer's API key is either missing, malformed, or does not belong to this environment.
+
+    **Common causes**
+
+    - The API key header name does not match what the route expects. The default header is `x-api-key`; some routes are configured to read from `Authorization: Bearer <key>`.
+    - The API key belongs to a different environment (e.g., a dev key used against the production gateway).
+    - The key was revoked or has expired.
+    - The `Authorization` header value includes extra whitespace or a wrong prefix.
+
+    **How to diagnose**
+
+    Check the request your client is sending:
+
+    ```bash
+    curl -v https://your-gateway.gw.mysoleas.io/v1/endpoint \
+      -H "x-api-key: YOUR_CONSUMER_KEY"
+    ```
+
+    Open the **Consumers** section of your gateway dashboard and confirm the key is listed, active, and belongs to the correct environment.
+
+    **Fix**
+
+    Correct the header name or value in your client. If the key is for the wrong environment, issue a new key under the correct gateway. To regenerate a compromised key, go to **Consumers → [consumer name] → API Keys → Regenerate**.
+  </Accordion>
+
+  <Accordion title="403 Forbidden">
+    A `403 Forbidden` response means authentication succeeded — Mysoleas recognized the consumer — but an authorization policy is blocking the request.
+
+    **Common causes**
+
+    - An **IP restriction policy** on the route or gateway is blocking the requester's IP address.
+    - The consumer belongs to a **consumer group** that has a policy denying access to this route.
+    - A **time-based access policy** is active and the request is outside the allowed window.
+
+    **How to diagnose**
+
+    Check the response headers — Mysoleas includes an `X-Denied-By` header indicating which policy triggered the denial (e.g., `X-Denied-By: ip_restriction`).
+
+    For IP restriction issues, compare the client's public IP against the allowlist in **Routes → [route] → Policies → IP Restriction**. For consumer group issues, check **Consumers → [consumer name] → Groups** and review the policies attached to each group.
+
+    **Fix**
+
+    Add the client's IP to the allowlist, adjust the consumer group policy, or move the consumer to a group with the appropriate access level.
+  </Accordion>
+
+  <Accordion title="429 Too Many Requests">
+    A `429 Too Many Requests` response means the consumer has exhausted their rate limit within the current window.
+
+    **Common causes**
+
+    - The consumer's rate limit is too low for the actual traffic volume.
+    - A bug in client code is sending duplicate or runaway requests.
+    - A sudden traffic spike (e.g., a marketing campaign or batch job) exceeded the configured limit.
+
+    **How to diagnose**
+
+    Inspect the rate limit headers on any response to understand where the consumer stands:
+
+    ```
+    X-RateLimit-Limit: 100
+    X-RateLimit-Remaining: 0
+    X-RateLimit-Reset: 1705312860
+    ```
+
+    `X-RateLimit-Reset` is a Unix timestamp indicating when the window resets. Open the **Analytics** section of your gateway and filter by consumer ID to see the request volume over time.
+
+    **Fix**
+
+    If the limit is legitimately too low, raise it in **Consumers → [consumer] → Rate Limit Override** or update the route's default rate limit policy. If the requests are unintentional, fix the client-side bug. For temporary overrides on high-traffic days, contact [support@mysoleas.com](mailto:support@mysoleas.com).
+  </Accordion>
+
+  <Accordion title="Route not matching (404)">
+    A `404` returned by Mysoleas itself (not your upstream) means no configured route matched the incoming request path and method.
+
+    **Common causes**
+
+    - The request path contains a trailing slash that does not match the configured path (or vice versa).
+    - The HTTP method (e.g., `DELETE`) is not included in the route's allowed methods.
+    - A wildcard path requires `/*` but is configured as only `/` or `/prefix`.
+    - A higher-priority route with an overlapping path is catching the request first.
+
+    **How to diagnose**
+
+    Review your routes under **Routes** in the dashboard. Routes are evaluated in **priority order** (lowest number wins). Check:
+    1. The path pattern — an exact path `/v1/users` will not match `/v1/users/123`. Use `/v1/users/*` to capture sub-paths.
+    2. The allowed methods list — confirm the method your client is using is checked.
+    3. Priority conflicts — a catch-all route with lower priority number may be intercepting traffic before your specific route.
+
+    **Fix**
+
+    Correct the path pattern, add the missing method, or adjust route priorities. To match any path under a prefix, append `/*` (e.g., `/v1/users/*`).
+  </Accordion>
+
+  <Accordion title="Slow response times">
+    If your API responses are slower than expected, the latency can originate from the upstream service, the gateway configuration, or network conditions.
+
+    **How to diagnose**
+
+    Open **Analytics → Performance** for your gateway and check the **p99 latency** chart. Compare it against the same metric scoped to a specific route to isolate whether the slowness is widespread or route-specific.
+
+    Look at the `X-Upstream-Duration` header in responses — this reports the time Mysoleas spent waiting for your upstream, making it easy to distinguish upstream latency from gateway overhead.
+
+    **Common causes and fixes**
+
+    - **High upstream latency** — the upstream service is slow. Profile and optimize the upstream, or enable the `response-cache` plugin to serve repeated requests without hitting the backend.
+    - **Cold start on upstream** — the upstream is autoscaling and newly provisioned instances are slow. Consider keeping a minimum instance count.
+    - **Plugin overhead** — a large number of enabled plugins (especially `logging` with `include_body: true`) adds processing time. Disable unused plugins.
+    - **High gateway load** — if your gateway is on the free or starter plan, resource limits may cause queuing. Upgrade your plan or contact support.
+
+    <Tip>
+      Enable the `response-cache` plugin with a short TTL (e.g., 30–60 seconds) on read-heavy routes to dramatically reduce upstream load and improve perceived latency.
+    </Tip>
+  </Accordion>
+
+  <Accordion title="Webhook not receiving events">
+    If your webhook endpoint is not receiving events you expect, the issue is usually with your endpoint's availability, response behavior, or signature verification.
+
+    **How to diagnose**
+
+    Go to **Settings → Webhooks → [your endpoint] → Delivery Logs**. Each delivery attempt shows the HTTP status your endpoint returned (or a connection error if it was unreachable). Look for `timeout`, `connection refused`, or non-200 status codes.
+
+    **Common causes and fixes**
+
+    - **Endpoint returning non-200** — Mysoleas treats any non-`200` response as a failure. Ensure your handler always returns `200` after receiving the payload, even if processing is deferred to a queue.
+    - **Endpoint timing out** — your handler must respond within 5 seconds. Move slow processing to an async background job and respond immediately.
+    - **Signature verification rejecting valid requests** — if you are re-serializing the JSON before computing the HMAC, the digest will not match. Compute the digest against the raw request body bytes. See [Verifying webhook signatures](/configuration/webhooks#verifying-webhook-signatures) for working code examples.
+    - **Firewall blocking inbound requests** — ensure your server allows inbound HTTPS traffic from Mysoleas IP ranges (available in your dashboard under Settings → IP Ranges).
+
+    From the Delivery Logs page you can also **Replay** any failed delivery to re-test your endpoint after making fixes.
+  </Accordion>
+
+  <Accordion title="Gateway showing as inactive">
+    If your gateway is listed as **Inactive** in the dashboard, it is not processing traffic and all requests will return an error.
+
+    **Common causes**
+
+    - Your subscription plan has reached the maximum number of active gateways. Check your current plan limits under **Account → Subscription**.
+    - A recent plan downgrade reduced your active gateway quota. If you had more gateways than the new limit allows, the excess gateways are automatically paused.
+    - The gateway was manually paused by an account administrator.
+
+    **Fix**
+
+    Open **Account → Subscription** and review your active gateway count against your plan limit. Upgrade your plan to increase the limit, or delete unused gateways to free up a slot. To reactivate a paused gateway manually, go to **Gateways → [gateway name] → Settings → Activate**.
+  </Accordion>
+</AccordionGroup>
+
+<Note>
+For issues not covered on this page, reach out to the Mysoleas support team at [support@mysoleas.com](mailto:support@mysoleas.com). Include your gateway ID, the affected route, a sample request, and the full error response — this lets support reproduce the issue quickly.
+</Note>

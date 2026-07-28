@@ -1,0 +1,127 @@
+---
+title: "Transform Requests and Responses at the Gateway"
+sidebarTitle: "Transformations"
+description: "Modify request and response headers, query parameters, and URL paths at the gateway layer to adapt traffic to your upstreams without changing backend code."
+---
+
+Transformation policies let you modify requests before they reach your upstream and responses before they reach your clients — without changing your backend code. This makes the gateway a powerful adapter layer: you can inject tracing headers, strip internal metadata from responses, rewrite URL paths for legacy compatibility, and more, all through configuration rather than code changes. Transformations run after authentication and rate limiting have already passed, so you can safely reference consumer context in dynamic values.
+
+## Request transformations
+
+Use request transformation policies to shape the data and headers the gateway sends to your upstream. You can add headers your backend expects, remove headers that shouldn't leave your infrastructure, and pass dynamic context about the consumer or request.
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "request-transform",
+    "config": {
+      "add": {
+        "headers": {
+          "X-Forwarded-By": "mysoleas",
+          "X-Consumer-Id": "$(consumer.id)"
+        }
+      },
+      "remove": {
+        "headers": ["X-Internal-Token"]
+      }
+    }
+  }'
+```
+
+The `add` block injects new headers into the forwarded request. The `remove` block strips headers by name before the request leaves the gateway. Both can be specified in the same policy.
+
+You can also add or remove query parameters using the same structure:
+
+```json
+{
+  "type": "request-transform",
+  "config": {
+    "add": {
+      "headers": {
+        "X-Forwarded-By": "mysoleas"
+      },
+      "querystring": {
+        "version": "2"
+      }
+    },
+    "remove": {
+      "querystring": ["debug"]
+    }
+  }
+}
+```
+
+## Response transformations
+
+Use response transformation policies to control what the gateway sends back to your clients. Common uses include adding standard headers like `X-Powered-By`, removing internal server details that shouldn't be exposed, and normalizing header names across multiple upstream services.
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "response-transform",
+    "config": {
+      "add": {
+        "headers": {
+          "X-Powered-By": "Mysoleas"
+        }
+      },
+      "remove": {
+        "headers": ["X-Backend-Server"]
+      }
+    }
+  }'
+```
+
+Stripping headers like `X-Backend-Server` or `Server` from responses prevents your infrastructure details from being disclosed to clients, which is a useful security hardening step.
+
+## Dynamic variables
+
+Transformation policies support template variables that the gateway resolves at request time. Use these to inject context-aware values without hardcoding them:
+
+| Variable | Resolves to |
+|---|---|
+| `$(consumer.id)` | The unique ID of the authenticated consumer |
+| `$(consumer.name)` | The display name of the authenticated consumer |
+| `$(request.ip)` | The originating IP address of the request |
+| `$(gateway.id)` | The ID of the gateway handling the request |
+
+Reference these variables anywhere a header or query parameter value appears in your transformation config. For example, `"X-Consumer-Id": "$(consumer.id)"` automatically stamps each upstream request with the caller's identity, enabling per-consumer audit logging on your backend without any code changes.
+
+<Note>
+  Dynamic variables like `$(consumer.id)` and `$(consumer.name)` resolve to empty strings on routes that have no authentication policy applied. Always attach an auth policy to routes where consumer context is critical.
+</Note>
+
+## URL rewriting
+
+Redirect incoming requests to a different path on your upstream without changing the public URL your clients use. This is valuable for version migrations, path normalization, and legacy API compatibility.
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "url-rewrite",
+    "config": {
+      "from": "/api/v1/(.*)",
+      "to": "/v2/$1"
+    }
+  }'
+```
+
+The `from` field is a regular expression matched against the incoming request path. The `to` field is the replacement pattern, where `$1`, `$2`, etc. reference capture groups from the `from` pattern. In this example, a request to `/api/v1/users/123` is forwarded upstream as `/v2/users/123`.
+
+<ParamField body="config.from" type="string" required>
+  A regular expression pattern matched against the full incoming request path.
+</ParamField>
+
+<ParamField body="config.to" type="string" required>
+  The replacement path template. Supports capture group references (`$1`, `$2`, etc.) from the `from` pattern.
+</ParamField>
+
+<Note>
+  Transformations run after authentication and rate limiting policies have been evaluated, and before the request is forwarded to your upstream. This ordering means you can safely use consumer context variables in transformations and be confident that every transformed request has already been authorized.
+</Note>

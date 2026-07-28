@@ -1,0 +1,77 @@
+---
+title: "API Error Codes and Troubleshooting Responses"
+sidebarTitle: "Errors"
+description: "Reference guide for every Mysoleas API error code, HTTP status meaning, common causes, and guidance on when to retry or fix your request."
+---
+
+Mysoleas uses standard HTTP status codes to indicate the outcome of every API request. All error responses return a JSON body containing three fields — `error`, `message`, and `status_code` — so your application can handle failures programmatically without parsing human-readable text.
+
+## Error Code Reference
+
+The table below lists every status code the API may return, its associated `error` code, a plain-English description, and the most common cause.
+
+| Status Code | Error Code             | Description                                                                 | Common Cause                                                              |
+|-------------|------------------------|-----------------------------------------------------------------------------|---------------------------------------------------------------------------|
+| `400`       | `bad_request`          | The request body is missing required fields or contains invalid values      | Malformed JSON, missing a required field, or an unsupported field value   |
+| `401`       | `unauthorized`         | Missing or invalid API key in the Authorization header                      | No `Authorization` header, a typo in the key, or a revoked key            |
+| `403`       | `forbidden`            | Your API key does not have permission for this operation                    | The key's scope does not include the resource or action you requested     |
+| `404`       | `not_found`            | The requested resource does not exist                                       | Incorrect resource ID, or the resource was already deleted                |
+| `409`       | `conflict`             | A resource with the same name already exists                                | Attempting to create a gateway or route whose `name` is already in use    |
+| `422`       | `unprocessable_entity` | The request was understood but failed validation                            | Invalid URL in an `upstream` field, out-of-range numeric values           |
+| `429`       | `rate_limit_exceeded`  | You have exceeded the management API rate limit (1,000 req/min)            | Sending requests in tight loops without throttling or backoff             |
+| `500`       | `internal_error`       | An unexpected error occurred on our side                                    | Transient server fault; contact support if the error persists             |
+| `503`       | `service_unavailable`  | The service is temporarily unavailable                                      | Planned maintenance or an infrastructure incident; retry with backoff     |
+
+## Error Response Structure
+
+Every error response follows the same JSON structure. Use the `error` field for programmatic branching in your error-handling logic, and present `message` to operators or logs for context:
+
+```json
+{
+  "error": "unprocessable_entity",
+  "message": "The 'upstream' field must be a valid HTTPS URL",
+  "status_code": 422,
+  "request_id": "req_7f3a9bc4e21d"
+}
+```
+
+<Note>
+  The `request_id` field is included in all error responses and mirrors the `X-Request-ID` response header. Keep it handy when reaching out to support — it lets the team trace your exact request in the system logs.
+</Note>
+
+## Retrying on Errors
+
+Not all errors are worth retrying. Use the guidance below to decide whether to fix your request or implement retry logic.
+
+**Retry these errors** — they are transient and likely to resolve on their own:
+
+- **`429 rate_limit_exceeded`** — Wait and retry using exponential backoff. Check the `Retry-After` response header for the number of seconds to wait before your next attempt.
+- **`500 internal_error`** — Retry up to three times with increasing delays. If the error persists beyond a few minutes, contact support with the `request_id`.
+- **`503 service_unavailable`** — Retry with exponential backoff. Monitor the [Mysoleas status page](https://status.mysoleas.io) for incident updates.
+
+<Tip>
+  A simple exponential backoff strategy — wait 1 s, then 2 s, then 4 s, then 8 s — prevents hammering the API during a transient outage and reduces the risk of compounding a `429`.
+</Tip>
+
+**Fix your request before retrying** — these errors indicate a client-side issue that will not resolve itself:
+
+- **`400 bad_request`** — Review the `message` field to identify the missing or invalid field, then correct your request body.
+- **`401 unauthorized`** — Verify your `Authorization` header is present and that your API key has not been revoked.
+- **`403 forbidden`** — Check the scope of the API key you are using. You may need to generate a key with broader permissions from the dashboard.
+- **`404 not_found`** — Confirm the resource ID in your request path is correct and that the resource has not been deleted.
+- **`409 conflict`** — Choose a different `name` for the resource you are creating, or delete the conflicting resource first.
+- **`422 unprocessable_entity`** — Read the `message` field for the specific validation failure and correct the offending value before retrying.
+
+<Warning>
+  Retrying a `400`, `401`, `403`, `404`, `409`, or `422` response without fixing the underlying cause will always produce the same error. These codes indicate a problem with your request, not a server-side fault.
+</Warning>
+
+## Getting Help
+
+If you receive a `500 internal_error` response and retrying does not resolve it, gather the following before contacting support:
+
+1. The `request_id` from the `X-Request-ID` response header (also present as `request_id` in the JSON body).
+2. The full request you sent — method, URL, and sanitized request body (remove any sensitive credentials).
+3. The timestamp of the failing request.
+
+Send this information to **support@mysoleas.com**. Including the `request_id` allows the support team to locate your request in the distributed trace logs immediately, dramatically reducing resolution time.

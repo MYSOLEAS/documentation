@@ -1,0 +1,145 @@
+---
+title: "Update a Route Configuration — PUT /routes/{id}"
+sidebarTitle: "Update Route"
+description: "Modify one or more configuration fields of an existing route, including its upstream URL, path, methods, priority, and status."
+---
+
+Updating a route lets you change any part of its configuration without deleting and recreating it. You only need to include the fields you want to modify — any fields you omit retain their current values. Updates are applied immediately and affect all new incoming requests.
+
+**Endpoint**
+
+```
+PUT https://api.mysoleas.io/v1/routes/{id}
+```
+
+<Note>
+  Changing `path` or `methods` takes effect immediately for new requests. In-flight requests that matched the previous route configuration will complete using the original settings.
+</Note>
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique identifier of the route you want to update (e.g., `rt_xyz789`).
+</ParamField>
+
+## Request Body
+
+All body fields are optional. Include only the fields you want to change.
+
+<ParamField body="name" type="string">
+  A new human-readable name for the route. Must be unique within the gateway.
+</ParamField>
+
+<ParamField body="path" type="string">
+  A new URL path prefix for this route. Must begin with a `/`.
+</ParamField>
+
+<ParamField body="methods" type="array of strings">
+  A new set of HTTP methods for this route. Supported values: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`. Replaces the existing methods array entirely.
+</ParamField>
+
+<ParamField body="upstream" type="string">
+  A new HTTPS URL for the upstream service to forward requests to.
+</ParamField>
+
+<ParamField body="strip_path" type="boolean">
+  Update whether the path prefix is stripped before forwarding requests to the upstream.
+</ParamField>
+
+<ParamField body="preserve_host" type="boolean">
+  Update whether the original client `Host` header is passed to the upstream.
+</ParamField>
+
+<ParamField body="priority" type="integer">
+  A new matching priority for the route. Lower numbers indicate higher priority.
+</ParamField>
+
+<ParamField body="status" type="string">
+  Set the route's operational status. Accepted values: `active`, `inactive`. Setting a route to `inactive` stops it from matching requests without deleting it.
+</ParamField>
+
+## Example Request
+
+This example updates the upstream URL and sets the route status to `inactive`.
+
+```bash
+curl --request PUT \
+  --url "https://api.mysoleas.io/v1/routes/rt_xyz789" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "upstream": "https://api-v2.example.com",
+    "status": "inactive"
+  }'
+```
+
+## Response
+
+Returns `200 OK` with the fully updated route object.
+
+```json
+{
+  "id": "rt_xyz789",
+  "gateway_id": "gw_abc123",
+  "name": "main-api",
+  "path": "/api/v1",
+  "methods": ["GET", "POST", "PUT", "DELETE"],
+  "upstream": "https://api-v2.example.com",
+  "strip_path": true,
+  "preserve_host": false,
+  "status": "inactive",
+  "priority": 1,
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T11:30:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier of the route.
+</ResponseField>
+
+<ResponseField name="gateway_id" type="string">
+  The identifier of the gateway this route belongs to.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name of the route.
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  The URL path prefix this route matches against incoming requests.
+</ResponseField>
+
+<ResponseField name="methods" type="array of strings">
+  The HTTP methods this route is configured to accept.
+</ResponseField>
+
+<ResponseField name="upstream" type="string">
+  The HTTPS URL of the upstream service requests are forwarded to.
+</ResponseField>
+
+<ResponseField name="strip_path" type="boolean">
+  Whether the matched path prefix is stripped before forwarding requests to the upstream.
+</ResponseField>
+
+<ResponseField name="preserve_host" type="boolean">
+  Whether the original client `Host` header is preserved when forwarding to the upstream.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The current status of the route after the update. Either `active` or `inactive`.
+</ResponseField>
+
+<ResponseField name="priority" type="integer">
+  The route matching priority. Lower numbers indicate higher priority.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the route was originally created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of when the route was last updated. Reflects the time of this request.
+</ResponseField>

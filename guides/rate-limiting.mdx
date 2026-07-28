@@ -1,0 +1,176 @@
+---
+title: "Configure Rate Limiting on Your API Routes"
+sidebarTitle: "Rate Limiting"
+description: "Protect your upstream services from traffic spikes and abuse by applying gateway-level or route-level rate limiting policies with flexible window and scope options."
+---
+
+Rate limiting protects your upstream APIs from overload and abuse by capping how many requests a client can make within a given time window. Without it, a single misconfigured client or malicious actor can saturate your backend and degrade service for everyone. Mysoleas supports two levels of rate limiting: **gateway-level** policies that apply to all routes on a gateway, and **route-level** policies that let you set different thresholds for individual routes based on their sensitivity or cost.
+
+## Enable rate limiting on a route
+
+<Steps>
+
+  <Step title="Open the Policies tab for your route">
+    In the [Mysoleas dashboard](https://mysoleas.com), navigate to **Gateways**, select your gateway, click the **Routes** tab, and select the route you want to protect. Switch to the **Policies** tab within the route detail view.
+  </Step>
+
+  <Step title="Add a Rate Limit policy">
+    Click **Add Policy** and select **Rate Limit** from the policy type list.
+  </Step>
+
+  <Step title="Configure the rate limit parameters">
+    Set the following options:
+
+    | Parameter | Description |
+    |---|---|
+    | **Requests** | Maximum number of requests allowed in the window (e.g., `100`) |
+    | **Window** | Time window for counting requests: `per_minute`, `per_hour`, or `per_day` |
+    | **Scope** | Who the limit applies to: `global`, `per_consumer`, or `per_ip` |
+
+    Choosing `per_consumer` enforces the limit independently for each authenticated consumer, while `global` counts all requests to the route regardless of origin.
+  </Step>
+
+  <Step title="Save the policy">
+    Click **Save**. The rate limit policy is applied to the route immediately — no restart required.
+  </Step>
+
+  <Step title="Apply a rate limit via the management API (alternative)">
+    Send a `POST` request to the route's policies endpoint:
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "type": "rate-limit",
+        "config": {
+          "requests": 100,
+          "window": "per_minute",
+          "scope": "per_consumer"
+        }
+      }'
+    ```
+
+    ```javascript Node.js
+    const response = await fetch(
+      `https://api.mysoleas.io/v1/routes/${routeId}/policies`,
+      {
+        method: "POST",
+        headers: {
+          "Authorization": "Bearer YOUR_API_KEY",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type: "rate-limit",
+          config: {
+            requests: 100,
+            window: "per_minute",
+            scope: "per_consumer",
+          },
+        }),
+      }
+    );
+
+    const policy = await response.json();
+    console.log(policy);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post(
+        f"https://api.mysoleas.io/v1/routes/{route_id}/policies",
+        headers={
+            "Authorization": "Bearer YOUR_API_KEY",
+            "Content-Type": "application/json",
+        },
+        json={
+            "type": "rate-limit",
+            "config": {
+                "requests": 100,
+                "window": "per_minute",
+                "scope": "per_consumer",
+            },
+        },
+    )
+
+    print(response.json())
+    ```
+
+    </CodeGroup>
+
+    <ParamField body="type" type="string" required>
+      Must be `"rate-limit"` to apply a rate limiting policy.
+    </ParamField>
+
+    <ParamField body="config.requests" type="integer" required>
+      The maximum number of requests permitted within the specified window.
+    </ParamField>
+
+    <ParamField body="config.window" type="string" required>
+      The time window for the rate limit counter. Accepted values: `per_minute`, `per_hour`, `per_day`.
+    </ParamField>
+
+    <ParamField body="config.scope" type="string" required>
+      Determines how request counts are tracked. Accepted values: `global`, `per_consumer`, `per_ip`.
+    </ParamField>
+
+  </Step>
+
+</Steps>
+
+## Rate limit response headers
+
+When rate limiting is active, Mysoleas adds the following headers to every response so clients can track their usage and back off gracefully:
+
+| Header | Description |
+|---|---|
+| `X-RateLimit-Limit` | The total number of requests allowed in the current window |
+| `X-RateLimit-Remaining` | The number of requests remaining before the limit is reached |
+| `X-RateLimit-Reset` | A Unix timestamp indicating when the counter resets |
+
+Encourage your API consumers to read these headers and implement exponential backoff in their clients.
+
+## Per-consumer overrides
+
+If you need to give a specific consumer a higher (or lower) limit than the route default — for example, a trusted partner who needs more headroom — you can set a per-consumer override without changing the base policy:
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/consumers/{consumer_id}/overrides \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "route_id": "rt_xyz789",
+    "policy_type": "rate-limit",
+    "config": {
+      "requests": 1000,
+      "window": "per_minute"
+    }
+  }'
+```
+
+The override applies only to that consumer on that route. All other consumers continue to use the route-level default.
+
+## What happens when the limit is exceeded
+
+When a consumer exceeds their allowed request count, the gateway immediately returns a `429 Too Many Requests` response and does **not** forward the request to your upstream:
+
+```
+HTTP/2 429
+Content-Type: application/json
+Retry-After: 42
+
+{
+  "error": "rate_limit_exceeded",
+  "message": "Too many requests. Please retry after 42 seconds.",
+  "retry_after": 42
+}
+```
+
+The `Retry-After` header tells the client exactly how many seconds to wait before retrying. Well-behaved clients should respect this value instead of immediately retrying, which would only continue failing.
+
+<Tip>
+  Start with a generous rate limit and then tighten it based on real traffic data from your analytics dashboard. Setting an overly aggressive limit from day one risks breaking legitimate clients before you have baseline usage data to reason about.
+</Tip>

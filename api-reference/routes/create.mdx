@@ -1,0 +1,142 @@
+---
+title: "Create a Route on a Gateway — POST /gateways/{gateway_id}/routes"
+sidebarTitle: "Create Route"
+description: "Add a new route to a gateway by defining a path, HTTP methods, and an upstream URL to forward matching requests to."
+---
+
+Creating a route tells the gateway how to handle incoming requests that match a specific path prefix and set of HTTP methods. Once created, the route becomes active immediately and begins forwarding matched traffic to the upstream service you provide.
+
+**Endpoint**
+
+```
+POST https://api.mysoleas.io/v1/gateways/{gateway_id}/routes
+```
+
+## Path Parameters
+
+<ParamField path="gateway_id" type="string" required>
+  The unique identifier of the gateway to which you want to add the route (e.g., `gw_abc123`).
+</ParamField>
+
+## Request Body
+
+<ParamField body="name" type="string" required>
+  A human-readable name for the route. Must be unique within the gateway.
+</ParamField>
+
+<ParamField body="path" type="string" required>
+  The URL path prefix that incoming requests must match. Must begin with a `/` (e.g., `/api/v1`).
+</ParamField>
+
+<ParamField body="methods" type="array of strings" required>
+  The HTTP methods this route accepts. Supported values: `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`. Pass at least one method.
+</ParamField>
+
+<ParamField body="upstream" type="string" required>
+  The fully-qualified HTTPS URL of the upstream service that matching requests will be forwarded to (e.g., `https://api.example.com`).
+</ParamField>
+
+<ParamField body="strip_path" type="boolean">
+  When `true`, the matched path prefix is stripped from the request before it is forwarded to the upstream. Defaults to `true`.
+</ParamField>
+
+<ParamField body="preserve_host" type="boolean">
+  When `true`, the original `Host` header sent by the client is preserved and passed to the upstream instead of the upstream's own hostname. Defaults to `false`.
+</ParamField>
+
+<ParamField body="priority" type="integer">
+  An integer that controls the order in which routes are evaluated. Lower numbers take precedence over higher numbers. When omitted, the gateway auto-assigns a priority value based on path specificity.
+</ParamField>
+
+<Tip>
+  Set `strip_path: true` when your upstream service uses its own internal path structure and doesn't expect the gateway's path prefix to be included in the request it receives.
+</Tip>
+
+## Example Request
+
+```bash
+curl --request POST \
+  --url "https://api.mysoleas.io/v1/gateways/gw_abc123/routes" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "main-api",
+    "path": "/api/v1",
+    "methods": ["GET", "POST", "PUT", "DELETE"],
+    "upstream": "https://api.example.com",
+    "strip_path": true,
+    "preserve_host": false,
+    "priority": 1
+  }'
+```
+
+## Response
+
+Returns `201 Created` with the newly created route object.
+
+```json
+{
+  "id": "rt_xyz789",
+  "gateway_id": "gw_abc123",
+  "name": "main-api",
+  "path": "/api/v1",
+  "methods": ["GET", "POST", "PUT", "DELETE"],
+  "upstream": "https://api.example.com",
+  "strip_path": true,
+  "preserve_host": false,
+  "status": "active",
+  "priority": 1,
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier assigned to the newly created route.
+</ResponseField>
+
+<ResponseField name="gateway_id" type="string">
+  The identifier of the gateway this route was created on.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name you assigned to the route.
+</ResponseField>
+
+<ResponseField name="path" type="string">
+  The URL path prefix configured for this route.
+</ResponseField>
+
+<ResponseField name="methods" type="array of strings">
+  The HTTP methods this route is configured to accept.
+</ResponseField>
+
+<ResponseField name="upstream" type="string">
+  The HTTPS URL of the upstream service this route forwards requests to.
+</ResponseField>
+
+<ResponseField name="strip_path" type="boolean">
+  Whether the path prefix is stripped before forwarding requests to the upstream.
+</ResponseField>
+
+<ResponseField name="preserve_host" type="boolean">
+  Whether the original client `Host` header is preserved when forwarding to the upstream.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The initial status of the route. Newly created routes are set to `active` by default.
+</ResponseField>
+
+<ResponseField name="priority" type="integer">
+  The route matching priority. Lower numbers indicate higher priority.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp of when the route was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp of when the route was last updated.
+</ResponseField>

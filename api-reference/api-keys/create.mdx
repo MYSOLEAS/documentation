@@ -1,0 +1,109 @@
+---
+title: "Issue an API Key to a Consumer — POST /consumers/{id}/api-keys"
+sidebarTitle: "Create API Key"
+description: "Generate a new API key for a consumer. The full key value is returned only once in this response — store it securely before proceeding."
+---
+
+Issuing an API key gives a consumer the credentials it needs to authenticate requests to your gateway. Each key is cryptographically generated and scoped to a single consumer. You can issue multiple keys to one consumer — for example, separate keys per environment or integration — and revoke any of them independently without affecting the others.
+
+## Endpoint
+
+```
+POST https://api.mysoleas.io/v1/consumers/{id}/api-keys
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique ID of the consumer you want to issue the key to. This is the `id` returned when you created the consumer (e.g., `con_123abc`).
+</ParamField>
+
+## Body Parameters
+
+<ParamField body="name" type="string" required>
+  A descriptive label for this key so you can identify it later. Use a name that reflects where or how the key will be used (e.g., `mobile-prod`, `web-app`, `ci-pipeline`). Must be between 2 and 64 characters.
+</ParamField>
+
+## Request Example
+
+```bash
+curl --request POST \
+  --url "https://api.mysoleas.io/v1/consumers/con_123abc/api-keys" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "production-key"
+  }'
+```
+
+## Response
+
+Returns `201 Created` with the full API key object. This is the **only time** the `key` field contains the actual secret value.
+
+<Warning>
+  Store the `key` value immediately and securely — for example, in your secrets manager or environment variables. After this response, the value is permanently masked and cannot be retrieved again. If you lose it, you must create a new key and revoke the old one.
+</Warning>
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the new API key, prefixed with `key_`. Use this ID to reference or revoke the key in future requests.
+</ResponseField>
+
+<ResponseField name="consumer_id" type="string">
+  The ID of the consumer this key was issued to.
+</ResponseField>
+
+<ResponseField name="key" type="string">
+  The full API key secret, prefixed with `msk_live_`. This value is returned **only in this response**. All subsequent reads return `null`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The label you provided in the request body.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The status of the key. Always `active` immediately after creation.
+</ResponseField>
+
+<ResponseField name="last_used_at" type="null">
+  Always `null` immediately after creation, since the key has not yet been used to authenticate any requests.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp recording when the key was created.
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "id": "key_def456",
+  "consumer_id": "con_123abc",
+  "key": "msk_live_aBcDeFgHiJkLmNoPqRsTuVwXyZ",
+  "name": "production-key",
+  "status": "active",
+  "last_used_at": null,
+  "created_at": "2024-01-15T10:00:00Z"
+}
+```
+
+---
+
+## Revoking a Key
+
+If a key is compromised or no longer needed, revoke it immediately with `PATCH /consumers/{consumer_id}/api-keys/{key_id}`. Revoked keys are rejected by the gateway instantly and cannot be re-activated.
+
+```bash
+curl --request PATCH \
+  --url "https://api.mysoleas.io/v1/consumers/con_123abc/api-keys/key_def456" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "status": "revoked"
+  }'
+```
+
+<Note>
+  Revoking a key does not delete it. The key record and its usage history remain visible in [GET /consumers/\{id\}/api-keys](/api-reference/api-keys/list) with `"status": "revoked"`, giving you a complete audit trail.
+</Note>

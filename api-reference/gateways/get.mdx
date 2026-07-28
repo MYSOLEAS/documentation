@@ -1,0 +1,80 @@
+---
+title: "Get a Gateway by ID — GET /gateways/{id}"
+sidebarTitle: "Get Gateway"
+description: "Fetch the full details of a single gateway by its ID, including its status, environment, public endpoint URL, and timestamps."
+---
+
+The Get Gateway endpoint retrieves the complete details of a single gateway using its unique ID. Use this endpoint to inspect a gateway's current status, confirm its public endpoint URL, or fetch metadata before performing an update or deletion.
+
+**Endpoint**
+
+```
+GET https://api.mysoleas.io/v1/gateways/{id}
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique ID of the gateway you want to retrieve. Gateway IDs are prefixed with `gw_` (e.g. `gw_abc123`). You can find gateway IDs in the response from the [List Gateways](/api-reference/gateways/list) endpoint.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request GET \
+  --url "https://api.mysoleas.io/v1/gateways/gw_abc123" \
+  --header "Authorization: Bearer YOUR_API_KEY"
+```
+
+## Example Response
+
+```json
+{
+  "id": "gw_abc123",
+  "name": "my-gateway",
+  "description": "Primary production gateway for the payments service.",
+  "status": "active",
+  "environment": "production",
+  "endpoint": "https://gw_abc123.mysoleas.io",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the gateway, prefixed with `gw_`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The user-defined name of the gateway.
+</ResponseField>
+
+<ResponseField name="description" type="string | null">
+  The gateway's description, or `null` if none was set.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The current operational status of the gateway. One of `active` or `inactive`.
+</ResponseField>
+
+<ResponseField name="environment" type="string">
+  The environment the gateway belongs to. One of `development`, `staging`, or `production`.
+</ResponseField>
+
+<ResponseField name="endpoint" type="string">
+  The publicly accessible URL for the gateway. Requests sent to this URL are routed according to the gateway's configured routes and policies.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was last updated.
+</ResponseField>
+
+<Tip>
+  If you receive a `404 Not Found` response, verify that the gateway ID is correct and that the gateway belongs to the account associated with your API key.
+</Tip>

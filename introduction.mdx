@@ -1,0 +1,63 @@
+---
+title: "Mysoleas API Gateway: Route, Secure, and Manage APIs"
+sidebarTitle: Introduction
+description: "Mysoleas API Gateway helps you route, secure, and manage API traffic with authentication, rate limiting, analytics, transformations, and a powerful plugin system."
+---
+
+Mysoleas API Gateway gives you a single, managed control plane for all your API traffic. Whether you're protecting backend services with authentication, enforcing rate limits on consumers, transforming requests on the fly, or tracking usage through real-time analytics — Mysoleas handles the infrastructure so you can focus on building your product.
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Create your first gateway, add a route, and make a request in under five minutes.
+  </Card>
+  <Card title="Authentication" icon="key" href="/authentication">
+    Learn how to generate API keys and authenticate requests to the management API.
+  </Card>
+  <Card title="Gateway Concepts" icon="map" href="/concepts/gateway">
+    Understand gateways, routes, consumers, plugins, and how they work together.
+  </Card>
+  <Card title="API Reference" icon="code" href="/api-reference/overview">
+    Explore the full REST API for managing gateways, routes, consumers, and more.
+  </Card>
+</CardGroup>
+
+## What you can do
+
+Mysoleas API Gateway covers the full lifecycle of API traffic management — from routing and security to analytics and extensibility.
+
+<CardGroup cols={3}>
+  <Card title="Routing & Load Balancing" icon="arrow-right-arrow-left" href="/concepts/gateway">
+    Route traffic to upstream services with path-based rules, method filters, and weighted load balancing across multiple backends.
+  </Card>
+  <Card title="Rate Limiting" icon="gauge-high" href="/guides/rate-limiting">
+    Protect your upstream services by enforcing per-consumer, per-route, or global rate limits with flexible time windows.
+  </Card>
+  <Card title="Analytics" icon="chart-line" href="/guides/analytics">
+    Monitor request volume, latency, error rates, and consumer usage in real time through the built-in analytics dashboard.
+  </Card>
+  <Card title="Security" icon="shield-halved" href="/guides/security">
+    Authenticate consumers with API keys, OAuth 2.0, or JWT — and apply IP allowlists, bot detection, and TLS termination.
+  </Card>
+  <Card title="Transformations" icon="wand-magic-sparkles" href="/guides/transformations">
+    Modify request and response headers, rewrite paths, inject parameters, and reshape payloads before they reach your backend.
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/configuration/webhooks">
+    Subscribe to gateway events — route hits, auth failures, rate limit breaches — and push real-time notifications to any endpoint.
+  </Card>
+</CardGroup>
+
+## How onboarding works
+
+Get from zero to a live, traffic-routing gateway in three steps.
+
+<Steps>
+  <Step title="Create a gateway">
+    Provision a new gateway instance through the dashboard or the REST API. Each gateway gets a unique endpoint URL that your consumers will call.
+  </Step>
+  <Step title="Add a route">
+    Define a route by mapping an inbound path and HTTP method to an upstream URL. Apply plugins — authentication, rate limiting, transformations — directly on the route.
+  </Step>
+  <Step title="Make your first request">
+    Send a real HTTP request through your gateway endpoint and watch it proxy to your upstream service. Confirm success in the analytics dashboard.
+  </Step>
+</Steps>

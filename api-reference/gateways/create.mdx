@@ -1,0 +1,96 @@
+---
+title: "Create a New Gateway — POST /gateways"
+sidebarTitle: "Create Gateway"
+description: "Provision a new API gateway in your account. The gateway endpoint URL is auto-generated and returned immediately in the response upon creation."
+---
+
+The Create Gateway endpoint provisions a new API gateway and makes it immediately available under an auto-generated endpoint URL. You must supply a unique `name` for the gateway; all other fields are optional and fall back to sensible defaults. Once created, the gateway's `environment` is permanent and cannot be changed.
+
+**Endpoint**
+
+```
+POST https://api.mysoleas.io/v1/gateways
+```
+
+## Body Parameters
+
+<ParamField body="name" type="string" required>
+  A unique, human-readable name for the gateway. Must be between 2 and 64 characters and contain only lowercase alphanumeric characters and hyphens (e.g. `my-gateway`, `payments-v2`). Names must be unique within your account.
+</ParamField>
+
+<ParamField body="description" type="string">
+  An optional description for the gateway, up to 255 characters. Use this to document the gateway's purpose for your team.
+</ParamField>
+
+<ParamField body="environment" type="string" default="production">
+  The environment in which to create the gateway. Accepted values: `development`, `staging`, `production`. Defaults to `production` if not specified. This value cannot be changed after creation.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request POST \
+  --url "https://api.mysoleas.io/v1/gateways" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "my-gateway",
+    "description": "Primary production gateway for the payments service.",
+    "environment": "production"
+  }'
+```
+
+## Example Response
+
+A successful request returns HTTP `201 Created` with the full gateway object in the response body.
+
+```json
+{
+  "id": "gw_abc123",
+  "name": "my-gateway",
+  "description": "Primary production gateway for the payments service.",
+  "status": "active",
+  "environment": "production",
+  "endpoint": "https://gw_abc123.mysoleas.io",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the newly created gateway, prefixed with `gw_`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name you provided for the gateway.
+</ResponseField>
+
+<ResponseField name="description" type="string | null">
+  The description you provided, or `null` if none was supplied.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The initial status of the gateway. Newly created gateways are always set to `active`.
+</ResponseField>
+
+<ResponseField name="environment" type="string">
+  The environment you specified. One of `development`, `staging`, or `production`.
+</ResponseField>
+
+<ResponseField name="endpoint" type="string">
+  The auto-generated public URL for your gateway. This endpoint is live immediately and ready to receive traffic.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was last updated. Equal to `created_at` on a newly created gateway.
+</ResponseField>
+
+<Note>
+  The `endpoint` URL (e.g. `https://gw_abc123.mysoleas.io`) is auto-generated at creation time based on the gateway's unique ID. You cannot choose or customize the endpoint URL — save it from the response to use in your integrations.
+</Note>

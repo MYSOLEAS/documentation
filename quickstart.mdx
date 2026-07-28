@@ -1,47 +1,108 @@
 ---
-title: "Quickstart"
-description: "Begin with a guide on the fastest path to a successful outcome"
+title: "Get Started with Mysoleas API Gateway Fast"
+sidebarTitle: Quickstart
+description: "Create your first Mysoleas gateway, add a route to an upstream service, and send a proxied request — all in under five minutes."
 ---
 
-Describe how someone begins using your product. What is the first thing they need to do? Are there any prerequisites?
+This guide walks you through the fastest path to a working API gateway. By the end, you'll have a live gateway endpoint that proxies requests to an upstream service, with all traffic visible in your analytics dashboard.
 
-A quickstart should take someone from zero to using your product. They'll get a quick win and a sense of what they can accomplish.
-
-## Prerequisites
-
-Before you begin, you must have:
-
-- Requirement one (for example, Node.js 18+, a free account, an API key)
-- Requirement two (for example, a compatible device, a compatible browser, a compatible operating system)
-
-## Get started
+<Note>
+  **Prerequisites:** You need a Mysoleas account and a management API key before you begin. If you don't have one yet, see [Authentication](/authentication) to generate your first API key.
+</Note>
 
 <Steps>
-  <Step title="Install">
-    Describe how to install your product or sign up.
+  <Step title="Create your first gateway">
+    Send a `POST` request to `/gateways` to provision a new gateway instance. Replace `YOUR_API_KEY` with your management API key.
 
-    ```bash
-    npm install your-package
-    ```
+    <CodeGroup>
+      ```bash cURL
+      curl --request POST \
+        --url https://api.mysoleas.io/v1/gateways \
+        --header 'Authorization: Bearer YOUR_API_KEY' \
+        --header 'Content-Type: application/json' \
+        --data '{
+          "name": "my-gateway",
+          "description": "My first gateway"
+        }'
+      ```
+
+      ```json Response
+      {
+        "id": "gw_abc123",
+        "name": "my-gateway",
+        "status": "active",
+        "endpoint": "https://gw_abc123.mysoleas.io",
+        "created_at": "2024-01-15T10:00:00Z"
+      }
+      ```
+    </CodeGroup>
+
+    Copy the `id` and `endpoint` from the response — you'll use both in the next steps.
+
+    <Tip>
+      The `endpoint` value is the public URL your consumers will call. Keep it handy.
+    </Tip>
   </Step>
-  <Step title="Configure">
-    Describe any setup or configuration needed before first use.
 
-    ```bash
-    your-cli init
-    ```
+  <Step title="Add a route">
+    Define a route that maps an inbound path on your gateway to an upstream URL. Replace `gw_abc123` with the gateway `id` you received above.
+
+    <CodeGroup>
+      ```bash cURL
+      curl --request POST \
+        --url https://api.mysoleas.io/v1/gateways/gw_abc123/routes \
+        --header 'Authorization: Bearer YOUR_API_KEY' \
+        --header 'Content-Type: application/json' \
+        --data '{
+          "name": "api-route",
+          "path": "/api/v1",
+          "upstream": "https://api.example.com",
+          "methods": ["GET", "POST"]
+        }'
+      ```
+
+      ```json Response
+      {
+        "id": "rt_xyz789",
+        "name": "api-route",
+        "path": "/api/v1",
+        "upstream": "https://api.example.com",
+        "status": "active"
+      }
+      ```
+    </CodeGroup>
+
+    Any `GET` or `POST` request to `https://gw_abc123.mysoleas.io/api/v1` will now proxy to `https://api.example.com`.
   </Step>
-  <Step title="Run it">
-    Show the first thing a user does to see it working.
 
-    ```bash
-    your-cli start
-    ```
+  <Step title="Make a request through the gateway">
+    Call your gateway endpoint directly. Mysoleas forwards the request to the upstream URL and returns the response.
+
+    <CodeGroup>
+      ```bash cURL
+      curl --request GET \
+        --url https://gw_abc123.mysoleas.io/api/v1 \
+        --header 'x-api-key: YOUR_API_KEY'
+      ```
+
+      ```json Response
+      {
+        "message": "Hello from your upstream service!",
+        "status": 200
+      }
+      ```
+    </CodeGroup>
+
+    <Note>
+      The `x-api-key` header here authenticates the **consumer** request through the gateway. This is separate from the `Authorization: Bearer` header used to manage the gateway via the REST API.
+    </Note>
+  </Step>
+
+  <Step title="Verify in the dashboard">
+    Open the [Mysoleas dashboard](https://dashboard.mysoleas.io) and navigate to **Gateways → my-gateway → Analytics**. You'll see the request you just made appear in the traffic log with status code, latency, and upstream response details.
   </Step>
 </Steps>
 
 <Tip>
-  Give people a way to get help. This could be a link to a support page, a chat with a customer support agent, or a forum for your product.
-
-  Example: Need help? Reach out to us at [support@yourcompany.com](mailto:support@yourcompany.com).
+  Ready to go further? Learn how to enforce [rate limiting](/guides/rate-limiting) on your routes, lock down traffic with [security policies](/guides/security), or track trends in [analytics](/guides/analytics).
 </Tip>

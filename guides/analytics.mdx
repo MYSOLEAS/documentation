@@ -1,0 +1,89 @@
+---
+title: "Monitor API Traffic with Gateway Analytics"
+sidebarTitle: "Analytics"
+description: "Track request volume, error rates, latency percentiles, and per-consumer usage in real time, then set threshold alerts and export data for deeper analysis."
+---
+
+Mysoleas captures detailed traffic analytics for every request passing through your gateway — no instrumentation required on your backend. The analytics dashboard gives you a live view of how your API is performing, who is using it, and where problems are emerging. Whether you're debugging a latency spike, enforcing SLA compliance, or understanding usage patterns to plan capacity, analytics gives you the data you need without any additional tooling.
+
+## Dashboard analytics
+
+Open **Gateways** in the sidebar, select your gateway, and click the **Analytics** tab to see your traffic overview. The dashboard surfaces the following metrics:
+
+| Metric | Description |
+|---|---|
+| **Request volume** | Total request count over the selected time range, plotted as a time series |
+| **Error rate** | Percentage of requests that returned a `4xx` or `5xx` response |
+| **Latency — p50** | Median response time across all requests |
+| **Latency — p95** | Response time at the 95th percentile; 95% of requests are faster than this |
+| **Latency — p99** | Response time at the 99th percentile; useful for identifying tail latency issues |
+| **Status code distribution** | Breakdown of response codes (2xx, 3xx, 4xx, 5xx) as a percentage and count |
+| **Top consumers** | The consumers generating the most traffic to your gateway |
+| **Top routes** | The routes receiving the most requests |
+
+All charts update in near-real time with a maximum delay of 30 seconds.
+
+## Filtering
+
+Narrow the analytics view to exactly the traffic you care about using the filter controls at the top of the dashboard:
+
+- **Gateway** — switch between gateways in your account
+- **Route** — focus on a single route to isolate its traffic and error patterns
+- **Consumer** — show only traffic from one specific consumer
+- **Time range** — choose from preset windows: Last 1 hour, Last 24 hours, Last 7 days, Last 30 days
+
+Combine filters to answer specific questions — for example, filter by a consumer and a route together to see that consumer's behavior on a specific endpoint.
+
+## Per-consumer analytics
+
+To see a breakdown of traffic by individual consumer, navigate to **Gateways → [Your Gateway] → Consumers** and select a consumer from the list. The consumer detail view shows:
+
+- Request volume over time for that consumer
+- Error rate and status code distribution for their requests
+- Routes they call most frequently
+- Current rate limit status and remaining quota
+
+This view helps you identify consumers who are generating disproportionate error rates or approaching their rate limits before they hit a `429`.
+
+## Alerts
+
+Set threshold-based alerts to get notified when a key metric crosses a critical boundary — before your users start reporting problems.
+
+**Set up an alert:**
+
+1. Navigate to **Gateways → [Your Gateway] → Alerts**.
+2. Click **New Alert**.
+3. Fill in the alert configuration:
+
+| Field | Description |
+|---|---|
+| **Metric** | The metric to monitor (e.g., `error_rate`, `latency_p99`, `request_volume`) |
+| **Threshold** | The numeric value that triggers the alert (e.g., `5` for 5% error rate) |
+| **Comparison** | How to compare against the threshold: `greater_than`, `less_than`, `equal_to` |
+| **Notification channel** | Where to send the alert: `email` or `webhook` |
+
+4. Click **Save Alert**. Mysoleas evaluates the condition every minute and fires the notification as soon as the threshold is crossed.
+
+**Example alert configurations:**
+
+```
+Error rate > 5%  →  notify via email
+Latency p99 > 500ms  →  notify via webhook
+Request volume < 10 (last 5 min)  →  notify via email (detect outages)
+```
+
+<Tip>
+  Use the p99 latency metric — rather than p50 or average — as your primary latency alert trigger. The p99 surfaces slow upstream responses that affect a meaningful share of users but would be masked by the average. A rising p99 is often the first signal of a degrading upstream service.
+</Tip>
+
+## Exporting data
+
+### CSV export
+
+Download a CSV snapshot of your traffic data for a selected time range directly from the dashboard. Navigate to **Analytics → Export**, choose your time range and granularity, and click **Download CSV**. The export includes request counts, error rates, and latency percentiles aggregated per minute or per hour.
+
+### Webhook streaming
+
+For real-time data pipelines — feeding traffic events into your data warehouse, logging platform, or custom monitoring system — configure a webhook destination to receive a stream of request events as they occur. Each event payload contains the request method, path, status code, latency, consumer ID, and gateway ID.
+
+See the [Webhooks configuration guide](/configuration/webhooks) for full setup instructions, available event types, and the event payload schema.

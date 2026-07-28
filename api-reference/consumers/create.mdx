@@ -1,0 +1,88 @@
+---
+title: "Create a Consumer — POST /consumers"
+sidebarTitle: "Create Consumer"
+description: "Register a new API consumer on your Mysoleas account. Returns the created consumer object including its unique ID for issuing API keys."
+---
+
+A consumer represents an application or user that calls your APIs through the gateway. Each consumer has its own identity, usage metrics, and set of API keys, allowing you to track and control access at a granular level. You must create a consumer before you can issue it an API key.
+
+## Endpoint
+
+```
+POST https://api.mysoleas.io/v1/consumers
+```
+
+## Body Parameters
+
+<ParamField body="name" type="string" required>
+  A unique name for the consumer within your account. Must be between 2 and 64 characters. Use a slug-style name that clearly identifies the application or user (e.g., `mobile-app`, `partner-acme`).
+</ParamField>
+
+<ParamField body="description" type="string">
+  An optional description of the consumer, up to 255 characters. Use this field to provide context that the `name` alone does not capture.
+</ParamField>
+
+<ParamField body="tags" type="array of strings">
+  An optional list of string labels to group and filter consumers. Common patterns include environment tags (`production`, `staging`) or team ownership tags (`platform-team`, `mobile`).
+</ParamField>
+
+## Request Example
+
+```bash
+curl --request POST \
+  --url "https://api.mysoleas.io/v1/consumers" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "mobile-app",
+    "description": "iOS mobile application",
+    "tags": ["mobile", "production"]
+  }'
+```
+
+## Response
+
+Returns `201 Created` with the newly created consumer object.
+
+### Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the new consumer, prefixed with `con_`. Use this ID when issuing API keys or looking up the consumer in future requests.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The name you provided in the request body.
+</ResponseField>
+
+<ResponseField name="description" type="string">
+  The description you provided, or `null` if omitted.
+</ResponseField>
+
+<ResponseField name="tags" type="array of strings">
+  The tags you provided, or an empty array if omitted.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  ISO 8601 timestamp recording when the consumer was created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  ISO 8601 timestamp recording when the consumer was last modified. Equals `created_at` immediately after creation.
+</ResponseField>
+
+### Example Response
+
+```json
+{
+  "id": "con_123abc",
+  "name": "mobile-app",
+  "description": "iOS mobile application",
+  "tags": ["mobile", "production"],
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T10:00:00Z"
+}
+```
+
+<Tip>
+  After creating a consumer, issue it an API key so it can begin authenticating requests. Use [POST /consumers/\{id\}/api-keys](/api-reference/api-keys/create) with the `id` returned above.
+</Tip>

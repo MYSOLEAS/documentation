@@ -1,0 +1,173 @@
+---
+title: "Secure Your APIs with Authentication Policies"
+sidebarTitle: "Security"
+description: "Lock down your API routes with API key, JWT, or OAuth 2.0 authentication policies, and restrict access by IP address to prevent unauthorized use."
+---
+
+Use authentication policies to ensure only authorized consumers can call your APIs. Mysoleas enforces these policies at the gateway layer — before a request ever reaches your upstream service — so your backend never has to handle an unauthenticated call. You can apply one or more auth policies to any route and layer them with IP restrictions for defense in depth.
+
+## Authentication methods
+
+<Tabs>
+
+  <Tab title="API Key Auth">
+    API key authentication is the simplest way to secure a route. The gateway checks every incoming request for a valid key and rejects any request that doesn't carry one.
+
+    **Enable via the dashboard:**
+    1. Open your gateway → **Routes** → select the route → **Policies** tab.
+    2. Click **Add Policy** → **API Key Auth**.
+    3. Click **Save**.
+
+    **Enable via the management API:**
+
+    ```bash
+    curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "type": "api-key-auth"
+      }'
+    ```
+
+    **How consumers authenticate:**
+
+    Consumers pass their API key in one of two ways — either as a dedicated header or as a Bearer token:
+
+    ```bash
+    # Using the x-api-key header
+    curl https://gw_abc123.mysoleas.io/api/v1/users \
+      -H "x-api-key: CONSUMER_API_KEY"
+
+    # Using the Authorization header
+    curl https://gw_abc123.mysoleas.io/api/v1/users \
+      -H "Authorization: Bearer CONSUMER_API_KEY"
+    ```
+
+    **Issue keys to consumers:**
+
+    Create and distribute API keys through the Mysoleas key management API. See the [Create API Key reference](/api-reference/api-keys/create) for the full request and response schema.
+  </Tab>
+
+  <Tab title="JWT Auth">
+    JWT authentication lets consumers prove their identity using signed tokens. The gateway validates the token's signature and, optionally, specific claims — without forwarding the token to your upstream for verification.
+
+    **Enable via the management API:**
+
+    ```bash
+    curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "type": "jwt-auth",
+        "config": {
+          "secret": "your-jwt-secret",
+          "algorithm": "HS256",
+          "claims": {
+            "iss": "your-app"
+          }
+        }
+      }'
+    ```
+
+    <ParamField body="config.secret" type="string" required>
+      The secret key used to verify the JWT signature. For asymmetric algorithms, provide the public key PEM string.
+    </ParamField>
+
+    <ParamField body="config.algorithm" type="string">
+      The signing algorithm. Accepted values: `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`. Defaults to `HS256`.
+    </ParamField>
+
+    <ParamField body="config.claims" type="object">
+      An object of claim key-value pairs that the gateway validates in addition to the signature. Requests with tokens that don't match all specified claims are rejected.
+    </ParamField>
+
+    **How consumers authenticate:**
+
+    Consumers pass their JWT in the `Authorization` header as a Bearer token:
+
+    ```bash
+    curl https://gw_abc123.mysoleas.io/api/v1/users \
+      -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    ```
+
+    The gateway validates the token's signature and checks any configured claims. If validation passes, the request is forwarded to your upstream. If the token is expired, malformed, or fails a claim check, the gateway returns `401 Unauthorized`.
+  </Tab>
+
+  <Tab title="OAuth 2.0">
+    OAuth 2.0 token introspection lets the gateway verify access tokens issued by your existing authorization server. This is the right choice when you already have an OAuth infrastructure and want the gateway to act as a resource server.
+
+    **Enable via the management API:**
+
+    ```bash
+    curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "type": "oauth2",
+        "config": {
+          "introspection_endpoint": "https://auth.example.com/oauth/introspect",
+          "client_id": "your-client-id",
+          "client_secret": "your-client-secret"
+        }
+      }'
+    ```
+
+    <ParamField body="config.introspection_endpoint" type="string" required>
+      The token introspection endpoint URL of your authorization server (RFC 7662).
+    </ParamField>
+
+    <ParamField body="config.client_id" type="string" required>
+      The client ID the gateway uses to authenticate itself to the introspection endpoint.
+    </ParamField>
+
+    <ParamField body="config.client_secret" type="string" required>
+      The client secret for authenticating the introspection request.
+    </ParamField>
+
+    **How it works:**
+
+    For every incoming request, the gateway extracts the Bearer token from the `Authorization` header and calls your introspection endpoint with it. If the authorization server confirms the token is active, the gateway forwards the original request to your upstream. If the token is inactive or the introspection call fails, the gateway returns `401 Unauthorized`.
+
+    ```bash
+    # Consumers pass their OAuth access token as a Bearer token
+    curl https://gw_abc123.mysoleas.io/api/v1/users \
+      -H "Authorization: Bearer ACCESS_TOKEN"
+    ```
+  </Tab>
+
+</Tabs>
+
+## IP allowlist and blocklist
+
+Restrict route access to specific IP ranges regardless of authentication status. This is useful for internal APIs that should only be reachable from your office network or cloud infrastructure.
+
+```bash
+curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
+  -H "Authorization: Bearer YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "type": "ip-restriction",
+    "config": {
+      "allow": ["203.0.113.0/24"],
+      "deny": []
+    }
+  }'
+```
+
+<ParamField body="config.allow" type="array">
+  A list of CIDR ranges that are permitted to access the route. All other IPs are blocked when this list is non-empty.
+</ParamField>
+
+<ParamField body="config.deny" type="array">
+  A list of CIDR ranges that are explicitly blocked, even if they fall within an allowed range.
+</ParamField>
+
+Requests from blocked IPs receive a `403 Forbidden` response before any authentication checks run.
+
+<Warning>
+  Removing an authentication policy makes the route publicly accessible to anyone who can reach your gateway endpoint. Always confirm you intend a route to be unauthenticated before deleting an auth policy, especially in production environments.
+</Warning>
+
+<Tip>
+  Stack multiple policies on the same route for layered security. For example, combining JWT authentication with an IP restriction ensures that even a valid token is not enough — the request must also originate from a trusted network. Add policies incrementally and verify traffic behavior after each change.
+</Tip>

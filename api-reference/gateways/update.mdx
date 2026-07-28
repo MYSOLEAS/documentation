@@ -1,0 +1,105 @@
+---
+title: "Update a Gateway — PUT /gateways/{id}"
+sidebarTitle: "Update Gateway"
+description: "Update the name, description, or status of an existing gateway. Send only the fields you want to change — all other fields remain unchanged."
+---
+
+The Update Gateway endpoint lets you modify an existing gateway's `name`, `description`, or `status`. You only need to include the fields you want to change in the request body — any field you omit remains unchanged. Note that a gateway's `environment` is immutable after creation and cannot be updated through this endpoint.
+
+**Endpoint**
+
+```
+PUT https://api.mysoleas.io/v1/gateways/{id}
+```
+
+## Path Parameters
+
+<ParamField path="id" type="string" required>
+  The unique ID of the gateway you want to update. Gateway IDs are prefixed with `gw_` (e.g. `gw_abc123`).
+</ParamField>
+
+## Body Parameters
+
+<ParamField body="name" type="string">
+  A new name for the gateway. Must be between 2 and 64 characters and contain only lowercase alphanumeric characters and hyphens. Must be unique within your account.
+</ParamField>
+
+<ParamField body="description" type="string">
+  A new description for the gateway, up to 255 characters. Pass an empty string (`""`) to clear an existing description.
+</ParamField>
+
+<ParamField body="status" type="string">
+  The desired status for the gateway. Accepted values: `active`, `inactive`. Setting a gateway to `inactive` stops it from accepting traffic immediately.
+</ParamField>
+
+## Example Request
+
+```bash
+curl --request PUT \
+  --url "https://api.mysoleas.io/v1/gateways/gw_abc123" \
+  --header "Authorization: Bearer YOUR_API_KEY" \
+  --header "Content-Type: application/json" \
+  --data '{
+    "name": "payments-gateway-v2",
+    "status": "inactive"
+  }'
+```
+
+## Example Response
+
+A successful request returns HTTP `200 OK` with the full updated gateway object.
+
+```json
+{
+  "id": "gw_abc123",
+  "name": "payments-gateway-v2",
+  "description": "Primary production gateway for the payments service.",
+  "status": "inactive",
+  "environment": "production",
+  "endpoint": "https://gw_abc123.mysoleas.io",
+  "created_at": "2024-01-15T10:00:00Z",
+  "updated_at": "2024-01-15T12:45:00Z"
+}
+```
+
+## Response Fields
+
+<ResponseField name="id" type="string">
+  The unique identifier for the gateway, prefixed with `gw_`.
+</ResponseField>
+
+<ResponseField name="name" type="string">
+  The updated name of the gateway.
+</ResponseField>
+
+<ResponseField name="description" type="string | null">
+  The updated description, or `null` if none is set.
+</ResponseField>
+
+<ResponseField name="status" type="string">
+  The current status of the gateway, reflecting any change you applied. One of `active` or `inactive`.
+</ResponseField>
+
+<ResponseField name="environment" type="string">
+  The environment the gateway belongs to. One of `development`, `staging`, or `production`. This field is never modified by an update request.
+</ResponseField>
+
+<ResponseField name="endpoint" type="string">
+  The publicly accessible URL for the gateway. This value does not change when you update a gateway.
+</ResponseField>
+
+<ResponseField name="created_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was originally created.
+</ResponseField>
+
+<ResponseField name="updated_at" type="string">
+  The ISO 8601 timestamp indicating when the gateway was last updated. This value reflects the time of your current update.
+</ResponseField>
+
+<Note>
+  The `environment` field is immutable and cannot be changed after a gateway is created. To use a different environment, create a new gateway with the desired `environment` value.
+</Note>
+
+<Warning>
+  Setting `status` to `inactive` immediately stops your gateway from accepting inbound traffic. Any requests to the gateway's endpoint will receive a `503 Service Unavailable` response until you restore the status to `active`.
+</Warning>

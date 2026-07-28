@@ -1,0 +1,78 @@
+---
+title: Gateway Policies and Traffic Control Rules
+sidebarTitle: Policies
+description: Understand how Mysoleas policies control authentication, rate limiting, transformations, access control, and caching for routes and gateways.
+---
+
+Policies are rules applied to routes that control how traffic is processed — including authentication, rate limiting, transformations, and more. By stacking policies on your routes, you define exactly what Mysoleas does to a request before it reaches your upstream and to a response before it returns to the caller.
+
+## Policy Types
+
+Mysoleas provides five categories of policies. Each category targets a distinct concern in your traffic control strategy.
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="lock">
+    Verify the caller's identity before forwarding the request. Supports **API key**, **JWT**, and **OAuth 2.0** authentication methods. Requests that fail authentication receive a `401 Unauthorized` response immediately — they never reach your upstream.
+  </Card>
+  <Card title="Rate Limiting" icon="gauge">
+    Cap how many requests a consumer or all consumers can make within a time window. Configure limits per second, per minute, or per hour. Apply limits globally across all consumers or override them per individual consumer.
+  </Card>
+  <Card title="Transformation" icon="shuffle">
+    Modify requests and responses in flight. Add, remove, or rewrite headers, reshape the request body, or rewrite the URL path before Mysoleas forwards the request upstream — and apply the same transformations to the response on the way back.
+  </Card>
+  <Card title="Access Control" icon="shield">
+    Restrict which callers can reach a route based on network or identity criteria. Configure IP allowlists and blocklists to permit or deny traffic by source address, or restrict access to specific consumer groups.
+  </Card>
+  <Card title="Caching" icon="database">
+    Cache upstream responses for a configurable TTL to reduce repeated load on your services. Define cache keys based on path, headers, or query parameters to control cache granularity.
+  </Card>
+</CardGroup>
+
+## Policy Scope
+
+You can attach a policy at two levels:
+
+<Tabs>
+  <Tab title="Gateway Level">
+    A gateway-level policy applies to **all routes** on that gateway. Use this scope for baseline rules that every request must pass — for example, requiring a valid API key on every endpoint before any route-specific logic runs.
+  </Tab>
+  <Tab title="Route Level">
+    A route-level policy applies only to requests that match that specific route. Use this scope to layer additional rules on sensitive endpoints, apply different rate limits to different paths, or cache responses only for read-heavy routes.
+  </Tab>
+</Tabs>
+
+When both gateway-level and route-level policies of the same type are present, the route-level policy takes precedence for requests that match that route.
+
+## Policy Evaluation Order
+
+Mysoleas always evaluates policies in a fixed order, regardless of when you attached them. This order ensures that unauthenticated or unauthorized requests are rejected before consuming rate limit budget or reaching your upstream.
+
+<Steps>
+  <Step title="Authentication">
+    Confirm the caller's identity. If authentication fails, Mysoleas returns `401` and stops processing.
+  </Step>
+  <Step title="Access Control">
+    Check IP allowlists/blocklists and consumer group restrictions. If the caller is blocked, Mysoleas returns `403` and stops processing.
+  </Step>
+  <Step title="Rate Limiting">
+    Verify the caller has not exceeded their request quota. If the limit is reached, Mysoleas returns `429 Too Many Requests` and stops processing.
+  </Step>
+  <Step title="Transformation">
+    Apply any request transformations — header rewrites, body modifications, URL rewrites — before forwarding.
+  </Step>
+  <Step title="Forward to Upstream">
+    Send the (potentially transformed) request to your upstream service and apply any response transformations before returning the result to the caller.
+  </Step>
+</Steps>
+
+## Stacking Policies
+
+<Note>
+  You can have multiple policies of **different types** active on the same route at the same time — for example, an API key authentication policy, a rate limiting policy, and a response header transformation policy all applied together. Policies of the same type (for example, two rate limiting policies) follow their own merging rules described in each policy's reference page.
+</Note>
+
+## Next Steps
+
+- Configure traffic quotas: [Rate Limiting Guide](/guides/rate-limiting)
+- Add authentication and access control: [Security Guide](/guides/security)
+- Rewrite headers and bodies: [Transformations Guide](/guides/transformations)

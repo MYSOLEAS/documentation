@@ -1,0 +1,150 @@
+---
+title: "Create and Configure Your First API Gateway"
+sidebarTitle: "Create Gateway"
+description: "Provision a new Mysoleas API gateway via the dashboard or management API, configure its environment, and verify your endpoint is live."
+---
+
+Whether you prefer a visual interface or prefer to automate everything through code, Mysoleas gives you two equally capable paths to create a gateway: the web dashboard and the management API. This guide walks you through both so you can pick the approach that fits your workflow, then confirms your gateway is ready to receive traffic.
+
+<Steps>
+
+  <Step title="Log in to the Mysoleas dashboard">
+    Open [https://mysoleas.com](https://mysoleas.com) in your browser and sign in with your credentials. Once authenticated, you land on the main dashboard overview.
+  </Step>
+
+  <Step title="Navigate to New Gateway">
+    In the left-hand sidebar, click **Gateways**, then click the **New Gateway** button in the top-right corner of the Gateways list.
+  </Step>
+
+  <Step title="Fill in gateway details">
+    Complete the creation form with the following information:
+
+    | Field | Description |
+    |---|---|
+    | **Name** | A short, memorable identifier for your gateway (e.g., `production-api`) |
+    | **Description** | A human-readable summary of what this gateway serves |
+    | **Environment** | Choose `development`, `staging`, or `production` |
+
+    Choosing the right environment tag helps you filter gateways and apply environment-specific defaults later.
+  </Step>
+
+  <Step title="Click Create">
+    Click the **Create** button. Mysoleas provisions your gateway endpoint immediately — no waiting for infrastructure to spin up. You are redirected to the gateway detail page where your unique endpoint URL is displayed.
+  </Step>
+
+  <Step title="Create via the management API (alternative)">
+    If you prefer to create gateways programmatically — for example, from a CI/CD pipeline — send a `POST` request to the `/gateways` endpoint instead.
+
+    <CodeGroup>
+
+    ```bash cURL
+    curl -X POST https://api.mysoleas.io/v1/gateways \
+      -H "Authorization: Bearer YOUR_API_KEY" \
+      -H "Content-Type: application/json" \
+      -d '{
+        "name": "my-gateway",
+        "description": "Production API gateway",
+        "environment": "production"
+      }'
+    ```
+
+    ```javascript Node.js
+    const response = await fetch("https://api.mysoleas.io/v1/gateways", {
+      method: "POST",
+      headers: {
+        "Authorization": "Bearer YOUR_API_KEY",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "my-gateway",
+        description: "Production API gateway",
+        environment: "production",
+      }),
+    });
+
+    const gateway = await response.json();
+    console.log(gateway);
+    ```
+
+    ```python Python
+    import requests
+
+    response = requests.post(
+        "https://api.mysoleas.io/v1/gateways",
+        headers={
+            "Authorization": "Bearer YOUR_API_KEY",
+            "Content-Type": "application/json",
+        },
+        json={
+            "name": "my-gateway",
+            "description": "Production API gateway",
+            "environment": "production",
+        },
+    )
+
+    print(response.json())
+    ```
+
+    </CodeGroup>
+
+    A successful response returns a `201 Created` status with the new gateway object:
+
+    ```json
+    {
+      "id": "gw_abc123",
+      "name": "my-gateway",
+      "status": "active",
+      "endpoint": "https://gw_abc123.mysoleas.io",
+      "environment": "production",
+      "created_at": "2024-01-15T10:00:00Z"
+    }
+    ```
+
+    <ParamField body="name" type="string" required>
+      A unique name for the gateway within your account.
+    </ParamField>
+
+    <ParamField body="description" type="string">
+      A human-readable description of the gateway's purpose.
+    </ParamField>
+
+    <ParamField body="environment" type="string" required>
+      The deployment environment. Accepted values: `development`, `staging`, `production`.
+    </ParamField>
+
+  </Step>
+
+  <Step title="Test your gateway endpoint">
+    Confirm the gateway is live by sending a request to its endpoint. Until you add routes, the gateway returns a `404` — that response is itself proof the gateway is up and handling traffic.
+
+    ```bash
+    curl -i https://gw_abc123.mysoleas.io
+    ```
+
+    You should receive:
+
+    ```
+    HTTP/2 404
+    content-type: application/json
+
+    {"message": "No route matched."}
+    ```
+
+    A `404` from the gateway is expected at this stage. A connection error, on the other hand, indicates the endpoint URL may have been copied incorrectly.
+  </Step>
+
+</Steps>
+
+<Tip>
+  Copy your gateway ID (e.g., `gw_abc123`) and endpoint URL and store them somewhere accessible — you'll reference them frequently when adding routes, policies, and consumers.
+</Tip>
+
+<Note>
+  The Free plan supports one active gateway. To create additional gateways for separate projects or environments, upgrade to a paid plan from **Account → Billing**.
+</Note>
+
+## Next steps
+
+Your gateway is provisioned and ready. The next step is to add routes so the gateway knows where to forward incoming requests.
+
+➡ [Add and Manage Routes on Your Gateway](/guides/manage-routes)
