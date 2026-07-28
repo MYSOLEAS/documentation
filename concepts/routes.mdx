@@ -1,5 +1,5 @@
 ---
-title: Understanding Routes in Mysoleas API Gateway
+title: "Routes in Mysoleas: Match, Forward, and Control Traffic"
 sidebarTitle: Routes
 description: Learn how routes match incoming requests to upstream services, configure path and method rules, and control forwarding behavior in Mysoleas API Gateway.
 ---
@@ -18,7 +18,7 @@ A route is built from five core fields. Configure each one to precisely control 
     The HTTP methods this route accepts. Choose any combination of `GET`, `POST`, `PUT`, `DELETE`, and `PATCH`. Requests using an unlisted method are not matched by this route.
   </Card>
   <Card title="upstream" icon="server">
-    The full backend URL that matching requests are forwarded to — for example, `https://internal.example.com/service`. Mysoleas proxies the request to this address after route matching and policy evaluation.
+    The full backend URL that matching requests are forwarded to — for example, `https://api.example.com/service`. Mysoleas proxies the request to this address after route matching and policy evaluation.
   </Card>
   <Card title="strip_path" icon="scissors">
     When set to `true`, Mysoleas removes the matched path prefix before forwarding the request. For example, a request to `/api/v1/users` matched by `/api/v1/*` would arrive at your upstream as `/users`.

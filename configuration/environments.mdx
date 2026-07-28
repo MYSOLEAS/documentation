@@ -1,5 +1,5 @@
 ---
-title: Manage Dev, Staging, and Production Environments
+title: Manage Development, Staging, and Production Environments
 sidebarTitle: Environments
 description: Isolate your API configurations across development, staging, and production environments so you can test changes safely before they reach real traffic.
 ---
@@ -88,7 +88,7 @@ The response is a self-contained JSON document describing all routes, policies, 
     {
       "path": "/v1/users",
       "methods": ["GET", "POST"],
-      "upstream": "https://users-service.internal",
+      "upstream": "https://users.example.com",
       "policies": {
         "authentication": { "type": "api_key" },
         "rate_limit": { "requests": 500, "window": "per_minute" }

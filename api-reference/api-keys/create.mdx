@@ -1,5 +1,5 @@
 ---
-title: "Issue an API Key to a Consumer — POST /consumers/{id}/api-keys"
+title: "Issue a New API Key — POST /consumers/{id}/api-keys"
 sidebarTitle: "Create API Key"
 description: "Generate a new API key for a consumer. The full key value is returned only once in this response — store it securely before proceeding."
 ---
@@ -88,22 +88,6 @@ Returns `201 Created` with the full API key object. This is the **only time** th
 }
 ```
 
----
-
-## Revoking a Key
-
-If a key is compromised or no longer needed, revoke it immediately with `PATCH /consumers/{consumer_id}/api-keys/{key_id}`. Revoked keys are rejected by the gateway instantly and cannot be re-activated.
-
-```bash
-curl --request PATCH \
-  --url "https://api.mysoleas.io/v1/consumers/con_123abc/api-keys/key_def456" \
-  --header "Authorization: Bearer YOUR_API_KEY" \
-  --header "Content-Type: application/json" \
-  --data '{
-    "status": "revoked"
-  }'
-```
-
 <Note>
-  Revoking a key does not delete it. The key record and its usage history remain visible in [GET /consumers/\{id\}/api-keys](/api-reference/api-keys/list) with `"status": "revoked"`, giving you a complete audit trail.
+  To view all keys you have issued to a consumer — including their current status and last-used timestamps — use [GET /consumers/\{id\}/api-keys](/api-reference/api-keys/list).
 </Note>

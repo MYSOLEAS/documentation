@@ -1,14 +1,14 @@
 ---
-title: "Get a Gateway by ID — GET /gateways/{id}"
+title: "Fetch a Gateway by ID — GET /gateways/{id} Endpoint"
 sidebarTitle: "Get Gateway"
-description: "Fetch the full details of a single gateway by its ID, including its status, environment, public endpoint URL, and timestamps."
+description: "Fetch the full details of a single gateway by its unique ID, including its current status, environment, public endpoint URL, and timestamps."
 ---
 
 The Get Gateway endpoint retrieves the complete details of a single gateway using its unique ID. Use this endpoint to inspect a gateway's current status, confirm its public endpoint URL, or fetch metadata before performing an update or deletion.
 
 **Endpoint**
 
-```
+```http
 GET https://api.mysoleas.io/v1/gateways/{id}
 ```
 

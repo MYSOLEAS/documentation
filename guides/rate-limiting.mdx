@@ -1,7 +1,7 @@
 ---
-title: "Configure Rate Limiting on Your API Routes"
+title: "Configure Route-Level Rate Limiting for Your API Gateway"
 sidebarTitle: "Rate Limiting"
-description: "Protect your upstream services from traffic spikes and abuse by applying gateway-level or route-level rate limiting policies with flexible window and scope options."
+description: "Protect your upstream services from traffic spikes and abuse by applying rate limiting policies at the gateway or route level with flexible scoping."
 ---
 
 Rate limiting protects your upstream APIs from overload and abuse by capping how many requests a client can make within a given time window. Without it, a single misconfigured client or malicious actor can saturate your backend and degrade service for everyone. Mysoleas supports two levels of rate limiting: **gateway-level** policies that apply to all routes on a gateway, and **route-level** policies that let you set different thresholds for individual routes based on their sensitivity or cost.
@@ -157,7 +157,7 @@ The override applies only to that consumer on that route. All other consumers co
 
 When a consumer exceeds their allowed request count, the gateway immediately returns a `429 Too Many Requests` response and does **not** forward the request to your upstream:
 
-```
+```http
 HTTP/2 429
 Content-Type: application/json
 Retry-After: 42

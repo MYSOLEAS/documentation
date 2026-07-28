@@ -1,5 +1,5 @@
 ---
-title: "Delete a Gateway — DELETE /gateways/{id}"
+title: "Delete an Existing Gateway — DELETE /gateways/{id}"
 sidebarTitle: "Delete Gateway"
 description: "Permanently delete a gateway and all its associated routes, policies, and consumer API keys. This action is immediate and cannot be undone."
 ---
@@ -8,7 +8,7 @@ The Delete Gateway endpoint permanently removes a gateway from your account alon
 
 **Endpoint**
 
-```
+```http
 DELETE https://api.mysoleas.io/v1/gateways/{id}
 ```
 
@@ -30,7 +30,7 @@ curl --request DELETE \
 
 A successful deletion returns HTTP `204 No Content` with an empty response body. If the specified gateway does not exist or does not belong to your account, the API returns `404 Not Found`.
 
-```
+```http
 HTTP/1.1 204 No Content
 ```
 

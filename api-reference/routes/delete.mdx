@@ -1,7 +1,7 @@
 ---
-title: "Delete a Route — DELETE /routes/{id}"
+title: "Delete a Route by ID — DELETE /routes/{route_id}"
 sidebarTitle: "Delete Route"
-description: "Permanently remove a route from a gateway by its ID. Deleting a route also removes all policies attached to it immediately."
+description: "Permanently remove a route from a gateway by its unique ID. Deleting a route also removes all attached policies, and the action cannot be undone."
 ---
 
 Deleting a route permanently removes it from the gateway along with any policies attached to it. This action cannot be undone. If you want to stop a route from matching requests without losing its configuration, consider setting its status to `inactive` using the [Update Route](/api-reference/routes/update) endpoint instead.

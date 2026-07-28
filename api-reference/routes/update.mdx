@@ -1,7 +1,7 @@
 ---
-title: "Update a Route Configuration — PUT /routes/{id}"
+title: "Modify Route Configuration — PUT /routes/{route_id}"
 sidebarTitle: "Update Route"
-description: "Modify one or more configuration fields of an existing route, including its upstream URL, path, methods, priority, and status."
+description: "Update an existing route's path, methods, upstream URL, priority, or status. Send only the fields you want to change — all others remain unchanged."
 ---
 
 Updating a route lets you change any part of its configuration without deleting and recreating it. You only need to include the fields you want to modify — any fields you omit retain their current values. Updates are applied immediately and affect all new incoming requests.

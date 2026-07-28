@@ -1,5 +1,5 @@
 ---
-title: "Transform Requests and Responses at the Gateway"
+title: "Transform Requests and Responses at the API Gateway Layer"
 sidebarTitle: "Transformations"
 description: "Modify request and response headers, query parameters, and URL paths at the gateway layer to adapt traffic to your upstreams without changing backend code."
 ---
@@ -24,7 +24,7 @@ curl -X POST https://api.mysoleas.io/v1/routes/{route_id}/policies \
         }
       },
       "remove": {
-        "headers": ["X-Internal-Token"]
+        "headers": ["X-Debug-Token"]
       }
     }
   }'

@@ -1,7 +1,7 @@
 ---
-title: "Get Started with Mysoleas API Gateway Fast"
+title: "Mysoleas API Gateway Quickstart: Up and Running in Minutes"
 sidebarTitle: Quickstart
-description: "Create your first Mysoleas gateway, add a route to an upstream service, and send a proxied request — all in under five minutes."
+description: "Create your first Mysoleas gateway, add a route to an upstream service, and send your first proxied request in under five minutes."
 ---
 
 This guide walks you through the fastest path to a working API gateway. By the end, you'll have a live gateway endpoint that proxies requests to an upstream service, with all traffic visible in your analytics dashboard.
@@ -76,13 +76,12 @@ This guide walks you through the fastest path to a working API gateway. By the e
   </Step>
 
   <Step title="Make a request through the gateway">
-    Call your gateway endpoint directly. Mysoleas forwards the request to the upstream URL and returns the response.
+    Call your gateway endpoint directly. Mysoleas forwards the request to the upstream URL and returns the response. Because no authentication plugin has been applied to this route yet, no consumer credentials are required.
 
     <CodeGroup>
       ```bash cURL
       curl --request GET \
-        --url https://gw_abc123.mysoleas.io/api/v1 \
-        --header 'x-api-key: YOUR_API_KEY'
+        --url https://gw_abc123.mysoleas.io/api/v1
       ```
 
       ```json Response
@@ -94,7 +93,7 @@ This guide walks you through the fastest path to a working API gateway. By the e
     </CodeGroup>
 
     <Note>
-      The `x-api-key` header here authenticates the **consumer** request through the gateway. This is separate from the `Authorization: Bearer` header used to manage the gateway via the REST API.
+      Replace `gw_abc123` with the `id` returned when you created your gateway. To require consumers to authenticate, add an authentication plugin to the route — see [Security](/guides/security).
     </Note>
   </Step>
 
