@@ -1,0 +1,71 @@
+---
+title: "Mysoleas API"
+description: "Integrez la nouvelle architecture Mysoleas avec une gateway unique et une authentification OAuth centralisee."
+---
+
+Mysoleas expose une architecture API modulaire pour accepter des paiements, envoyer des fonds, creer des liens de paiement, gerer des souscriptions et brancher des plugins marchands sans coupler votre application aux microservices internes.
+
+La nouvelle integration repose sur deux domaines publics:
+
+| Domaine | Role |
+| --- | --- |
+| `https://api.mysoleas.com` | Gateway applicative pour les paiements, services, pays et providers |
+| `https://account.mysoleas.com` | Authentification OAuth 2.0, jetons et informations utilisateur |
+
+<CardGroup cols={2}>
+  <Card title="Demarrer l'integration" icon="rocket" href="/quickstart">
+    Obtenez un jeton, choisissez un pays, listez les services et lancez votre premier paiement.
+  </Card>
+  <Card title="Comprendre l'architecture" icon="diagram-project" href="/api-docs/architecture">
+    Voyez comment la gateway, l'authentification et les services internes cooperent.
+  </Card>
+  <Card title="Plugin marchand" icon="puzzle-piece" href="/api-docs/plugin">
+    Utilisez le flux direct concu pour les plugins e-commerce et applications partenaires.
+  </Card>
+  <Card title="Reference API" icon="brackets-curly" href="/api-reference/introduction">
+    Retrouvez les endpoints, payloads et schemas pour chaque ressource.
+  </Card>
+</CardGroup>
+
+## Ce que vous pouvez construire
+
+### Encaisser
+
+Utilisez les collections pour demander un paiement au client. Mysoleas retourne une reference, pilote le provider et vous laisse suivre le statut jusqu'a l'etat final.
+
+### Decaisser
+
+Utilisez les disbursements pour envoyer des fonds depuis votre solde Mysoleas vers un wallet client. Le flux verifie le solde, reserve les fonds, execute le payout, puis synchronise le statut.
+
+### Automatiser
+
+Utilisez les souscriptions pour facturer un client a une frequence definie. Chaque paiement de souscription possede sa propre reference et son propre statut.
+
+### Simplifier le checkout
+
+Utilisez les liens de paiement pour creer une URL partageable. Le client paie sur une page publique, pendant que votre backend conserve la reference et suit l'evolution.
+
+## Convention de reponse
+
+Les APIs applicatives renvoient une enveloppe JSON stable.
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {},
+  "locale": "fr",
+  "message": "transaction_submitted",
+  "meta": {}
+}
+```
+
+En cas d'erreur, `success` vaut `false` et `message` contient la raison exploitable par votre backend.
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "message": "empty_data"
+}
+```

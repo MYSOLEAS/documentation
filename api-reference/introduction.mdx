@@ -1,0 +1,57 @@
+---
+title: "Introduction"
+description: "Reference technique de la nouvelle API Mysoleas."
+---
+
+La reference API de Mysoleas est organisee autour de deux serveurs.
+
+| Serveur | URL |
+| --- | --- |
+| Gateway | `https://api.mysoleas.com` |
+| Auth | `https://account.mysoleas.com` |
+
+Toutes les routes gateway protegees utilisent `Authorization: Bearer <access_token>`.
+
+Les routes publiques de paiement par lien sont:
+
+- `GET /pay/{shortCode}`;
+- `POST /pay/{shortCode}/pay`.
+
+## Format de succes
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {},
+  "locale": "fr",
+  "message": "transaction_submitted"
+}
+```
+
+## Format d'erreur
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "message": "empty_data"
+}
+```
+
+## Pagination
+
+Les listes acceptent generalement `page` et `limit`. La reponse peut contenir `meta.pagination`.
+
+```json
+{
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 120,
+    "pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```

@@ -1,0 +1,58 @@
+---
+title: "Webhooks"
+description: "Recevoir les changements de statut sans dependre uniquement du polling."
+---
+
+Les endpoints de statut sont toujours disponibles. Pour une experience plus reactive, configurez aussi une URL de notification cote marchand lorsque votre dashboard ou votre integration le permet.
+
+## Role du webhook
+
+Un webhook informe votre backend lorsqu'une transaction change d'etat. Il ne remplace pas votre endpoint de statut; il le complete.
+
+Votre traitement webhook doit:
+
+- repondre rapidement avec HTTP `200`;
+- etre idempotent;
+- enregistrer le payload brut;
+- verifier ensuite le statut via l'API Mysoleas si l'action est sensible;
+- ignorer les duplications deja traitees.
+
+## Payload recommande cote marchand
+
+Selon le provider et le flux, le payload peut varier. Structurez votre traitement autour des champs stables.
+
+```json
+{
+  "transaction_reference": "TRX-20260728-000001",
+  "invoice_reference": "MS-10045",
+  "provider_reference": "PROVIDER-998877",
+  "operation": "COLLECTION",
+  "status": "COMPLETED",
+  "amount": 2500,
+  "currency": "XAF",
+  "updated_at": "2026-07-28T13:20:12+01:00"
+}
+```
+
+## Verification defensive
+
+Apres reception d'un webhook critique, appelez le statut.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/status" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "transaction_reference": "TRX-20260728-000001" }'
+```
+
+Cette verification evite de traiter un payload incomplet ou un webhook rejoue.
+
+## Reponse attendue
+
+Votre endpoint webhook doit retourner `200` des que l'evenement est bien recu.
+
+```json
+{
+  "received": true
+}
+```

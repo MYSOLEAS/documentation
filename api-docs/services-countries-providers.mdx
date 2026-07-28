@@ -1,0 +1,92 @@
+---
+title: "Services, pays et providers"
+description: "Identifier les pays disponibles, choisir un service et verifier le statut des providers."
+---
+
+Avant de lancer un paiement, votre backend doit connaitre trois choses:
+
+- le pays actif;
+- le service de paiement a utiliser;
+- le statut operationnel du provider.
+
+## Lister les pays
+
+```bash
+curl "https://api.mysoleas.com/country/list?page=1&limit=100" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Un pays utilisable doit avoir `active: true`.
+
+```json
+{
+  "id": 1,
+  "code": "CM",
+  "name": "Cameroon",
+  "active": true
+}
+```
+
+## Lister les services
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CM&currency=XAF" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Un service de paiement retourne les capacites dont votre integration a besoin.
+
+| Champ | Role |
+| --- | --- |
+| `code` | Valeur a envoyer dans `provider` lors d'une transaction |
+| `provider` | Provider technique qui execute l'operation |
+| `country` | Pays du service |
+| `currency` | Devise |
+| `is_active` | Le service est disponible cote Mysoleas |
+| `is_public` | Le service peut etre expose aux marchands |
+| `is_need_otp` | L'execution demande `otp` |
+| `is_can_collect` | Le service accepte les collections |
+| `is_can_disburse` | Le service accepte les disbursements |
+| `confirmation_method` | `MSISDN`, `LINK` ou `QRCODE` |
+
+## Lister les providers
+
+```bash
+curl "https://api.mysoleas.com/provider/list?page=1&limit=100" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Le statut d'un provider se lit dans `is_active`.
+
+```json
+{
+  "id": 1,
+  "code": "MTN_CMR",
+  "name": "MTN Cameroon",
+  "is_active": true,
+  "countries": ["CM"],
+  "updated_at": "2026-07-28 13:20:10"
+}
+```
+
+## Choisir correctement
+
+Pour une collection:
+
+1. Verifiez que le pays est actif.
+2. Filtrez les services par `country` et `currency`.
+3. Gardez les services avec `is_active: true` et `is_can_collect: true`.
+4. Si `is_need_otp` vaut `true`, demandez l'OTP au client avant `execute`.
+5. Envoyez `service.code` dans le champ `provider`.
+
+Pour un disbursement:
+
+1. Verifiez que le pays est actif.
+2. Filtrez les services par `country` et `currency`.
+3. Gardez les services avec `is_active: true` et `is_can_disburse: true`.
+4. Verifiez votre solde avant de lancer de gros volumes.
+5. Envoyez `service.code` dans le champ `provider`.
+
+## Provider inactif
+
+Si `is_active` vaut `false`, masquez le moyen de paiement dans votre checkout. Si un provider devient indisponible apres la selection du client, affichez un message clair et proposez un autre service actif du meme pays.

@@ -1,107 +1,128 @@
 ---
-title: "Mysoleas API Gateway Quickstart: Up and Running in Minutes"
-sidebarTitle: Quickstart
-description: "Create your first Mysoleas gateway, add a route to an upstream service, and send your first proxied request in under five minutes."
+title: "Demarrage rapide"
+description: "Le chemin le plus court pour appeler la nouvelle architecture Mysoleas en production."
 ---
 
-This guide walks you through the fastest path to a working API gateway. By the end, you'll have a live gateway endpoint that proxies requests to an upstream service, with all traffic visible in your analytics dashboard.
+Ce guide vous accompagne de l'authentification jusqu'au suivi d'une premiere transaction.
 
-<Note>
-  **Prerequisites:** You need a Mysoleas account and a management API key before you begin. If you don't have one yet, see [Authentication](/authentication) to generate your first API key.
-</Note>
+## 1. Preparez vos domaines
 
-<Steps>
-  <Step title="Create your first gateway">
-    Send a `POST` request to `/gateways` to provision a new gateway instance. Replace `YOUR_API_KEY` with your management API key.
+Toutes les requetes de paiement partent vers la gateway.
 
-    <CodeGroup>
-      ```bash cURL
-      curl --request POST \
-        --url https://api.mysoleas.io/v1/gateways \
-        --header 'Authorization: Bearer YOUR_API_KEY' \
-        --header 'Content-Type: application/json' \
-        --data '{
-          "name": "my-gateway",
-          "description": "My first gateway"
-        }'
-      ```
+```txt
+https://api.mysoleas.com
+```
 
-      ```json Response
-      {
-        "id": "gw_abc123",
-        "name": "my-gateway",
-        "status": "active",
-        "endpoint": "https://gw_abc123.mysoleas.io",
-        "created_at": "2024-01-15T10:00:00Z"
-      }
-      ```
-    </CodeGroup>
+Toutes les requetes OAuth partent vers le service d'authentification.
 
-    Copy the `id` and `endpoint` from the response — you'll use both in the next steps.
-
-    <Tip>
-      The `endpoint` value is the public URL your consumers will call. Keep it handy.
-    </Tip>
-  </Step>
-
-  <Step title="Add a route">
-    Define a route that maps an inbound path on your gateway to an upstream URL. Replace `gw_abc123` with the gateway `id` you received above.
-
-    <CodeGroup>
-      ```bash cURL
-      curl --request POST \
-        --url https://api.mysoleas.io/v1/gateways/gw_abc123/routes \
-        --header 'Authorization: Bearer YOUR_API_KEY' \
-        --header 'Content-Type: application/json' \
-        --data '{
-          "name": "api-route",
-          "path": "/api/v1",
-          "upstream": "https://api.example.com",
-          "methods": ["GET", "POST"]
-        }'
-      ```
-
-      ```json Response
-      {
-        "id": "rt_xyz789",
-        "name": "api-route",
-        "path": "/api/v1",
-        "upstream": "https://api.example.com",
-        "status": "active"
-      }
-      ```
-    </CodeGroup>
-
-    Any `GET` or `POST` request to `https://gw_abc123.mysoleas.io/api/v1` will now proxy to `https://api.example.com`.
-  </Step>
-
-  <Step title="Make a request through the gateway">
-    Call your gateway endpoint directly. Mysoleas forwards the request to the upstream URL and returns the response. Because no authentication plugin has been applied to this route yet, no consumer credentials are required.
-
-    <CodeGroup>
-      ```bash cURL
-      curl --request GET \
-        --url https://gw_abc123.mysoleas.io/api/v1
-      ```
-
-      ```json Response
-      {
-        "message": "Hello from your upstream service!",
-        "status": 200
-      }
-      ```
-    </CodeGroup>
-
-    <Note>
-      Replace `gw_abc123` with the `id` returned when you created your gateway. To require consumers to authenticate, add an authentication plugin to the route — see [Security](/guides/security).
-    </Note>
-  </Step>
-
-  <Step title="Verify in the dashboard">
-    Open the [Mysoleas dashboard](https://dashboard.mysoleas.io) and navigate to **Gateways → my-gateway → Analytics**. You'll see the request you just made appear in the traffic log with status code, latency, and upstream response details.
-  </Step>
-</Steps>
+```txt
+https://account.mysoleas.com
+```
 
 <Tip>
-  Ready to go further? Learn how to enforce [rate limiting](/guides/rate-limiting) on your routes, lock down traffic with [security policies](/guides/security), or track trends in [analytics](/guides/analytics).
+  Stockez ces URLs dans des variables d'environnement. Cela rend vos tests, vos workers et votre backoffice plus faciles a maintenir.
 </Tip>
+
+## 2. Obtenez un access token
+
+Pour une integration serveur a serveur, utilisez le grant `client_credentials`.
+
+```bash
+curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "client_credentials",
+    "client_id": "YOUR_CLIENT_ID",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "scope": "payments services countries providers"
+  }'
+```
+
+La reponse contient un `access_token`.
+
+```json
+{
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "access_token": "eyJ..."
+}
+```
+
+## 3. Appelez la gateway
+
+Transmettez le jeton dans `Authorization`.
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CM&currency=XAF" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Accept: application/json"
+```
+
+Vous pouvez aussi transmettre des headers de contexte lorsque votre application gere plusieurs environnements ou pays.
+
+| Header | Usage |
+| --- | --- |
+| `Authorization` | Jeton Bearer obligatoire |
+| `X-Request-Id` | Identifiant de trace cote marchand |
+| `X-Idempotency-Key` | Cle d'idempotence explicite pour les operations sensibles |
+| `X-SP-Country` | Pays actif, par exemple `CM` |
+| `X-SP-Environment` | Environnement logique, par exemple `prod` ou `dev` |
+
+## 4. Choisissez un service
+
+Listez les services disponibles avant de creer une transaction. Le champ `code` du service devient la valeur `provider` dans les payloads de paiement.
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CM&currency=XAF" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Un service utilisable pour une collection doit avoir `is_active: true` et `is_can_collect: true`.
+
+Un service utilisable pour un disbursement doit avoir `is_active: true` et `is_can_disburse: true`.
+
+## 5. Lancez une collection
+
+Le flux standard se fait en trois appels: `intent`, `execute`, puis `status`.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/intent" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 2500,
+    "currency": "XAF",
+    "transaction_uuid": "2f8b9a68-1ad3-4a0c-a187-40b91a4c44a1",
+    "provider": "CM_MTN_MOMO",
+    "channel": "PROVIDER",
+    "customer_wallet": "237670000000",
+    "description": "Commande MS-10045"
+  }'
+```
+
+La reponse contient `transaction_reference`. Utilisez cette valeur pour executer et suivre la transaction.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/execute" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_reference": "TRX-20260728-000001",
+    "invoice_reference": "MS-10045"
+  }'
+```
+
+## 6. Suivez le statut
+
+Interrogez le statut jusqu'a obtenir un etat final.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/status" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_reference": "TRX-20260728-000001"
+  }'
+```
+
+Les etats finaux sont `COMPLETED`, `SUCCESS`, `FAILED`, `CANCELLED` et `REFUNDED`.

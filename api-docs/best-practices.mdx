@@ -1,0 +1,48 @@
+---
+title: "Bonnes pratiques"
+description: "Rendre votre integration Mysoleas fiable, lisible et facile a maintenir."
+---
+
+## Rendez chaque paiement tracable
+
+Conservez toujours ces valeurs dans votre base:
+
+| Valeur | Pourquoi |
+| --- | --- |
+| `transaction_uuid` | Identifier votre tentative locale |
+| `transaction_reference` | Suivre la transaction chez Mysoleas |
+| `invoice_reference` | Relier le paiement a votre commande |
+| `provider_reference` | Diagnostiquer les cas provider |
+| `status` | Piloter votre logique metier |
+
+## Utilisez l'idempotence
+
+Ne genereez pas un nouveau `transaction_uuid` apres un timeout. Rejouez la meme intention avec le meme UUID, puis appelez le statut.
+
+Pour les souscriptions, envoyez aussi `X-Idempotency-Key` ou `idempotency_key` lorsque votre systeme peut rejouer une creation.
+
+## Ne bloquez pas votre checkout
+
+Les providers mobile money peuvent prendre quelques secondes ou plusieurs minutes. Affichez un etat d'attente et laissez votre backend suivre `status`.
+
+## Cachez le catalogue prudemment
+
+Vous pouvez cacher les pays, services et providers pendant quelques minutes. Ne les cachez pas trop longtemps, car `is_active` peut changer.
+
+## Interpretez les statuts correctement
+
+Validez une commande uniquement sur `COMPLETED` ou `SUCCESS`. Ne validez pas sur `SUBMITTED` ou `PROCESSING`.
+
+## Journalisez les erreurs utiles
+
+Pour chaque erreur, conservez:
+
+- endpoint appele;
+- payload hors donnees sensibles;
+- `transaction_reference`;
+- `invoice_reference`;
+- `X-Request-Id`;
+- reponse Mysoleas;
+- date de l'appel.
+
+Ces informations reduisent fortement le temps de resolution avec le support.

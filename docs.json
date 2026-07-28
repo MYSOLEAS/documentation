@@ -1,114 +1,174 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "name": "Mysoleas API Gateway",
-  "theme": "luma",
+  "theme": "willow",
+  "name": "Mysoleas API",
   "colors": {
     "primary": "#ef7025",
     "light": "#eec9bc",
     "dark": "#4fa1ab"
   },
   "favicon": "/favicon.svg",
-  "navbar": {
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://mysoleas.com/dashboard"
-    }
-  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Documentation",
+        "tab": "Api Docs",
         "groups": [
           {
-            "group": "Get Started",
+            "group": "Demarrer",
             "pages": [
-              "introduction",
+              "index",
               "quickstart",
-              "authentication"
+              "api-docs/architecture",
+              "api-docs/authentication"
             ]
           },
           {
-            "group": "Core Concepts",
+            "group": "Paiements",
             "pages": [
-              "concepts/gateway",
-              "concepts/routes",
-              "concepts/policies",
-              "concepts/consumers"
+              "api-docs/plugin",
+              "api-docs/payment-links",
+              "api-docs/subscriptions",
+              "api-docs/collections",
+              "api-docs/disbursements",
+              "api-docs/transaction-statuses"
             ]
           },
           {
-            "group": "Guides",
+            "group": "Catalogue",
             "pages": [
-              "guides/create-gateway",
-              "guides/manage-routes",
-              "guides/rate-limiting",
-              "guides/security",
-              "guides/transformations",
-              "guides/analytics"
-            ]
-          },
-          {
-            "group": "Configuration",
-            "pages": [
-              "configuration/environments",
-              "configuration/plugins",
-              "configuration/webhooks"
-            ]
-          },
-          {
-            "group": "Support",
-            "pages": [
-              "troubleshooting",
-              "faq"
+              "api-docs/services-countries-providers",
+              "api-docs/webhooks",
+              "api-docs/best-practices"
             ]
           }
         ]
       },
       {
-        "tab": "API Reference",
+        "tab": "Api reference",
         "groups": [
           {
-            "group": "Overview",
+            "group": "Introduction",
             "pages": [
-              "api-reference/overview",
-              "api-reference/errors"
+              "api-reference/introduction"
             ]
           },
           {
-            "group": "Gateways",
+            "group": "Auth",
             "pages": [
-              "api-reference/gateways/list",
-              "api-reference/gateways/create",
-              "api-reference/gateways/get",
-              "api-reference/gateways/update",
-              "api-reference/gateways/delete"
+              "api-reference/auth/discovery",
+              "api-reference/auth/token",
+              "api-reference/auth/userinfo",
+              "api-reference/auth/introspect",
+              "api-reference/auth/revoke"
             ]
           },
           {
-            "group": "Routes",
+            "group": "Plugin",
             "pages": [
-              "api-reference/routes/list",
-              "api-reference/routes/create",
-              "api-reference/routes/get",
-              "api-reference/routes/update",
-              "api-reference/routes/delete"
+              "api-reference/gateway/plugin-collection",
+              "api-reference/gateway/plugin-status",
+              "api-reference/gateway/plugin-services"
             ]
           },
           {
-            "group": "Consumers & Keys",
+            "group": "Liens de paiement",
             "pages": [
-              "api-reference/consumers/list",
-              "api-reference/consumers/create",
-              "api-reference/api-keys/list",
-              "api-reference/api-keys/create"
+              "api-reference/gateway/payment-link-create",
+              "api-reference/gateway/payment-link-list",
+              "api-reference/gateway/payment-link-public",
+              "api-reference/gateway/payment-link-pay"
+            ]
+          },
+          {
+            "group": "Souscriptions",
+            "pages": [
+              "api-reference/gateway/subscription-create",
+              "api-reference/gateway/subscription-list",
+              "api-reference/gateway/subscription-detail",
+              "api-reference/gateway/subscription-suspend",
+              "api-reference/gateway/subscription-reactivate",
+              "api-reference/gateway/subscription-cancel",
+              "api-reference/gateway/subscription-payments",
+              "api-reference/gateway/subscription-payment-detail",
+              "api-reference/gateway/subscribers"
+            ]
+          },
+          {
+            "group": "Collections",
+            "pages": [
+              "api-reference/gateway/collection-intent",
+              "api-reference/gateway/collection-execute",
+              "api-reference/gateway/collection-status"
+            ]
+          },
+          {
+            "group": "Disbursements",
+            "pages": [
+              "api-reference/gateway/disbursement-intent",
+              "api-reference/gateway/disbursement-execute",
+              "api-reference/gateway/disbursement-status"
+            ]
+          },
+          {
+            "group": "Catalogue",
+            "pages": [
+              "api-reference/catalog/services-list",
+              "api-reference/catalog/countries-list",
+              "api-reference/catalog/providers-list"
             ]
           }
         ]
       }
+    ],
+    "global": {
+      "anchors": [
+        {
+          "anchor": "Mysoleas",
+          "href": "https://mysoleas.com",
+          "icon": "globe"
+        },
+        {
+          "anchor": "Support",
+          "href": "mailto:support@mysoleas.com",
+          "icon": "life-ring"
+        }
+      ]
+    }
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "navbar": {
+    "links": [
+      {
+        "label": "Support",
+        "href": "mailto:support@mysoleas.com"
+      }
+    ],
+    "primary": {
+      "type": "button",
+      "label": "Dashboard",
+      "href": "https://account.mysoleas.com"
+    }
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "mcp",
+      "cursor",
+      "vscode"
     ]
   },
   "footer": {
-    "socials": {}
+    "socials": {
+      "website": "https://mysoleas.com",
+      "github": "https://github.com/MYSOLEAS",
+      "linkedin": "https://cm.linkedin.com/company/mysoleas"
+    }
   }
 }

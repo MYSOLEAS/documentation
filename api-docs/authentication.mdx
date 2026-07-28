@@ -1,0 +1,83 @@
+---
+title: "Authentification"
+description: "Obtenir, transmettre et verifier les jetons OAuth de Mysoleas."
+---
+
+Mysoleas utilise OAuth 2.0. Le service public d'authentification est:
+
+```txt
+https://account.mysoleas.com
+```
+
+## Choisir le bon flow
+
+| Flow | Quand l'utiliser |
+| --- | --- |
+| `client_credentials` | Backend marchand, worker, plugin serveur, synchronisation de statut |
+| `authorization_code` avec PKCE | Application qui agit au nom d'un utilisateur connecte |
+| `refresh_token` | Renouveler une session longue sans redemander les identifiants |
+
+Pour la plupart des integrations de paiement serveur a serveur, commencez avec `client_credentials`.
+
+## Demander un token
+
+```bash
+curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "client_credentials",
+    "client_id": "YOUR_CLIENT_ID",
+    "client_secret": "YOUR_CLIENT_SECRET",
+    "scope": "payments services countries providers"
+  }'
+```
+
+La reponse suit le format OAuth.
+
+```json
+{
+  "token_type": "Bearer",
+  "expires_in": 3600,
+  "access_token": "eyJ..."
+}
+```
+
+## Appeler l'API
+
+Toutes les routes gateway protegees attendent le jeton dans `Authorization`.
+
+```bash
+curl "https://api.mysoleas.com/service/list" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Accept: application/json"
+```
+
+## Utiliser les headers de contexte
+
+Ces headers sont utiles pour les integrations multi-pays, les environnements separes et le debogage.
+
+| Header | Description |
+| --- | --- |
+| `Authorization` | Jeton Bearer |
+| `X-Request-Id` | Trace id cree par votre systeme |
+| `X-Idempotency-Key` | Cle d'idempotence externe quand l'endpoint la supporte |
+| `X-SP-Country` | Pays actif, par exemple `CM` |
+| `X-SP-Environment` | `prod` ou `dev` |
+
+## Decouverte OAuth
+
+Vous pouvez lire les metadonnees OAuth et OIDC.
+
+```bash
+curl "https://account.mysoleas.com/.well-known/openid-configuration"
+```
+
+Cette route indique les endpoints officiels de token, introspection, revocation, JWKS et userinfo.
+
+## Bonnes pratiques
+
+- Ne mettez jamais `client_secret` dans le navigateur.
+- Renouvelez le token avant expiration.
+- Stockez les tokens en memoire ou dans un coffre adapte a votre backend.
+- Utilisez une cle d'idempotence stable pour toute operation qui peut etre rejouee apres timeout.
+- Loggez `transaction_reference`, `invoice_reference` et `X-Request-Id` ensemble.

@@ -1,0 +1,94 @@
+---
+title: "Disbursements"
+description: "Envoyer des fonds depuis votre compte Mysoleas vers un wallet client."
+---
+
+Un disbursement est une operation Pay-Out. Mysoleas verifie votre solde, reserve le montant et les frais, execute le transfert chez le provider, puis libere ou consolide les fonds selon le resultat.
+
+## Workflow
+
+```mermaid
+sequenceDiagram
+  participant App as Votre backend
+  participant Gateway as Gateway
+  participant Wallet as Wallet
+  participant Provider as Provider
+  App->>Gateway: POST /disbursement/intent
+  Gateway->>Wallet: verification solde
+  Gateway-->>App: transaction_reference + fee
+  App->>Gateway: POST /disbursement/execute
+  Gateway->>Wallet: reserve amount + fee
+  Gateway->>Provider: payout
+  Gateway-->>App: status
+  App->>Gateway: POST /disbursement/status
+  Gateway-->>App: status final ou intermediaire
+```
+
+## 1. Creer l'intention
+
+```bash
+curl -X POST "https://api.mysoleas.com/disbursement/intent" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 10000,
+    "currency": "XAF",
+    "transaction_uuid": "0798ab17-9f53-4895-9ea3-0c327fa8efb1",
+    "provider": "CM_MTN_MOMO",
+    "channel": "PROVIDER",
+    "customer_wallet": "237670000000",
+    "description": "Remboursement commande MS-10045"
+  }'
+```
+
+La reponse inclut `fee` et `required_total`. Votre wallet doit couvrir `amount + fee`.
+
+## 2. Executer
+
+```bash
+curl -X POST "https://api.mysoleas.com/disbursement/execute" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_reference": "TRX-20260728-000021",
+    "invoice_reference": "PAYOUT-10045"
+  }'
+```
+
+Pendant l'execution provider, les fonds sont reserves. Si le provider echoue, Mysoleas tente de relacher les fonds reserves.
+
+## 3. Verifier le statut
+
+```bash
+curl -X POST "https://api.mysoleas.com/disbursement/status" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "transaction_reference": "TRX-20260728-000021" }'
+```
+
+## Reponse type
+
+```json
+{
+  "transaction_reference": "TRX-20260728-000021",
+  "environment": "prod",
+  "invoice_reference": "PAYOUT-10045",
+  "provider_reference": "PROVIDER-998877",
+  "status": "PROCESSING",
+  "operation": "DISBURSEMENT",
+  "channel": "PROVIDER",
+  "amount": 10000,
+  "currency": "XAF",
+  "created_at": "2026-07-28 13:20:10",
+  "updated_at": "2026-07-28 13:20:12"
+}
+```
+
+## Erreurs frequentes
+
+| Message | Cause probable |
+| --- | --- |
+| `provider_not_found` | Service inactif, inexistant ou non autorise pour le payout |
+| `user_wallet_not_found` | Aucun wallet marchand compatible avec la devise et le pays |
+| `insufficient_balance` | Solde disponible insuffisant pour `amount + fee` |
+| `transaction_not_found` | Reference inexistante ou rattachee a un autre tenant |

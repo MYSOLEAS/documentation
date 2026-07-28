@@ -1,0 +1,1192 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Mysoleas API",
+    "version": "3.0.0",
+    "description": "Nouvelle architecture Mysoleas: gateway de paiement et authentification OAuth 2.0."
+  },
+  "servers": [
+    {
+      "url": "https://api.mysoleas.com",
+      "description": "Gateway Mysoleas"
+    },
+    {
+      "url": "https://account.mysoleas.com",
+      "description": "Authentification Mysoleas"
+    }
+  ],
+  "tags": [
+    { "name": "Auth" },
+    { "name": "Plugin" },
+    { "name": "Payment links" },
+    { "name": "Subscriptions" },
+    { "name": "Collections" },
+    { "name": "Disbursements" },
+    { "name": "Catalog" }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/.well-known/openid-configuration": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Lire la configuration OpenID Connect",
+        "description": "Retourne les endpoints OAuth, les grants supportes, les scopes et la cle JWKS.",
+        "security": [],
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "responses": {
+          "200": {
+            "description": "Configuration OIDC",
+            "content": {
+              "application/json": {
+                "example": {
+                  "issuer": "https://account.mysoleas.com",
+                  "token_endpoint": "https://account.mysoleas.com/oauth/v2/token",
+                  "introspection_endpoint": "https://account.mysoleas.com/oauth/v2/introspect",
+                  "revocation_endpoint": "https://account.mysoleas.com/oauth/v2/revoke",
+                  "jwks_uri": "https://account.mysoleas.com/oauth/jwks",
+                  "grant_types_supported": ["authorization_code", "client_credentials", "refresh_token"],
+                  "code_challenge_methods_supported": ["S256"]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/v2/token": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Obtenir un access token",
+        "description": "Supporte `authorization_code`, `client_credentials` et `refresh_token`.",
+        "security": [],
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OAuthTokenRequest" },
+              "example": {
+                "grant_type": "client_credentials",
+                "client_id": "YOUR_CLIENT_ID",
+                "client_secret": "YOUR_CLIENT_SECRET",
+                "scope": "payments services countries providers"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Token genere",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/OAuthTokenResponse" }
+              }
+            }
+          },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/oauth/v2/userinfo": {
+      "get": {
+        "tags": ["Auth"],
+        "summary": "Lire les claims utilisateur",
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "responses": {
+          "200": {
+            "description": "Claims utilisateur",
+            "content": {
+              "application/json": {
+                "example": {
+                  "sub": "user_123",
+                  "api_key": "spk_live_xxx",
+                  "email": "merchant@example.com",
+                  "email_verified": true,
+                  "tenant_id": "tenant_123",
+                  "tier": 6
+                }
+              }
+            }
+          },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/oauth/v2/introspect": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Introspecter un token",
+        "security": [],
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OAuthIntrospectRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Resultat d'introspection",
+            "content": {
+              "application/json": {
+                "example": {
+                  "active": true,
+                  "scope": "payments services",
+                  "client_id": "client_123",
+                  "sub": "user_123",
+                  "exp": 1785230000,
+                  "token_type": "Bearer"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/oauth/v2/revoke": {
+      "post": {
+        "tags": ["Auth"],
+        "summary": "Revoquer un token",
+        "security": [],
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/OAuthRevokeRequest" }
+            }
+          }
+        },
+        "responses": {
+          "204": { "description": "Token revoque" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "401": { "$ref": "#/components/responses/Unauthorized" }
+        }
+      }
+    },
+    "/merchand/collection": {
+      "post": {
+        "tags": ["Plugin"],
+        "summary": "Creer et executer une collection plugin",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PluginCollectionRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "404": { "$ref": "#/components/responses/NotFound" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/merchand/status": {
+      "post": {
+        "tags": ["Plugin"],
+        "summary": "Verifier le statut d'une collection plugin",
+        "requestBody": { "$ref": "#/components/requestBodies/TransactionStatus" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/merchand/services": {
+      "get": {
+        "tags": ["Plugin", "Catalog"],
+        "summary": "Lister les services autorises pour le plugin",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ServiceListSuccess" }
+        }
+      }
+    },
+    "/payment-links": {
+      "post": {
+        "tags": ["Payment links"],
+        "summary": "Creer un lien de paiement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentLinkCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/PaymentLinkSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      },
+      "get": {
+        "tags": ["Payment links"],
+        "summary": "Lister les liens de paiement du marchand",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PaymentLinkListSuccess" }
+        }
+      }
+    },
+    "/pay/{shortCode}": {
+      "get": {
+        "tags": ["Payment links"],
+        "summary": "Lire un lien de paiement public",
+        "security": [],
+        "parameters": [{ "$ref": "#/components/parameters/ShortCode" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/PublicPaymentLinkSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/pay/{shortCode}/pay": {
+      "post": {
+        "tags": ["Payment links"],
+        "summary": "Payer un lien de paiement",
+        "security": [],
+        "parameters": [{ "$ref": "#/components/parameters/ShortCode" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentLinkPayRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/merchand/billing/subscribe": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Creer une souscription",
+        "parameters": [{ "$ref": "#/components/parameters/XIdempotencyKey" }],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/SubscriptionCreateRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriptionSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/merchand/billing/subscriptions": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Lister les souscriptions marchand",
+        "parameters": [
+          { "$ref": "#/components/parameters/SubscriptionStatus" },
+          { "$ref": "#/components/parameters/CustomerEmail" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriptionListSuccess" }
+        }
+      }
+    },
+    "/merchand/billing/subscriptions/detail/{reference}": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Lire le detail d'une souscription",
+        "parameters": [
+          { "$ref": "#/components/parameters/Reference" },
+          {
+            "name": "for",
+            "in": "query",
+            "schema": { "type": "string", "enum": ["merchant", "desc"] },
+            "description": "Utilisez `merchant` pour lire le detail cote marchand."
+          }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriptionDetailSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/merchand/billing/subscriptions/suspend/{reference}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Suspendre une souscription",
+        "parameters": [{ "$ref": "#/components/parameters/Reference" }],
+        "requestBody": { "$ref": "#/components/requestBodies/UpdateSubscription" },
+        "responses": { "200": { "$ref": "#/components/responses/SubscriptionSuccess" } }
+      }
+    },
+    "/merchand/billing/subscriptions/reactivate/{reference}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Reactiver une souscription",
+        "parameters": [{ "$ref": "#/components/parameters/Reference" }],
+        "requestBody": { "$ref": "#/components/requestBodies/UpdateSubscription" },
+        "responses": { "200": { "$ref": "#/components/responses/SubscriptionSuccess" } }
+      }
+    },
+    "/merchand/billing/subscriptions/cancel/{reference}": {
+      "post": {
+        "tags": ["Subscriptions"],
+        "summary": "Annuler une souscription",
+        "parameters": [{ "$ref": "#/components/parameters/Reference" }],
+        "requestBody": { "$ref": "#/components/requestBodies/UpdateSubscription" },
+        "responses": { "200": { "$ref": "#/components/responses/SubscriptionSuccess" } }
+      }
+    },
+    "/merchand/billing/subscriptions/payments/{reference}": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Lister les paiements d'une souscription",
+        "parameters": [
+          { "$ref": "#/components/parameters/Reference" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriptionPaymentListSuccess" }
+        }
+      }
+    },
+    "/merchand/billing/subscription-payments/{reference}": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Lire le detail d'un paiement de souscription",
+        "parameters": [{ "$ref": "#/components/parameters/Reference" }],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriptionPaymentSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/billing/subscribers": {
+      "get": {
+        "tags": ["Subscriptions"],
+        "summary": "Lister les abonnes d'un marchand",
+        "parameters": [
+          { "$ref": "#/components/parameters/SubscriptionStatus" },
+          { "$ref": "#/components/parameters/CustomerEmail" },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/SubscriberListSuccess" }
+        }
+      }
+    },
+    "/collection/intent": {
+      "post": {
+        "tags": ["Collections"],
+        "summary": "Creer une intention de collection",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentIntentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" },
+          "409": { "$ref": "#/components/responses/Conflict" }
+        }
+      }
+    },
+    "/collection/execute": {
+      "post": {
+        "tags": ["Collections"],
+        "summary": "Executer une collection",
+        "requestBody": { "$ref": "#/components/requestBodies/PaymentExecution" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/collection/status": {
+      "post": {
+        "tags": ["Collections"],
+        "summary": "Verifier le statut d'une collection",
+        "requestBody": { "$ref": "#/components/requestBodies/TransactionStatus" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/disbursement/intent": {
+      "post": {
+        "tags": ["Disbursements"],
+        "summary": "Creer une intention de disbursement",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/PaymentIntentRequest" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "400": { "$ref": "#/components/responses/BadRequest" }
+        }
+      }
+    },
+    "/disbursement/execute": {
+      "post": {
+        "tags": ["Disbursements"],
+        "summary": "Executer un disbursement",
+        "requestBody": { "$ref": "#/components/requestBodies/PaymentExecution" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/disbursement/status": {
+      "post": {
+        "tags": ["Disbursements"],
+        "summary": "Verifier le statut d'un disbursement",
+        "requestBody": { "$ref": "#/components/requestBodies/TransactionStatus" },
+        "responses": {
+          "200": { "$ref": "#/components/responses/TransactionSuccess" },
+          "404": { "$ref": "#/components/responses/NotFound" }
+        }
+      }
+    },
+    "/service/list": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Lister les services",
+        "parameters": [
+          { "name": "country", "in": "query", "schema": { "type": "string", "example": "CM" } },
+          { "name": "currency", "in": "query", "schema": { "type": "string", "example": "XAF" } },
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ServiceListSuccess" }
+        }
+      }
+    },
+    "/country/list": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Lister les pays disponibles",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/CountryListSuccess" }
+        }
+      }
+    },
+    "/provider/list": {
+      "get": {
+        "tags": ["Catalog"],
+        "summary": "Lister les providers et leur statut",
+        "parameters": [
+          { "$ref": "#/components/parameters/Page" },
+          { "$ref": "#/components/parameters/Limit" }
+        ],
+        "responses": {
+          "200": { "$ref": "#/components/responses/ProviderListSuccess" }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "parameters": {
+      "Page": {
+        "name": "page",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "default": 1 }
+      },
+      "Limit": {
+        "name": "limit",
+        "in": "query",
+        "schema": { "type": "integer", "minimum": 1, "maximum": 100, "default": 25 }
+      },
+      "Reference": {
+        "name": "reference",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string" }
+      },
+      "ShortCode": {
+        "name": "shortCode",
+        "in": "path",
+        "required": true,
+        "schema": { "type": "string", "pattern": "^[A-Za-z0-9]{8,12}$" }
+      },
+      "SubscriptionStatus": {
+        "name": "status",
+        "in": "query",
+        "schema": {
+          "type": "string",
+          "enum": ["ACTIVE", "SUSPENDED", "CANCELLED", "EXPIRED"]
+        }
+      },
+      "CustomerEmail": {
+        "name": "customer_email",
+        "in": "query",
+        "schema": { "type": "string", "format": "email" }
+      },
+      "XIdempotencyKey": {
+        "name": "X-Idempotency-Key",
+        "in": "header",
+        "required": false,
+        "schema": { "type": "string" },
+        "description": "Cle d'idempotence optionnelle fournie par le marchand."
+      }
+    },
+    "requestBodies": {
+      "PaymentExecution": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PaymentExecutionRequest" }
+          }
+        }
+      },
+      "TransactionStatus": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/TransactionStatusRequest" }
+          }
+        }
+      },
+      "UpdateSubscription": {
+        "required": false,
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/UpdateSubscriptionRequest" }
+          }
+        }
+      }
+    },
+    "responses": {
+      "BadRequest": {
+        "description": "Requete invalide",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Unauthorized": {
+        "description": "Authentification invalide ou manquante",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "NotFound": {
+        "description": "Ressource introuvable",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "Conflict": {
+        "description": "Conflit d'idempotence",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ErrorResponse" }
+          }
+        }
+      },
+      "TransactionSuccess": {
+        "description": "Transaction retournee",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/TransactionApiResponse" }
+          }
+        }
+      },
+      "PaymentLinkSuccess": {
+        "description": "Lien de paiement cree",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PaymentLinkApiResponse" }
+          }
+        }
+      },
+      "PaymentLinkListSuccess": {
+        "description": "Liste de liens de paiement",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PaymentLinkListApiResponse" }
+          }
+        }
+      },
+      "PublicPaymentLinkSuccess": {
+        "description": "Lien de paiement public",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/PublicPaymentLinkApiResponse" }
+          }
+        }
+      },
+      "SubscriptionSuccess": {
+        "description": "Souscription retournee",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriptionApiResponse" }
+          }
+        }
+      },
+      "SubscriptionListSuccess": {
+        "description": "Liste de souscriptions",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriptionListApiResponse" }
+          }
+        }
+      },
+      "SubscriptionDetailSuccess": {
+        "description": "Detail de souscription",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriptionDetailApiResponse" }
+          }
+        }
+      },
+      "SubscriptionPaymentSuccess": {
+        "description": "Paiement de souscription",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriptionPaymentApiResponse" }
+          }
+        }
+      },
+      "SubscriptionPaymentListSuccess": {
+        "description": "Liste de paiements de souscription",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriptionPaymentListApiResponse" }
+          }
+        }
+      },
+      "SubscriberListSuccess": {
+        "description": "Liste d'abonnes",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/SubscriberListApiResponse" }
+          }
+        }
+      },
+      "ServiceListSuccess": {
+        "description": "Liste de services",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ServiceListApiResponse" }
+          }
+        }
+      },
+      "CountryListSuccess": {
+        "description": "Liste de pays",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/CountryListApiResponse" }
+          }
+        }
+      },
+      "ProviderListSuccess": {
+        "description": "Liste de providers",
+        "content": {
+          "application/json": {
+            "schema": { "$ref": "#/components/schemas/ProviderListApiResponse" }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "OAuthTokenRequest": {
+        "type": "object",
+        "required": ["grant_type", "client_id"],
+        "properties": {
+          "grant_type": { "type": "string", "enum": ["authorization_code", "client_credentials", "refresh_token"] },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" },
+          "code": { "type": "string" },
+          "redirect_uri": { "type": "string" },
+          "code_verifier": { "type": "string" },
+          "refresh_token": { "type": "string" },
+          "scope": { "type": "string" }
+        }
+      },
+      "OAuthTokenResponse": {
+        "type": "object",
+        "properties": {
+          "token_type": { "type": "string", "example": "Bearer" },
+          "expires_in": { "type": "integer", "example": 3600 },
+          "access_token": { "type": "string" },
+          "refresh_token": { "type": "string" },
+          "id_token": { "type": "string" }
+        }
+      },
+      "OAuthIntrospectRequest": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": { "type": "string" },
+          "token_type_hint": { "type": "string", "enum": ["access_token", "refresh_token"] },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" }
+        }
+      },
+      "OAuthRevokeRequest": {
+        "type": "object",
+        "required": ["token"],
+        "properties": {
+          "token": { "type": "string" },
+          "token_type_hint": { "type": "string", "enum": ["access_token", "refresh_token"] },
+          "client_id": { "type": "string" },
+          "client_secret": { "type": "string" }
+        }
+      },
+      "PaymentIntentRequest": {
+        "type": "object",
+        "required": ["amount", "currency", "transaction_uuid", "provider", "channel", "customer_wallet"],
+        "properties": {
+          "amount": { "type": "integer", "example": 2500 },
+          "currency": { "type": "string", "example": "XAF" },
+          "transaction_uuid": { "type": "string", "format": "uuid" },
+          "provider": { "type": "string", "example": "CM_MTN_MOMO" },
+          "channel": { "type": "string", "enum": ["PROVIDER", "WALLET", "AUTO"], "example": "PROVIDER" },
+          "customer_wallet": { "type": "string", "example": "237670000000" },
+          "description": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "settlement_mode": { "type": "string", "enum": ["DIRECT", "SPLIT"] },
+          "distribution": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/SplitDistributionItem" }
+          }
+        }
+      },
+      "PluginCollectionRequest": {
+        "allOf": [
+          { "$ref": "#/components/schemas/PaymentIntentRequest" },
+          {
+            "type": "object",
+            "required": ["invoice_reference"],
+            "properties": {
+              "invoice_reference": { "type": "string", "example": "WC-100045" },
+              "otp": { "type": "integer", "example": 123456 }
+            }
+          }
+        ]
+      },
+      "PaymentExecutionRequest": {
+        "type": "object",
+        "required": ["transaction_reference", "invoice_reference"],
+        "properties": {
+          "transaction_reference": { "type": "string", "example": "TRX-20260728-000001" },
+          "invoice_reference": { "type": "string", "example": "INV-100045" },
+          "otp": { "type": "integer", "example": 123456 }
+        }
+      },
+      "TransactionStatusRequest": {
+        "type": "object",
+        "required": ["transaction_reference"],
+        "properties": {
+          "transaction_reference": { "type": "string", "example": "TRX-20260728-000001" }
+        }
+      },
+      "SplitDistributionItem": {
+        "type": "object",
+        "required": ["matricule", "rate"],
+        "properties": {
+          "matricule": { "type": "string", "example": "MS-SELLER-001" },
+          "rate": { "type": "number", "format": "float", "example": 80 },
+          "description": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "Transaction": {
+        "type": "object",
+        "properties": {
+          "transaction_reference": { "type": "string" },
+          "environment": { "type": "string", "example": "prod" },
+          "invoice_reference": { "type": "string" },
+          "provider_reference": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/TransactionStatus" },
+          "operation": { "type": "string", "enum": ["COLLECTION", "DISBURSEMENT"] },
+          "channel": { "type": "string", "enum": ["PROVIDER", "WALLET"] },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "confirmation_method": { "type": "string", "enum": ["MSISDN", "LINK", "QRCODE", null] },
+          "confirmation_url": { "type": ["string", "null"] },
+          "fee": { "type": "integer" },
+          "required_total": { "type": "integer" },
+          "settlement_mode": { "type": "string", "enum": ["DIRECT", "SPLIT"] },
+          "split_reference": { "type": "string" },
+          "split_status": { "type": "string", "enum": ["NONE", "PENDING", "PROCESSING", "SUCCESS", "PARTIAL_SUCCESS", "FAILED"] },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": "string" }
+        }
+      },
+      "TransactionStatus": {
+        "type": "string",
+        "enum": ["INITIATED", "PENDING", "SUBMITTED", "PROCESSING", "SUCCESS", "COMPLETED", "FAILED", "CANCELLED", "REFUNDED"]
+      },
+      "PaymentLinkCreateRequest": {
+        "type": "object",
+        "required": ["currency"],
+        "properties": {
+          "amount": { "type": "integer", "minimum": 1 },
+          "currency": { "type": "string", "example": "XAF" },
+          "provider": { "type": "string", "example": "CM_MTN_MOMO" },
+          "channel": { "type": "string", "enum": ["PROVIDER", "WALLET", "AUTO"] },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "expires_at": { "type": "string", "format": "date-time" },
+          "max_usage": { "type": "integer", "minimum": 1 },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "PaymentLinkPayRequest": {
+        "type": "object",
+        "required": ["customer_phone", "transaction_uuid"],
+        "properties": {
+          "customer_phone": { "type": "string", "example": "237670000000" },
+          "customer_name": { "type": "string" },
+          "customer_email": { "type": "string", "format": "email" },
+          "transaction_uuid": { "type": "string", "format": "uuid" },
+          "amount": { "type": "integer" },
+          "provider": { "type": "string" },
+          "channel": { "type": "string", "enum": ["PROVIDER", "WALLET", "AUTO"] },
+          "otp": { "type": "integer" },
+          "metadata": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "PaymentLink": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string" },
+          "short_code": { "type": "string" },
+          "payment_url": { "type": "string" },
+          "status": { "type": "string", "enum": ["ACTIVE", "DISABLED", "EXPIRED"] },
+          "amount": { "type": ["integer", "null"] },
+          "currency": { "type": "string" },
+          "title": { "type": "string" },
+          "description": { "type": "string" },
+          "expires_at": { "type": ["string", "null"] },
+          "created_at": { "type": "string" }
+        }
+      },
+      "SubscriptionCreateRequest": {
+        "type": "object",
+        "required": ["customer_email", "amount", "currency", "frequency"],
+        "properties": {
+          "customer_email": { "type": "string", "format": "email" },
+          "customer_phone_number": { "type": "string" },
+          "amount": { "type": "integer", "minimum": 1 },
+          "currency": { "type": "string", "example": "XAF" },
+          "frequency": { "type": "string", "enum": ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] },
+          "description": { "type": "string" },
+          "metadata": { "type": "object", "additionalProperties": true },
+          "idempotency_key": { "type": "string" }
+        }
+      },
+      "UpdateSubscriptionRequest": {
+        "type": "object",
+        "properties": {
+          "uuid": { "type": "string", "format": "uuid" },
+          "reason": { "type": "string" }
+        }
+      },
+      "Subscription": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string" },
+          "customer_email": { "type": "string" },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "frequency": { "type": "string", "enum": ["DAILY", "WEEKLY", "MONTHLY", "QUARTERLY", "YEARLY"] },
+          "status": { "type": "string", "enum": ["ACTIVE", "SUSPENDED", "CANCELLED", "EXPIRED"] },
+          "next_payment_at": { "type": ["string", "null"], "format": "date-time" },
+          "created_at": { "type": "string" }
+        }
+      },
+      "SubscriptionDetail": {
+        "allOf": [
+          { "$ref": "#/components/schemas/Subscription" },
+          {
+            "type": "object",
+            "properties": {
+              "uuid": { "type": "string" },
+              "merchant_id": { "type": "string" },
+              "customer_user_id": { "type": ["string", "null"] },
+              "description": { "type": "string" },
+              "subscribed_at": { "type": ["string", "null"] },
+              "last_payment_at": { "type": ["string", "null"] },
+              "cancelled_at": { "type": ["string", "null"] },
+              "suspended_at": { "type": ["string", "null"] },
+              "reactivated_at": { "type": ["string", "null"] },
+              "metadata": { "type": "object", "additionalProperties": true },
+              "latest_payments": {
+                "type": "array",
+                "items": { "$ref": "#/components/schemas/SubscriptionPayment" }
+              }
+            }
+          }
+        ]
+      },
+      "SubscriptionPayment": {
+        "type": "object",
+        "properties": {
+          "reference": { "type": "string" },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "status": { "type": "string", "enum": ["PENDING", "PROCESSING", "PAID", "FAILED", "CANCELLED"] },
+          "due_at": { "type": ["string", "null"], "format": "date-time" },
+          "paid_at": { "type": ["string", "null"], "format": "date-time" },
+          "payment_intent_reference": { "type": ["string", "null"] },
+          "payment_link_reference": { "type": ["string", "null"] },
+          "wallet_transaction_id": { "type": ["string", "null"] },
+          "failure_reason": { "type": ["string", "null"] },
+          "created_at": { "type": "string" },
+          "updated_at": { "type": ["string", "null"] }
+        }
+      },
+      "Subscriber": {
+        "type": "object",
+        "properties": {
+          "subscription_reference": { "type": "string" },
+          "subscribed_at": { "type": ["string", "null"] },
+          "customer_email": { "type": "string" },
+          "customer_phone": { "type": ["string", "null"] },
+          "amount": { "type": "integer" },
+          "currency": { "type": "string" },
+          "description": { "type": "string" },
+          "status": { "type": "string" },
+          "next_payment_at": { "type": ["string", "null"] }
+        }
+      },
+      "Service": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "code": { "type": "string", "example": "CM_MTN_MOMO" },
+          "description": { "type": "string" },
+          "provider": { "type": "string", "example": "MTN_CMR" },
+          "country": { "type": "string", "example": "CM" },
+          "currency": { "type": "string", "example": "XAF" },
+          "type": { "type": "string", "enum": ["CRYPTOCURRENCY", "FIAT", "CARD", "MARKETING", "MYSHUP"] },
+          "is_active": { "type": "boolean" },
+          "is_public": { "type": "boolean" },
+          "is_need_otp": { "type": "boolean" },
+          "is_can_collect": { "type": "boolean" },
+          "is_can_disburse": { "type": "boolean" },
+          "is_can_swap": { "type": "boolean" },
+          "confirmation_method": { "type": ["string", "null"], "enum": ["MSISDN", "LINK", "QRCODE", null] },
+          "otp_helper": { "type": ["object", "array", "null"] },
+          "updated_at": { "type": ["string", "null"] }
+        }
+      },
+      "Country": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "code": { "type": "string", "example": "CM" },
+          "name": { "type": "string", "example": "Cameroon" },
+          "active": { "type": "boolean" }
+        }
+      },
+      "Provider": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "integer" },
+          "code": { "type": "string", "example": "MTN_CMR" },
+          "name": { "type": "string", "example": "MTN Cameroon" },
+          "priority": { "type": ["integer", "null"] },
+          "website": { "type": ["string", "null"] },
+          "location": { "type": ["string", "null"] },
+          "contact": { "type": ["string", "null"] },
+          "support_email": { "type": ["string", "null"] },
+          "about": { "type": ["string", "null"] },
+          "is_active": { "type": "boolean" },
+          "countries": { "type": "array", "items": { "type": "string" } },
+          "updated_at": { "type": ["string", "null"] }
+        }
+      },
+      "ApiResponseBase": {
+        "type": "object",
+        "properties": {
+          "code": { "type": "integer", "example": 200 },
+          "success": { "type": "boolean", "example": true },
+          "locale": { "type": "string", "example": "fr" },
+          "message": { "type": "string" },
+          "meta": { "type": "object", "additionalProperties": true }
+        }
+      },
+      "TransactionApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": {
+              "data": { "$ref": "#/components/schemas/Transaction" }
+            }
+          }
+        ]
+      },
+      "PaymentLinkApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/PaymentLink" } }
+          }
+        ]
+      },
+      "PaymentLinkListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/PaymentLink" } } }
+          }
+        ]
+      },
+      "PublicPaymentLinkApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/PaymentLink" } }
+          }
+        ]
+      },
+      "SubscriptionApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/Subscription" } }
+          }
+        ]
+      },
+      "SubscriptionListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Subscription" } } }
+          }
+        ]
+      },
+      "SubscriptionDetailApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/SubscriptionDetail" } }
+          }
+        ]
+      },
+      "SubscriptionPaymentApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "$ref": "#/components/schemas/SubscriptionPayment" } }
+          }
+        ]
+      },
+      "SubscriptionPaymentListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/SubscriptionPayment" } } }
+          }
+        ]
+      },
+      "SubscriberListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Subscriber" } } }
+          }
+        ]
+      },
+      "ServiceListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Service" } } }
+          }
+        ]
+      },
+      "CountryListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Country" } } }
+          }
+        ]
+      },
+      "ProviderListApiResponse": {
+        "allOf": [
+          { "$ref": "#/components/schemas/ApiResponseBase" },
+          {
+            "type": "object",
+            "properties": { "data": { "type": "array", "items": { "$ref": "#/components/schemas/Provider" } } }
+          }
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "success": { "type": "boolean", "example": false },
+          "code": { "type": "integer", "example": 400 },
+          "message": { "type": "string", "example": "empty_data" },
+          "error": {
+            "type": "object",
+            "properties": {
+              "details": { "type": ["object", "array", "string", "null"] }
+            }
+          }
+        }
+      }
+    }
+  }
+}

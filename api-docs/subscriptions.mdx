@@ -1,0 +1,96 @@
+---
+title: "Souscriptions"
+description: "Creer, lister et piloter des paiements recurrents."
+---
+
+Une souscription represente un accord de paiement recurrent entre un marchand et un client. Mysoleas conserve la frequence, le montant, le client et l'etat de la souscription.
+
+## Frequences supportees
+
+| Frequence | Description |
+| --- | --- |
+| `DAILY` | Facturation quotidienne |
+| `WEEKLY` | Facturation hebdomadaire |
+| `MONTHLY` | Facturation mensuelle |
+| `QUARTERLY` | Facturation trimestrielle |
+| `YEARLY` | Facturation annuelle |
+
+## Creer une souscription
+
+```bash
+curl -X POST "https://api.mysoleas.com/merchand/billing/subscribe" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: sub-client-42-basic-monthly" \
+  -d '{
+    "customer_email": "client@example.com",
+    "customer_phone_number": "237670000000",
+    "amount": 5000,
+    "currency": "XAF",
+    "frequency": "MONTHLY",
+    "description": "Abonnement mensuel Basic",
+    "metadata": {
+      "plan": "basic",
+      "customer_id": "cust_42"
+    }
+  }'
+```
+
+La reponse retourne une `reference`. Conservez-la dans votre base.
+
+## Lister les souscriptions
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions?status=ACTIVE" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Vous pouvez filtrer par:
+
+| Filtre | Description |
+| --- | --- |
+| `status` | `ACTIVE`, `SUSPENDED`, `CANCELLED`, `EXPIRED` |
+| `customer_email` | Email du client |
+
+## Lire le detail
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions/detail/SUB-20260728-000001?for=merchant" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Le detail inclut les informations de souscription et les derniers paiements associes.
+
+## Suspendre, reactiver ou annuler
+
+```bash
+curl -X POST "https://api.mysoleas.com/merchand/billing/subscriptions/suspend/SUB-20260728-000001" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "reason": "Paiement en attente de regularisation" }'
+```
+
+Les endpoints de pilotage acceptent un `reason` optionnel.
+
+| Action | Endpoint |
+| --- | --- |
+| Suspendre | `POST /merchand/billing/subscriptions/suspend/{reference}` |
+| Reactiver | `POST /merchand/billing/subscriptions/reactivate/{reference}` |
+| Annuler | `POST /merchand/billing/subscriptions/cancel/{reference}` |
+
+## Suivre les paiements de souscription
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions/payments/SUB-20260728-000001" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Chaque paiement possede son propre statut.
+
+| Statut paiement | Signification |
+| --- | --- |
+| `PENDING` | Paiement prevu ou prepare |
+| `PROCESSING` | Paiement en cours |
+| `PAID` | Paiement reussi |
+| `FAILED` | Paiement echoue |
+| `CANCELLED` | Paiement annule |

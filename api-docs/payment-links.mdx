@@ -1,0 +1,88 @@
+---
+title: "Liens de paiement"
+description: "Creer une URL de paiement partageable et suivre le paiement associe."
+---
+
+Un lien de paiement permet de generer une URL publique que vous pouvez envoyer a un client par email, SMS, WhatsApp ou afficher dans votre application.
+
+## Cas d'usage
+
+- paiement d'une facture;
+- paiement hors panier;
+- recouvrement client;
+- paiement manuel depuis un backoffice;
+- paiement recurrent declenche par une souscription.
+
+## Creer un lien
+
+```bash
+curl -X POST "https://api.mysoleas.com/payment-links" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 15000,
+    "currency": "XAF",
+    "provider": "CM_MTN_MOMO",
+    "channel": "PROVIDER",
+    "title": "Facture FAC-2026-001",
+    "description": "Paiement de la facture FAC-2026-001",
+    "expires_at": "2026-08-30T23:59:59+01:00",
+    "max_usage": 1,
+    "metadata": {
+      "invoice_reference": "FAC-2026-001"
+    }
+  }'
+```
+
+La reponse contient `payment_url`. Redirigez le client vers cette URL ou partagez-la.
+
+```json
+{
+  "reference": "PLK-20260728-000001",
+  "short_code": "A1B2C3D4",
+  "payment_url": "https://api.mysoleas.com/pay/A1B2C3D4",
+  "status": "ACTIVE",
+  "amount": 15000,
+  "currency": "XAF"
+}
+```
+
+## Gerer le montant
+
+Le champ `amount` est optionnel a la creation. Si vous ne le fixez pas, le payeur peut fournir le montant au moment du paiement, selon les regles de votre integration.
+
+Si `max_usage` vaut `1`, le lien doit etre considere comme usage unique.
+
+## Lire un lien public
+
+```bash
+curl "https://api.mysoleas.com/pay/A1B2C3D4"
+```
+
+Cette route est publique. Elle retourne les informations necessaires a l'affichage du checkout.
+
+## Payer un lien
+
+```bash
+curl -X POST "https://api.mysoleas.com/pay/A1B2C3D4/pay" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customer_phone": "237670000000",
+    "customer_name": "Ada Client",
+    "customer_email": "ada@example.com",
+    "transaction_uuid": "65b0344e-0fc0-44f4-9f6f-ecdf6f41fbcb",
+    "provider": "CM_MTN_MOMO",
+    "channel": "PROVIDER"
+  }'
+```
+
+La reponse contient la reference de transaction a suivre avec le flux de statut correspondant.
+
+## Lister vos liens
+
+```bash
+curl "https://api.mysoleas.com/payment-links?page=1&limit=25" \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Utilisez la pagination `page` et `limit` pour charger progressivement vos liens dans un backoffice.
