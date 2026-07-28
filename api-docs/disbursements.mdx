@@ -28,15 +28,15 @@ sequenceDiagram
 
 ```bash
 curl -X POST "https://api.mysoleas.com/disbursement/intent" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 10000,
     "currency": "XAF",
     "transaction_uuid": "0798ab17-9f53-4895-9ea3-0c327fa8efb1",
-    "provider": "CM_MTN_MOMO",
+    "provider": "mtn_cmr",
     "channel": "PROVIDER",
-    "customer_wallet": "237670000000",
+    "customer_wallet": "670000000",
     "description": "Remboursement commande MS-10045"
   }'
 ```
@@ -47,7 +47,7 @@ La reponse inclut `fee` et `required_total`. Votre wallet doit couvrir `amount +
 
 ```bash
 curl -X POST "https://api.mysoleas.com/disbursement/execute" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "transaction_reference": "TRX-20260728-000021",
@@ -61,7 +61,7 @@ Pendant l'execution provider, les fonds sont reserves. Si le provider echoue, My
 
 ```bash
 curl -X POST "https://api.mysoleas.com/disbursement/status" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "transaction_reference": "TRX-20260728-000021" }'
 ```

@@ -1,0 +1,89 @@
+---
+title: "Button v3"
+description: "Reference d'integration du bouton JavaScript SoleasPay avec une API key."
+---
+
+Button v3 s'integre avec un script JavaScript et une API key marchand. Aucun token OAuth n'est requis.
+
+Utilisez Button v3 si vous voulez afficher le paiement directement dans une page produit, panier, facture ou espace client.
+
+## Script
+
+Ajoutez un conteneur dans votre page, puis chargez le script SoleasPay.
+
+```html
+<div id="soleaspay_btn_V3_1"></div>
+
+<script
+  id="SBScript"
+  type="text/javascript"
+  data-lang="fr"
+  data-apikey="YOUR_API_KEY"
+  src="https://btn.soleaspay.com/main.js">
+</script>
+```
+
+| Attribut | Obligatoire | Description |
+| --- | --- | --- |
+| `id` | Oui | Doit rester `SBScript` pour permettre au plugin de lire sa configuration |
+| `data-lang` | Non | Langue de l'interface, par exemple `fr` ou `en` |
+| `data-apikey` | Oui | API key marchand SoleasPay |
+| `src` | Oui | URL du plugin Button v3 |
+
+## Options
+
+```js
+const options = {
+  btnTitle: "Pay",
+  amount: 25,
+  currency: "USD",
+  orderId: "MLS00000025F",
+  description: "Test sopay button payment",
+  businessName: "Shop Name",
+  loadInvoice: true,
+  successUrl: "https://yourdomain.com/receivePayment",
+  mode: "BILLING"
+};
+```
+
+| Option | Type | Obligatoire | Description |
+| --- | --- | --- | --- |
+| `btnTitle` | `string` | Non | Texte du bouton |
+| `amount` | `number` | Oui en `BILLING` | Montant du paiement |
+| `currency` | `string` | Oui | Devise |
+| `orderId` | `string` | Oui | Reference unique cote marchand |
+| `description` | `string` | Oui | Description du paiement |
+| `businessName` | `string` | Oui | Nom affiche au client |
+| `loadInvoice` | `boolean` | Non | Charge ou cree l'invoice |
+| `successUrl` | `string` | Oui | URL de succes |
+| `mode` | `string` | Oui | `BILLING` ou `TIPING` |
+
+## Modes
+
+| Mode | Description |
+| --- | --- |
+| `BILLING` | Votre application fixe le montant avant l'ouverture du paiement |
+| `TIPING` | Le client peut saisir le montant dans l'interface du plugin |
+
+## Initialisation
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err));
+}
+
+initButton();
+```
+
+`SopayButton.pay(options)` retourne une promesse. Utilisez `then` pour traiter le resultat, `catch` pour afficher une erreur, et `finally` si vous voulez recharger le bouton apres une tentative.
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err))
+    .finally(initButton);
+}
+```

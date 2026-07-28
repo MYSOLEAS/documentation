@@ -1,19 +1,19 @@
 ---
 title: "Demarrage rapide"
-description: "Le chemin le plus court pour appeler la nouvelle architecture Mysoleas en production."
+description: "Le chemin le plus court pour comprendre Identity Cloud, appeler la gateway et lancer une premiere transaction."
 ---
 
-Ce guide vous accompagne de l'authentification jusqu'au suivi d'une premiere transaction.
+Ce guide vous accompagne de l'identite jusqu'au suivi d'une premiere transaction SoleasPay.
 
 ## 1. Preparez vos domaines
 
-Toutes les requetes de paiement partent vers la gateway.
+Toutes les requetes metier protegees partent vers la gateway.
 
 ```txt
 https://api.mysoleas.com
 ```
 
-Toutes les requetes OAuth partent vers le service d'authentification.
+Toutes les requetes OAuth2/OIDC partent vers Mysoleas Identity Cloud.
 
 ```txt
 https://account.mysoleas.com
@@ -23,38 +23,37 @@ https://account.mysoleas.com
   Stockez ces URLs dans des variables d'environnement. Cela rend vos tests, vos workers et votre backoffice plus faciles a maintenir.
 </Tip>
 
-## 2. Obtenez un access token
+## 2. Obtenez un JWT
 
-Pour une integration serveur a serveur, utilisez le grant `client_credentials`.
+Si vous integrez le bouton **Se connecter avec Mysoleas**, utilisez `authorization_code` avec PKCE. Si votre backend agit en son propre nom, utilisez `client_credentials`.
 
 ```bash
-curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
+curl -X POST "https://account.mysoleas.com/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
     "grant_type": "client_credentials",
-    "client_id": "YOUR_CLIENT_ID",
-    "client_secret": "YOUR_CLIENT_SECRET",
-    "scope": "payments services countries providers"
+    "sp_client_id": "YOUR_APPLICATION_CLIENT_ID",
+    "sp_client_secret": "YOUR_APPLICATION_CLIENT_SECRET"
   }'
 ```
 
-La reponse contient un `access_token`.
+La reponse contient un `access_token`. Ce token est le JWT a transmettre a la gateway.
 
 ```json
 {
+  "access_token": "eyJ...",
   "token_type": "Bearer",
-  "expires_in": 3600,
-  "access_token": "eyJ..."
+  "token_expired_at": 1785259148
 }
 ```
 
 ## 3. Appelez la gateway
 
-Transmettez le jeton dans `Authorization`.
+Transmettez le jeton dans `x-sp-auth-token`.
 
 ```bash
-curl "https://api.mysoleas.com/service/list?country=CM&currency=XAF" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Accept: application/json"
 ```
 
@@ -62,10 +61,10 @@ Vous pouvez aussi transmettre des headers de contexte lorsque votre application 
 
 | Header | Usage |
 | --- | --- |
-| `Authorization` | Jeton Bearer obligatoire |
+| `x-sp-auth-token` | Jeton Bearer JWT obligatoire pour les routes gateway |
 | `X-Request-Id` | Identifiant de trace cote marchand |
 | `X-Idempotency-Key` | Cle d'idempotence explicite pour les operations sensibles |
-| `X-SP-Country` | Pays actif, par exemple `CM` |
+| `X-SP-Country` | Pays actif, par exemple `CMR` |
 | `X-SP-Environment` | Environnement logique, par exemple `prod` ou `dev` |
 
 ## 4. Choisissez un service
@@ -73,8 +72,8 @@ Vous pouvez aussi transmettre des headers de contexte lorsque votre application 
 Listez les services disponibles avant de creer une transaction. Le champ `code` du service devient la valeur `provider` dans les payloads de paiement.
 
 ```bash
-curl "https://api.mysoleas.com/service/list?country=CM&currency=XAF" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 Un service utilisable pour une collection doit avoir `is_active: true` et `is_can_collect: true`.
@@ -87,24 +86,28 @@ Le flux standard se fait en trois appels: `intent`, `execute`, puis `status`.
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/intent" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 2500,
     "currency": "XAF",
     "transaction_uuid": "2f8b9a68-1ad3-4a0c-a187-40b91a4c44a1",
-    "provider": "CM_MTN_MOMO",
+    "provider": "mtn_cmr",
     "channel": "PROVIDER",
-    "customer_wallet": "237670000000",
+    "customer_wallet": "670000000",
     "description": "Commande MS-10045"
   }'
 ```
+
+<Note>
+  Dans la requete, `customer_wallet` ne doit pas contenir l'indicatif du pays.
+</Note>
 
 La reponse contient `transaction_reference`. Utilisez cette valeur pour executer et suivre la transaction.
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/execute" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "transaction_reference": "TRX-20260728-000001",
@@ -118,7 +121,7 @@ Interrogez le statut jusqu'a obtenir un etat final.
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/status" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "transaction_reference": "TRX-20260728-000001"

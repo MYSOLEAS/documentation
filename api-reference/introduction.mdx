@@ -1,16 +1,35 @@
 ---
 title: "Introduction"
-description: "Reference technique de la nouvelle API Mysoleas."
+description: "Reference technique de la gateway Mysoleas, de Identity Cloud et des domaines metier."
 ---
 
-La reference API de Mysoleas est organisee autour de deux serveurs.
+La reference API de Mysoleas est organisee autour de l'infrastructure commune et des corps de metier.
 
-| Serveur | URL |
-| --- | --- |
-| Gateway | `https://api.mysoleas.com` |
-| Auth | `https://account.mysoleas.com` |
+| Couche | Serveur | URL | Role |
+| --- | --- | --- | --- |
+| Infrastructure | Gateway | `https://api.mysoleas.com` | Route les appels vers les services metier |
+| Infrastructure | Mysoleas Identity Cloud | `https://account.mysoleas.com` | OAuth2/OIDC, bouton **Se connecter avec Mysoleas**, gestion utilisateur, JWT et userinfo |
+| Metier | SoleasPay | via `api.mysoleas.com` | Paiements, liens, souscriptions, collections, disbursements, pays, services et providers |
 
-Toutes les routes gateway protegees utilisent `Authorization: Bearer <access_token>`.
+Mysoleas Identity Cloud peut etre integre seul pour gerer l'authentification et les utilisateurs d'une application tierce. Dans ce cas, votre application utilise `account.mysoleas.com`, valide le JWT, lit `userinfo`, puis continue avec ses propres APIs.
+
+Pour creer une application OAuth2, connectez-vous au dashboard Mysoleas:
+
+```txt
+https://mysoleas.com
+```
+
+Les routes gateway protegees utilisent le header suivant:
+
+```txt
+x-sp-auth-token: Bearer <access_token>
+```
+
+Le token est un JWT emis par Mysoleas Identity Cloud.
+
+<Note>
+  Les endpoints OAuth2 eux-memes vivent sur `account.mysoleas.com`. Les plugins SoleasPay v3 utilisent une `apikey` marchand et ne demandent pas ce header.
+</Note>
 
 Les routes publiques de paiement par lien sont:
 

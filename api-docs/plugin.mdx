@@ -1,91 +1,155 @@
 ---
-title: "Plugin marchand"
-description: "Integrer le flux compact concu pour les plugins et checkouts partenaires."
+title: "Plugins SoleasPay v3"
+description: "Integrez SoleasPay rapidement avec Checkout v3 ou Button v3, uniquement avec votre API key."
 ---
 
-Le flux plugin est fait pour les integrations qui veulent collecter un paiement en un seul appel backend, puis suivre son statut avec une reference Mysoleas.
+Les plugins SoleasPay v3 sont concus pour integrer le paiement dans une application tierce sans gerer OAuth, JWT, intent, execute ou status cote marchand.
 
-## Quand utiliser le plugin
+Vous utilisez simplement votre `apikey` marchand SoleasPay. Le plugin se charge de charger les services disponibles, d'afficher l'interface de paiement, de collecter les informations client, de soumettre la transaction et de retourner le resultat.
 
-Utilisez les endpoints `/merchand/*` si vous construisez:
+<Note>
+  Les plugins v3 sont distincts de l'API gateway serveur a serveur. Pour Checkout v3 et Button v3, l'integration se fait avec une API key, pas avec un access token OAuth.
+</Note>
 
-- un plugin WooCommerce, Prestashop ou autre CMS e-commerce;
-- une application marketplace;
-- un checkout qui ne veut pas gerer separement `intent` et `execute`;
-- une integration qui doit lister uniquement les services actifs autorises pour le marchand.
+## Choisir le bon plugin
 
-## Workflow
+| Plugin | Integration | Experience utilisateur |
+| --- | --- | --- |
+| Checkout v3 | Formulaire ou payload envoye vers `https://pay.soleaspay.com` | Page de paiement complete hebergee par SoleasPay |
+| Button v3 | Script JavaScript `https://btn.soleaspay.com/main.js` | Bouton de paiement integre directement dans votre page |
 
-```mermaid
-sequenceDiagram
-  participant Plugin as Plugin marchand
-  participant Gateway as api.mysoleas.com
-  participant Provider as Provider
-  Plugin->>Gateway: POST /merchand/collection
-  Gateway->>Provider: Payin
-  Gateway-->>Plugin: transaction_reference + status
-  Plugin->>Gateway: POST /merchand/status
-  Gateway-->>Plugin: status final ou intermediaire
+Utilisez Checkout v3 si vous voulez rediriger le client vers une page de paiement complete. Utilisez Button v3 si vous voulez garder le bouton dans votre page produit, panier, facture ou espace client.
+
+## Prerequis
+
+Vous avez besoin de:
+
+- une `apikey` marchand SoleasPay;
+- un montant et une devise;
+- une reference de commande unique;
+- une URL de succes;
+- une URL d'echec.
+
+Votre `apikey` identifie le marchand et permet au plugin de charger les moyens de paiement autorises. Ne publiez pas une cle qui donne acces a des actions sensibles hors contexte plugin.
+
+## Checkout v3
+
+Checkout v3 affiche une page de paiement hebergee. Votre application soumet les donnees du paiement vers:
+
+```txt
+https://pay.soleaspay.com
 ```
 
-## Lister les services plugin
+Le client choisit son pays, son moyen de paiement, confirme l'operation, puis revient vers `successUrl` ou `failureUrl`.
 
-```bash
-curl "https://api.mysoleas.com/merchand/services?country=CM&currency=XAF" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+### Exemple HTML
+
+Vous pouvez creer un formulaire HTML classique.
+
+```html
+<form method="POST" action="https://pay.soleaspay.com">
+  <input type="hidden" name="apiKey" value="YOUR_API_KEY" />
+  <input type="hidden" name="amount" value="25000" />
+  <input type="hidden" name="currency" value="XAF" />
+  <input type="hidden" name="orderId" value="ORDER-2026-0001" />
+  <input type="hidden" name="description" value="Paiement commande ORDER-2026-0001" />
+  <input type="hidden" name="shopName" value="Shop Name" />
+  <input type="hidden" name="successUrl" value="https://yourdomain.com/receivePayment" />
+  <input type="hidden" name="failureUrl" value="https://yourdomain.com/paymentFailed" />
+
+  <button type="submit">Payer avec SoleasPay</button>
+</form>
 ```
 
-Selectionnez un service dont `is_active` et `is_can_collect` valent `true`. Utilisez son `code` dans le champ `provider`.
+### Exemple JSON serveur
 
-## Creer une collection plugin
+Si votre backend initie la checkout, envoyez le meme payload.
 
 ```bash
-curl -X POST "https://api.mysoleas.com/merchand/collection" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+curl -X POST "https://pay.soleaspay.com" \
   -H "Content-Type: application/json" \
   -d '{
-    "amount": 2500,
+    "apiKey": "YOUR_API_KEY",
+    "amount": 25000,
     "currency": "XAF",
-    "transaction_uuid": "8db4a998-4cd0-4282-a2e5-8c02b649d601",
-    "invoice_reference": "WC-100045",
-    "provider": "CM_MTN_MOMO",
-    "channel": "PROVIDER",
-    "customer_wallet": "237670000000",
-    "description": "Commande WooCommerce WC-100045",
-    "metadata": {
-      "cart_id": "cart_9012"
+    "orderId": "ORDER-2026-0001",
+    "description": "Paiement commande ORDER-2026-0001",
+    "shopName": "Shop Name",
+    "successUrl": "https://yourdomain.com/receivePayment",
+    "failureUrl": "https://yourdomain.com/paymentFailed",
+    "customer": {
+      "name": "Ada Client",
+      "email": "ada@example.com"
     }
   }'
 ```
 
-### Champs importants
+### Champs Checkout v3
 
 | Champ | Obligatoire | Description |
 | --- | --- | --- |
-| `amount` | Oui | Montant entier dans la devise demandee |
-| `currency` | Oui | Devise ISO, par exemple `XAF` |
-| `transaction_uuid` | Oui | Identifiant unique cote marchand |
-| `invoice_reference` | Oui | Reference de facture ou commande |
-| `provider` | Oui | Code du service Mysoleas |
-| `customer_wallet` | Oui | Wallet, telephone ou identifiant client a debiter |
-| `channel` | Non | `PROVIDER`, `WALLET` ou `AUTO` |
-| `otp` | Non | Requis seulement si le service indique `is_need_otp: true` |
+| `apiKey` | Oui | API key marchand SoleasPay |
+| `amount` | Oui | Montant a payer |
+| `currency` | Oui | Devise du montant, par exemple `XAF`, `XOF`, `USD` |
+| `orderId` | Oui | Reference unique de commande cote marchand |
+| `description` | Oui | Description affichee au client |
+| `shopName` | Oui | Nom de la boutique ou du service |
+| `successUrl` | Oui | URL appelee apres un paiement reussi |
+| `failureUrl` | Oui | URL appelee apres un paiement echoue ou annule |
+| `customer` | Non | Donnees client pour pre-remplir la checkout |
+| `line` | Non | `up` pour autoriser la conversion de devise |
+| `area` | Non | Zone ou pays souhaite pour filtrer les services |
 
-## Encaisser avec split
+### Retour apres paiement
 
-Pour distribuer automatiquement le paiement entre plusieurs beneficiaires, ajoutez `settlement_mode: "SPLIT"` et `distribution`.
+Apres le paiement, Checkout v3 redirige le client vers l'URL appropriee avec les donnees de paiement dans `soleaspay_data`.
+
+```txt
+https://yourdomain.com/receivePayment?soleaspay_data=<json-url-encoded>
+```
+
+Une fois decode, `soleaspay_data` contient les informations de transaction.
 
 ```json
 {
+  "transaction_reference": "TRX-123456",
+  "reference": "TRX-123456",
+  "invoice_reference": "ORDER-2026-0001",
+  "provider_reference": "PROVIDER-789",
+  "status": "SUCCESS",
+  "success": true,
+  "operation": "COLLECTION",
+  "channel": "PROVIDER",
+  "amount": 25000,
+  "currency": "XAF"
+}
+```
+
+Votre backend doit mettre a jour la commande avec `transaction_reference`, `status`, `amount`, `currency` et `invoice_reference`.
+
+### Checkout avec split
+
+Checkout v3 peut recevoir un contexte de repartition.
+
+```json
+{
+  "apiKey": "YOUR_API_KEY",
+  "amount": 25000,
+  "currency": "XAF",
+  "orderId": "ORDER-SPLIT-001",
+  "description": "Commande marketplace",
+  "shopName": "Marketplace",
+  "successUrl": "https://yourdomain.com/receivePayment",
+  "failureUrl": "https://yourdomain.com/paymentFailed",
   "settlement_mode": "SPLIT",
   "distribution": [
     {
-      "matricule": "MS-SELLER-001",
+      "matricule": "SELLER-001",
       "rate": 80,
       "description": "Part vendeur"
     },
     {
-      "matricule": "MS-MARKET-001",
+      "matricule": "MARKET-001",
       "rate": 20,
       "description": "Commission marketplace"
     }
@@ -95,15 +159,114 @@ Pour distribuer automatiquement le paiement entre plusieurs beneficiaires, ajout
 
 La somme des `rate` ne doit pas depasser `100`.
 
-## Suivre le statut
+## Button v3
 
-```bash
-curl -X POST "https://api.mysoleas.com/merchand/status" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "transaction_reference": "TRX-20260728-000001"
-  }'
+Button v3 ajoute un bouton SoleasPay dans votre page. Il se charge d'ouvrir l'interface de paiement, de charger les moyens de paiement et de retourner le resultat dans votre JavaScript.
+
+### Installation du script
+
+Ajoutez un conteneur pour le bouton, puis chargez le script.
+
+```html
+<div id="soleaspay_btn_V3_1"></div>
+
+<script
+  id="SBScript"
+  type="text/javascript"
+  data-lang="fr"
+  data-apikey="YOUR_API_KEY"
+  src="https://btn.soleaspay.com/main.js">
+</script>
 ```
 
-Votre plugin doit afficher un etat d'attente tant que le statut est `PENDING`, `SUBMITTED` ou `PROCESSING`.
+`data-lang` controle la langue de l'interface. Utilisez par exemple `fr` ou `en`.
+
+### Initialiser le paiement
+
+```html
+<script type="text/javascript">
+  const options = {
+    btnTitle: "Pay",
+    amount: 25,
+    currency: "USD",
+    orderId: "MLS00000025F",
+    description: "Test sopay button payment",
+    businessName: "Shop Name",
+    loadInvoice: true,
+    successUrl: "https://yourdomain.com/receivePayment",
+    mode: "BILLING"
+  };
+
+  function initButton() {
+    return SopayButton.pay(options)
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  }
+
+  initButton();
+</script>
+```
+
+Si vous voulez recreer automatiquement le bouton apres chaque tentative de paiement, vous pouvez relancer `initButton()` dans le `finally`.
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err))
+    .finally(initButton);
+}
+```
+
+### Options Button v3
+
+| Option | Obligatoire | Description |
+| --- | --- | --- |
+| `btnTitle` | Non | Texte affiche sur le bouton |
+| `amount` | Oui en `BILLING` | Montant a payer |
+| `currency` | Oui | Devise du paiement |
+| `orderId` | Oui | Reference unique de paiement |
+| `description` | Oui | Description affichee au client |
+| `businessName` | Oui | Nom de la boutique ou du service |
+| `loadInvoice` | Non | Charge ou cree l'invoice cote plugin |
+| `successUrl` | Oui | URL de retour apres succes |
+| `mode` | Oui | `BILLING` ou `TIPING` |
+
+### Modes Button v3
+
+| Mode | Comportement |
+| --- | --- |
+| `BILLING` | Le montant est fixe par votre application |
+| `TIPING` | Le client peut saisir le montant a payer |
+
+Conservez l'orthographe `TIPING` si votre integration utilise ce mode, car c'est la valeur attendue par le plugin.
+
+### Reponse JavaScript
+
+`SopayButton.pay(options)` retourne une promesse. En cas de succes, vous recevez un objet exploitable dans votre interface.
+
+```json
+{
+  "success": true,
+  "status": "SUCCESS",
+  "message": "Transaction submitted",
+  "data": {
+    "transaction_reference": "TRX-123456",
+    "reference": "TRX-123456",
+    "status": "SUCCESS",
+    "amount": 25,
+    "currency": "USD"
+  }
+}
+```
+
+Utilisez cette reponse pour afficher un message au client. Pour une commande sensible, votre backend doit aussi verifier la transaction avant de livrer le service.
+
+## Bonnes pratiques
+
+- Utilisez un `orderId` unique par paiement.
+- Chargez Button v3 une seule fois par page.
+- Ne melangez pas Checkout v3 et Button v3 sur le meme parcours utilisateur.
+- Verifiez que `successUrl` et `failureUrl` sont accessibles en HTTPS.
+- Enregistrez `transaction_reference` des que le plugin la retourne.
+- Ne considerez un paiement comme reussi que si `status` vaut `COMPLETED`.

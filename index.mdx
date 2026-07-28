@@ -1,33 +1,64 @@
 ---
 title: "Mysoleas API"
-description: "Integrez la nouvelle architecture Mysoleas avec une gateway unique et une authentification OAuth centralisee."
+description: "Integrez l'ecosysteme Mysoleas avec une gateway unifiee, Identity Cloud et des services metier specialises."
 ---
 
-Mysoleas expose une architecture API modulaire pour accepter des paiements, envoyer des fonds, creer des liens de paiement, gerer des souscriptions et brancher des plugins marchands sans coupler votre application aux microservices internes.
+Mysoleas expose une architecture modulaire pour connecter vos applications a plusieurs domaines metier sans les coupler aux microservices internes.
 
-La nouvelle integration repose sur deux domaines publics:
+La plateforme se lit en deux couches:
+
+- **l'infrastructure Mysoleas**, qui porte l'identite, la securite et la gateway;
+- **les corps de metier**, qui portent les usages business comme le paiement, les ventes, les notifications et le marketing.
+
+## Points d'entree publics
 
 | Domaine | Role |
 | --- | --- |
-| `https://api.mysoleas.com` | Gateway applicative pour les paiements, services, pays et providers |
-| `https://account.mysoleas.com` | Authentification OAuth 2.0, jetons et informations utilisateur |
+| `https://api.mysoleas.com` | Gateway applicative pour toutes les routes metier protegees |
+| `https://account.mysoleas.com` | Mysoleas Identity Cloud: OAuth2, OIDC, JWT, profil utilisateur et bouton **Se connecter avec Mysoleas** |
+
+Toutes les routes de la gateway attendent un JWT Bearer dans le header `x-sp-auth-token`.
+
+```txt
+x-sp-auth-token: Bearer <JWT>
+```
+
+<Note>
+  Les plugins SoleasPay `Checkout v3` et `Button v3` sont l'exception volontaire: ils s'integrent avec une `apikey` marchand pour accelerer les integrations paiement.
+</Note>
 
 <CardGroup cols={2}>
   <Card title="Demarrer l'integration" icon="rocket" href="/quickstart">
-    Obtenez un jeton, choisissez un pays, listez les services et lancez votre premier paiement.
+    Obtenez un JWT, appelez la gateway et lancez votre premiere transaction.
   </Card>
   <Card title="Comprendre l'architecture" icon="diagram-project" href="/api-docs/architecture">
-    Voyez comment la gateway, l'authentification et les services internes cooperent.
+    Voyez comment la gateway, Identity Cloud et les domaines metier cooperent.
   </Card>
-  <Card title="Plugin marchand" icon="puzzle-piece" href="/api-docs/plugin">
-    Utilisez le flux direct concu pour les plugins e-commerce et applications partenaires.
+  <Card title="Explorer l'ecosysteme" icon="grid-2x2" href="/api-docs/ecosysteme">
+    Situez SoleasPay, MyShup, Notification Service, MyBoost et Identity Cloud.
+  </Card>
+  <Card title="Se connecter avec Mysoleas" icon="user-round-check" href="/api-docs/authentication">
+    Integrez OAuth2/OIDC et utilisez le JWT obtenu pour appeler la gateway.
+  </Card>
+  <Card title="Plugins SoleasPay v3" icon="puzzle-piece" href="/api-docs/plugin">
+    Ajoutez Checkout v3 ou Button v3 avec une simple API key marchand.
   </Card>
   <Card title="Reference API" icon="brackets-curly" href="/api-reference/introduction">
-    Retrouvez les endpoints, payloads et schemas pour chaque ressource.
+    Retrouvez les endpoints, payloads, headers et schemas pour chaque ressource.
   </Card>
 </CardGroup>
 
-## Ce que vous pouvez construire
+## Corps de metier Mysoleas
+
+| Produit | Domaine | Ce que vous integrez |
+| --- | --- | --- |
+| SoleasPay | Payment service processor | Collections, disbursements, liens de paiement, souscriptions, services, pays et providers |
+| Mysoleas Identity Cloud | Identite | Connexion OAuth2/OIDC, JWT, userinfo et applications tierces |
+| MyShup | Ventes | Gestion et automatisation des ventes |
+| Notification Service | Communication | Notifications transactionnelles et messages lies aux evenements |
+| MyBoost | Marketing | Campagnes boost, activation et relance client |
+
+## Ce que vous pouvez construire avec SoleasPay
 
 ### Encaisser
 
@@ -45,7 +76,11 @@ Utilisez les souscriptions pour facturer un client a une frequence definie. Chaq
 
 Utilisez les liens de paiement pour creer une URL partageable. Le client paie sur une page publique, pendant que votre backend conserve la reference et suit l'evolution.
 
-## Convention de reponse
+### Integrer vite
+
+Utilisez `Checkout v3` ou `Button v3` lorsque vous voulez ajouter SoleasPay dans une application tierce avec une `apikey`, sans gerer OAuth2 ni les appels gateway.
+
+## Convention de reponse gateway
 
 Les APIs applicatives renvoient une enveloppe JSON stable.
 

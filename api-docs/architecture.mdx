@@ -1,38 +1,70 @@
 ---
 title: "Architecture"
-description: "Comprendre le role de la gateway, du service account et des microservices internes."
+description: "Comprendre la separation entre infrastructure Mysoleas et services metier."
 ---
 
-La nouvelle architecture Mysoleas separe l'authentification, l'orchestration publique et les traitements metier.
+La nouvelle architecture Mysoleas separe clairement l'infrastructure commune et les corps de metier.
+
+L'infrastructure gere les points d'entree publics, l'identite, la securite, le routage et le contexte. Les corps de metier portent les produits: paiements, utilisateurs, ventes, notifications et campagnes marketing.
 
 ```mermaid
 flowchart LR
-  App["Votre application"] --> Auth["account.mysoleas.com"]
-  App --> Gateway["api.mysoleas.com"]
-  Gateway --> Core["Core payments"]
-  Gateway --> User["User et countries"]
-  Gateway --> Provider["Providers"]
-  Gateway --> Wallet["Wallet"]
-  Core --> Provider
-  Core --> Wallet
+  App["Votre site ou application"]
+  Auth["Mysoleas Identity Cloud<br/>account.mysoleas.com"]
+  Gateway["Mysoleas API Gateway<br/>api.mysoleas.com"]
+  Pay["SoleasPay<br/>PSP et agregation de paiements"]
+  Shup["MyShup<br/>Ventes"]
+  Notify["Notification Service<br/>Communication"]
+  Boost["MyBoost<br/>Marketing"]
+
+  App -->|"OAuth2 / OIDC"| Auth
+  Auth -->|"JWT + claims utilisateur"| App
+  App -.->|"Optionnel: x-sp-auth-token: Bearer JWT"| Gateway
+  Gateway --> Pay
+  Gateway --> Shup
+  Gateway --> Notify
+  Gateway --> Boost
 ```
 
-## Les deux points d'entree
+## Infrastructure et metiers
 
-### `account.mysoleas.com`
+| Type | Nom | Role |
+| --- | --- | --- |
+| Infrastructure | Mysoleas API Gateway | Point d'entree unique pour les routes metier protegees |
+| Infrastructure | Mysoleas Identity Cloud | Authentification, gestion utilisateur, OAuth2/OIDC, JWT, userinfo et bouton de connexion |
+| Metier | SoleasPay | Payment service processor, collections, disbursements, liens, souscriptions et providers |
+| Metier | MyShup | Gestion et automatisation des ventes |
+| Metier | Notification Service | Communications transactionnelles et notifications applicatives |
+| Metier | MyBoost | Campagnes boost et marketing |
 
-Le domaine account gere OAuth 2.0, les jetons, la decouverte OIDC, le profil utilisateur et les clients OAuth.
+## `account.mysoleas.com`
+
+Le domaine account correspond a Mysoleas Identity Cloud. C'est un service a part entiere, pas une simple dependance technique.
 
 Utilisez-le pour:
 
-- creer ou configurer une application OAuth;
-- obtenir un `access_token`;
+- integrer le bouton **Se connecter avec Mysoleas**;
+- authentifier un utilisateur avec OAuth2/OIDC;
+- gerer la couche identite et utilisateur d'une application tierce;
+- obtenir un JWT;
 - rafraichir ou revoquer un jeton;
-- lire les claims utilisateur avec `/oauth/v2/userinfo`.
+- lire les claims utilisateur avec `/oauth/v2/userinfo`;
+- permettre a une application tierce d'agir dans le contexte d'un utilisateur ou d'un client autorise.
 
-### `api.mysoleas.com`
+Ce service peut etre utilise sans la gateway. Si votre besoin est uniquement d'authentifier vos utilisateurs et d'ouvrir une session dans votre propre application, vous pouvez vous arreter a Identity Cloud.
+
+Pour creer une application OAuth2, l'utilisateur doit avoir un compte Mysoleas, se connecter au dashboard `https://mysoleas.com`, puis parametrer son application, ses URLs de redirection et ses scopes.
+
+## `api.mysoleas.com`
 
 Le domaine API est la gateway publique. Votre integration ne doit pas appeler les microservices internes directement.
+
+Toutes les routes gateway attendent le JWT dans le header `x-sp-auth-token`.
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
 
 Utilisez-le pour:
 
@@ -43,7 +75,46 @@ Utilisez-le pour:
 - creer et suivre des disbursements;
 - creer des liens de paiement;
 - gerer les souscriptions;
-- utiliser les endpoints plugin marchand.
+- piloter les autres domaines metier exposes progressivement par Mysoleas.
+
+## Regle d'authentification gateway
+
+La gateway attend toujours le meme header:
+
+```txt
+x-sp-auth-token: Bearer <JWT>
+```
+
+Cette convention evite de confondre l'authentification gateway avec d'autres headers utilises par les providers, les plugins ou les frontends.
+
+| Contexte | Domaine | Credential |
+| --- | --- | --- |
+| Connexion et gestion utilisateur | `account.mysoleas.com` | OAuth2/OIDC |
+| Appel gateway metier | `api.mysoleas.com` | `x-sp-auth-token: Bearer <JWT>` |
+| Checkout v3 | `pay.soleaspay.com` | `apiKey` marchand |
+| Button v3 | `btn.soleaspay.com` | `data-apikey` marchand |
+
+## Domaines metier dans l'ecosysteme
+
+### SoleasPay
+
+SoleasPay est le payment service processor de Mysoleas. Il agrege les moyens de paiement et expose les flux de collection, disbursement, souscription, lien de paiement, services, pays et providers.
+
+### Mysoleas Identity Cloud
+
+Identity Cloud gere les utilisateurs, les applications OAuth2, les tokens JWT et les claims. Il peut servir de service d'identite autonome pour une application tierce, ou fournir le JWT utilise ensuite par la gateway.
+
+### MyShup
+
+MyShup porte la gestion et l'automatisation des ventes. Il intervient dans les parcours commerciaux, les commandes et les operations marchandes.
+
+### Notification Service
+
+Le Notification Service centralise les communications transactionnelles: confirmations, alertes, messages systeme et notifications liees aux evenements.
+
+### MyBoost
+
+MyBoost couvre le marketing à travers des campagnes de challenges personalisé pour favoriser le marketing UGC, des promotions.
 
 ## Flux de paiement standard
 
@@ -57,17 +128,16 @@ Les collections et disbursements utilisent un modele en trois etapes.
 
 Ce modele evite les doubles debits. Il vous donne aussi un point clair pour reprendre une transaction apres un timeout reseau.
 
-## Flux plugin
+## Flux plugin SoleasPay
 
-Le plugin marchand utilise un flux plus compact.
+Les plugins SoleasPay v3 ne suivent pas le meme modele que les appels gateway serveur a serveur.
 
-| Endpoint | Role |
-| --- | --- |
-| `POST /merchand/collection` | Cree et execute une collection en un appel |
-| `POST /merchand/status` | Retourne le statut de la collection plugin |
-| `GET /merchand/services` | Retourne les services actifs autorises pour le marchand |
+| Plugin | URL | Authentification | Role |
+| --- | --- | --- | --- |
+| Checkout v3 | `https://pay.soleaspay.com` | `apiKey` | Page de paiement hebergee |
+| Button v3 | `https://btn.soleaspay.com/main.js` | `data-apikey` | Bouton JavaScript integre dans votre page |
 
-Utilisez ce flux pour WooCommerce, Prestashop, Shopify custom apps, marketplaces et tout plugin qui veut limiter le nombre d'appels serveur.
+Utilisez ces plugins pour une integration paiement rapide lorsque vous ne voulez pas gerer directement OAuth2, JWT, `intent`, `execute` et `status`.
 
 ## Donnees de contexte
 
@@ -92,9 +162,8 @@ Une transaction peut passer par plusieurs etats non finaux avant d'aboutir.
 | `SUBMITTED` | La demande est transmise au provider |
 | `PROCESSING` | Le provider ou le wallet traite encore l'operation |
 | `COMPLETED` | Operation terminee avec succes |
-| `SUCCESS` | Operation terminee avec succes, selon certains providers |
 | `FAILED` | Operation echouee |
 | `CANCELLED` | Operation annulee |
 | `REFUNDED` | Operation remboursee |
 
-Traitez `COMPLETED`, `SUCCESS`, `FAILED`, `CANCELLED` et `REFUNDED` comme des etats finaux.
+Traitez `COMPLETED`, `FAILED`, `CANCELLED` et `REFUNDED` comme des etats finaux.

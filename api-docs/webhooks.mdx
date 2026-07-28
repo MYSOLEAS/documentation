@@ -40,7 +40,7 @@ Apres reception d'un webhook critique, appelez le statut.
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/status" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "transaction_reference": "TRX-20260728-000001" }'
 ```

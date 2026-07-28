@@ -17,12 +17,12 @@ Un lien de paiement permet de generer une URL publique que vous pouvez envoyer a
 
 ```bash
 curl -X POST "https://api.mysoleas.com/payment-links" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 15000,
     "currency": "XAF",
-    "provider": "CM_MTN_MOMO",
+    "provider": "mtn_cmr",
     "channel": "PROVIDER",
     "title": "Facture FAC-2026-001",
     "description": "Paiement de la facture FAC-2026-001",
@@ -71,7 +71,7 @@ curl -X POST "https://api.mysoleas.com/pay/A1B2C3D4/pay" \
     "customer_name": "Ada Client",
     "customer_email": "ada@example.com",
     "transaction_uuid": "65b0344e-0fc0-44f4-9f6f-ecdf6f41fbcb",
-    "provider": "CM_MTN_MOMO",
+    "provider": "mtn_cmr",
     "channel": "PROVIDER"
   }'
 ```
@@ -82,7 +82,7 @@ La reponse contient la reference de transaction a suivre avec le flux de statut 
 
 ```bash
 curl "https://api.mysoleas.com/payment-links?page=1&limit=25" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
 ```
 
 Utilisez la pagination `page` et `limit` pour charger progressivement vos liens dans un backoffice.

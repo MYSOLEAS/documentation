@@ -3,7 +3,7 @@
   "info": {
     "title": "Mysoleas API",
     "version": "3.0.0",
-    "description": "Nouvelle architecture Mysoleas: gateway de paiement et authentification OAuth 2.0."
+    "description": "Nouvelle architecture Mysoleas: gateway metier, Mysoleas Identity Cloud et ecosysteme SoleasPay."
   },
   "servers": [
     {
@@ -16,7 +16,7 @@
     }
   ],
   "tags": [
-    { "name": "Auth" },
+    { "name": "Identity Cloud" },
     { "name": "Plugin" },
     { "name": "Payment links" },
     { "name": "Subscriptions" },
@@ -26,13 +26,13 @@
   ],
   "security": [
     {
-      "bearerAuth": []
+      "spAuthToken": []
     }
   ],
   "paths": {
     "/.well-known/openid-configuration": {
       "get": {
-        "tags": ["Auth"],
+        "tags": ["Identity Cloud"],
         "summary": "Lire la configuration OpenID Connect",
         "description": "Retourne les endpoints OAuth, les grants supportes, les scopes et la cle JWKS.",
         "security": [],
@@ -57,11 +57,76 @@
         }
       }
     },
+    "/oauth/v2/authorize": {
+      "get": {
+        "tags": ["Identity Cloud"],
+        "summary": "Demarrer Se connecter avec Mysoleas",
+        "description": "Redirige l'utilisateur vers Mysoleas Identity Cloud pour authentification OAuth2/OIDC avec PKCE. L'application OAuth2 doit etre creee et configuree au prealable dans le dashboard https://mysoleas.com.",
+        "security": [],
+        "servers": [{ "url": "https://account.mysoleas.com" }],
+        "parameters": [
+          {
+            "name": "client_id",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Identifiant de l'application OAuth."
+          },
+          {
+            "name": "redirect_uri",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "format": "uri" },
+            "description": "URL de retour autorisee pour l'application."
+          },
+          {
+            "name": "response_type",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["code"] },
+            "description": "Utilisez `code` pour le flow authorization code."
+          },
+          {
+            "name": "scope",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Scopes demandes, par exemple `openid profile email payments`."
+          },
+          {
+            "name": "state",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Valeur aleatoire que votre application verifie au retour."
+          },
+          {
+            "name": "code_challenge",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string" },
+            "description": "Challenge PKCE genere par votre application."
+          },
+          {
+            "name": "code_challenge_method",
+            "in": "query",
+            "required": true,
+            "schema": { "type": "string", "enum": ["S256"] },
+            "description": "Methode PKCE recommandee."
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirection vers `redirect_uri` avec un `code` OAuth2 ou une erreur."
+          }
+        }
+      }
+    },
     "/oauth/v2/token": {
       "post": {
-        "tags": ["Auth"],
-        "summary": "Obtenir un access token",
-        "description": "Supporte `authorization_code`, `client_credentials` et `refresh_token`.",
+        "tags": ["Identity Cloud"],
+        "summary": "Obtenir un JWT",
+        "description": "Supporte `authorization_code`, `client_credentials` et `refresh_token`. Le JWT peut servir a ouvrir une session dans votre application, lire `userinfo` ou appeler la gateway avec `x-sp-auth-token`.",
         "security": [],
         "servers": [{ "url": "https://account.mysoleas.com" }],
         "requestBody": {
@@ -94,7 +159,7 @@
     },
     "/oauth/v2/userinfo": {
       "get": {
-        "tags": ["Auth"],
+        "tags": ["Identity Cloud"],
         "summary": "Lire les claims utilisateur",
         "servers": [{ "url": "https://account.mysoleas.com" }],
         "responses": {
@@ -119,7 +184,7 @@
     },
     "/oauth/v2/introspect": {
       "post": {
-        "tags": ["Auth"],
+        "tags": ["Identity Cloud"],
         "summary": "Introspecter un token",
         "security": [],
         "servers": [{ "url": "https://account.mysoleas.com" }],
@@ -152,7 +217,7 @@
     },
     "/oauth/v2/revoke": {
       "post": {
-        "tags": ["Auth"],
+        "tags": ["Identity Cloud"],
         "summary": "Revoquer un token",
         "security": [],
         "servers": [{ "url": "https://account.mysoleas.com" }],
@@ -480,7 +545,7 @@
         "tags": ["Catalog"],
         "summary": "Lister les services",
         "parameters": [
-          { "name": "country", "in": "query", "schema": { "type": "string", "example": "CM" } },
+          { "name": "country", "in": "query", "schema": { "type": "string", "example": "CMR" } },
           { "name": "currency", "in": "query", "schema": { "type": "string", "example": "XAF" } },
           { "$ref": "#/components/parameters/Page" },
           { "$ref": "#/components/parameters/Limit" }
@@ -519,10 +584,11 @@
   },
   "components": {
     "securitySchemes": {
-      "bearerAuth": {
-        "type": "http",
-        "scheme": "bearer",
-        "bearerFormat": "JWT"
+      "spAuthToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-sp-auth-token",
+        "description": "JWT Bearer emis par Mysoleas Identity Cloud. Format: Bearer <access_token>."
       }
     },
     "parameters": {
@@ -785,9 +851,9 @@
           "amount": { "type": "integer", "example": 2500 },
           "currency": { "type": "string", "example": "XAF" },
           "transaction_uuid": { "type": "string", "format": "uuid" },
-          "provider": { "type": "string", "example": "CM_MTN_MOMO" },
+          "provider": { "type": "string", "example": "mtn_cmr" },
           "channel": { "type": "string", "enum": ["PROVIDER", "WALLET", "AUTO"], "example": "PROVIDER" },
-          "customer_wallet": { "type": "string", "example": "237670000000" },
+          "customer_wallet": { "type": "string", "example": "670000000" },
           "description": { "type": "string" },
           "metadata": { "type": "object", "additionalProperties": true },
           "settlement_mode": { "type": "string", "enum": ["DIRECT", "SPLIT"] },
@@ -869,7 +935,7 @@
         "properties": {
           "amount": { "type": "integer", "minimum": 1 },
           "currency": { "type": "string", "example": "XAF" },
-          "provider": { "type": "string", "example": "CM_MTN_MOMO" },
+          "provider": { "type": "string", "example": "mtn_cmr" },
           "channel": { "type": "string", "enum": ["PROVIDER", "WALLET", "AUTO"] },
           "title": { "type": "string" },
           "description": { "type": "string" },
@@ -1001,10 +1067,10 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer" },
-          "code": { "type": "string", "example": "CM_MTN_MOMO" },
+          "code": { "type": "string", "example": "mtn_cmr" },
           "description": { "type": "string" },
-          "provider": { "type": "string", "example": "MTN_CMR" },
-          "country": { "type": "string", "example": "CM" },
+          "provider": { "type": "string", "example": "mtn_cmr" },
+          "country": { "type": "string", "example": "CMR" },
           "currency": { "type": "string", "example": "XAF" },
           "type": { "type": "string", "enum": ["CRYPTOCURRENCY", "FIAT", "CARD", "MARKETING", "MYSHUP"] },
           "is_active": { "type": "boolean" },
@@ -1022,7 +1088,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer" },
-          "code": { "type": "string", "example": "CM" },
+          "code": { "type": "string", "example": "CMR" },
           "name": { "type": "string", "example": "Cameroon" },
           "active": { "type": "boolean" }
         }
@@ -1031,7 +1097,7 @@
         "type": "object",
         "properties": {
           "id": { "type": "integer" },
-          "code": { "type": "string", "example": "MTN_CMR" },
+          "code": { "type": "string", "example": "mtn_cmr" },
           "name": { "type": "string", "example": "MTN Cameroon" },
           "priority": { "type": ["integer", "null"] },
           "website": { "type": ["string", "null"] },

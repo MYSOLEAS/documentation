@@ -19,6 +19,7 @@
               "index",
               "quickstart",
               "api-docs/architecture",
+              "api-docs/ecosysteme",
               "api-docs/authentication"
             ]
           },
@@ -53,21 +54,21 @@
             ]
           },
           {
-            "group": "Auth",
+            "group": "Mysoleas Identity Cloud",
             "pages": [
-              "api-reference/auth/discovery",
-              "api-reference/auth/token",
-              "api-reference/auth/userinfo",
-              "api-reference/auth/introspect",
-              "api-reference/auth/revoke"
+              "api-reference/oauth/discovery",
+              "api-reference/oauth/authorize",
+              "api-reference/oauth/token",
+              "api-reference/oauth/userinfo",
+              "api-reference/oauth/introspect",
+              "api-reference/oauth/revoke"
             ]
           },
           {
             "group": "Plugin",
             "pages": [
-              "api-reference/gateway/plugin-collection",
-              "api-reference/gateway/plugin-status",
-              "api-reference/gateway/plugin-services"
+              "api-reference/gateway/checkout-v3",
+              "api-reference/gateway/button-v3"
             ]
           },
           {
@@ -136,8 +137,8 @@
     }
   },
   "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
+    "light": "/logo/logo.png",
+    "dark": "/logo/logo.png"
   },
   "navbar": {
     "links": [
@@ -149,7 +150,7 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://account.mysoleas.com"
+      "href": "https://mysoleas.com"
     }
   },
   "contextual": {

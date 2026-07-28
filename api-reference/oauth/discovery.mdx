@@ -1,0 +1,9 @@
+---
+title: "Configuration Identity Cloud"
+description: "Lire les metadonnees OAuth2/OIDC de Mysoleas Identity Cloud."
+openapi: "GET /.well-known/openid-configuration"
+---
+
+Utilisez cette route pour decouvrir les endpoints officiels de Mysoleas Identity Cloud: autorisation, token, userinfo, introspection, revocation et JWKS.
+
+Elle est utile lorsque votre application configure dynamiquement le bouton **Se connecter avec Mysoleas** ou valide les JWT emis par `account.mysoleas.com`.

@@ -1,0 +1,81 @@
+---
+title: "Checkout v3"
+description: "Reference d'integration de la checkout hebergee SoleasPay avec une API key."
+---
+
+Checkout v3 s'utilise avec une API key marchand. Aucun token OAuth n'est requis.
+
+Votre application soumet le paiement vers la page hebergee SoleasPay. Le client termine le paiement sur SoleasPay, puis il est redirige vers votre application avec le resultat.
+
+```txt
+POST https://pay.soleaspay.com
+```
+
+## Cas d'usage
+
+Utilisez Checkout v3 si vous voulez:
+
+- rediriger le client vers une page de paiement complete;
+- eviter de construire une interface de collecte de moyen de paiement;
+- proposer rapidement les services actifs sur votre compte marchand;
+- integrer SoleasPay avec un simple formulaire HTML.
+
+## Payload
+
+| Champ | Type | Obligatoire | Description |
+| --- | --- | --- | --- |
+| `apiKey` | `string` | Oui | API key marchand SoleasPay |
+| `amount` | `number` | Oui | Montant total a payer |
+| `currency` | `string` | Oui | Devise du paiement, par exemple `XAF`, `XOF` ou `USD` |
+| `orderId` | `string` | Oui | Reference unique dans votre systeme |
+| `description` | `string` | Oui | Libelle affiche au client |
+| `shopName` | `string` | Oui | Nom de la boutique ou du service |
+| `successUrl` | `string` | Oui | URL de retour apres paiement reussi |
+| `failureUrl` | `string` | Oui | URL de retour apres paiement echoue ou annule |
+| `customer` | `object` | Non | Informations client pour pre-remplir la checkout |
+| `line` | `string` | Non | Utilisez `up` si une conversion de devise est autorisee |
+| `area` | `string` | Non | Zone ou pays souhaite pour filtrer les moyens de paiement |
+| `settlement_mode` | `string` | Non | Mode de reglement, par exemple `SPLIT` |
+| `distribution` | `array` | Non | Repartition des fonds lorsque le split est active |
+
+## Exemple
+
+```json
+{
+  "apiKey": "YOUR_API_KEY",
+  "amount": 25000,
+  "currency": "XAF",
+  "orderId": "ORDER-2026-0001",
+  "description": "Paiement commande ORDER-2026-0001",
+  "shopName": "Shop Name",
+  "successUrl": "https://yourdomain.com/receivePayment",
+  "failureUrl": "https://yourdomain.com/paymentFailed"
+}
+```
+
+## Formulaire HTML
+
+```html
+<form method="POST" action="https://pay.soleaspay.com">
+  <input type="hidden" name="apiKey" value="YOUR_API_KEY" />
+  <input type="hidden" name="amount" value="25000" />
+  <input type="hidden" name="currency" value="XAF" />
+  <input type="hidden" name="orderId" value="ORDER-2026-0001" />
+  <input type="hidden" name="description" value="Paiement commande ORDER-2026-0001" />
+  <input type="hidden" name="shopName" value="Shop Name" />
+  <input type="hidden" name="successUrl" value="https://yourdomain.com/receivePayment" />
+  <input type="hidden" name="failureUrl" value="https://yourdomain.com/paymentFailed" />
+
+  <button type="submit">Payer avec SoleasPay</button>
+</form>
+```
+
+## Retour
+
+Le client est redirige vers `successUrl` ou `failureUrl` avec `soleaspay_data` dans la query string.
+
+```txt
+https://yourdomain.com/receivePayment?soleaspay_data=<json-url-encoded>
+```
+
+Decodez `soleaspay_data`, enregistrez la reference de transaction, puis confirmez le statut avant de livrer un service sensible.

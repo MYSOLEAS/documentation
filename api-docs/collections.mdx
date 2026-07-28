@@ -25,15 +25,15 @@ sequenceDiagram
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/intent" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "amount": 2500,
     "currency": "XAF",
     "transaction_uuid": "2f8b9a68-1ad3-4a0c-a187-40b91a4c44a1",
-    "provider": "CM_MTN_MOMO",
+    "provider": "mtn_cmr",
     "channel": "PROVIDER",
-    "customer_wallet": "237670000000",
+    "customer_wallet": "670000000",
     "description": "Commande MS-10045"
   }'
 ```
@@ -44,7 +44,7 @@ curl -X POST "https://api.mysoleas.com/collection/intent" \
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/execute" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{
     "transaction_reference": "TRX-20260728-000001",
@@ -58,7 +58,7 @@ Ajoutez `otp` si le service choisi indique `is_need_otp: true`.
 
 ```bash
 curl -X POST "https://api.mysoleas.com/collection/status" \
-  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{ "transaction_reference": "TRX-20260728-000001" }'
 ```

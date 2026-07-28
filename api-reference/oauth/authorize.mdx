@@ -1,0 +1,21 @@
+---
+title: "Autoriser une connexion"
+description: "Rediriger un utilisateur vers Se connecter avec Mysoleas avec OAuth2 et PKCE."
+openapi: "GET /oauth/v2/authorize"
+---
+
+Cet endpoint demarre le parcours **Se connecter avec Mysoleas**.
+
+Avant d'appeler cet endpoint, l'utilisateur doit avoir un compte Mysoleas et creer une application OAuth2 depuis le dashboard:
+
+```txt
+https://mysoleas.com
+```
+
+Le dashboard permet de parametrer le `client_id`, les URLs de redirection autorisees, les scopes et les informations affichees pendant le consentement.
+
+Votre application y redirige l'utilisateur avec `client_id`, `redirect_uri`, `scope`, `state` et les parametres PKCE. Apres authentification et consentement, Mysoleas renvoie un `code` sur votre `redirect_uri`.
+
+Echangez ensuite ce `code` contre un JWT via `/oauth/v2/token`.
+
+Vous pouvez utiliser ce JWT pour ouvrir une session dans votre propre application. Si vous appelez ensuite la gateway Mysoleas, transmettez-le dans `x-sp-auth-token`.
