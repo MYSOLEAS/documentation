@@ -1,0 +1,21 @@
+---
+title: "Lire le pays principal"
+description: "Retourner le pays d'exercice principal du tenant courant."
+openapi: "GET /country/primary"
+---
+
+Cette route retourne la relation `TenantCountry` marquee comme primaire pour le tenant du token courant.
+
+Le pays principal sert de contexte par defaut lorsque certains flux doivent calculer des frais ou router un paiement sans pays explicite fiable.
+
+Si aucun pays principal n'est configure sur un ancien compte, la reponse peut contenir `data: null`. Dans ce cas, les flux existants conservent leur fallback historique.
+
+```json
+{
+  "id": 42,
+  "is_primary": true,
+  "tenant": "tenant_123",
+  "Country": "CMR",
+  "updated_at": "2026-08-08 12:30:00"
+}
+```

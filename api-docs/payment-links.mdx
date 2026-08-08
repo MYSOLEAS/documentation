@@ -24,6 +24,7 @@ curl -X POST "https://api.mysoleas.com/payment-links" \
     "currency": "XAF",
     "provider": "mtn_cmr",
     "channel": "PROVIDER",
+    "feeBearer": "CUSTOMER",
     "title": "Facture FAC-2026-001",
     "description": "Paiement de la facture FAC-2026-001",
     "expires_at": "2026-08-30T23:59:59+01:00",
@@ -52,6 +53,17 @@ La reponse contient `payment_url`. Redirigez le client vers cette URL ou partage
 Le champ `amount` est optionnel a la creation. Si vous ne le fixez pas, le payeur peut fournir le montant au moment du paiement, selon les regles de votre integration.
 
 Si `max_usage` vaut `1`, le lien doit etre considere comme usage unique.
+
+## Gerer les frais
+
+Un lien de paiement peut fixer le porteur des frais avec `feeBearer`.
+
+| Valeur | Effet |
+| --- | --- |
+| `CUSTOMER` | Les frais sont ajoutes au montant payable par le client |
+| `MERCHANT` | Les frais sont supportes par le marchand |
+
+Les alias historiques `customerPaysFees`, `customer_pays_fees`, `customerPaidFees` et `customer_paid_fees` sont acceptes, mais `feeBearer` reste la forme recommandee.
 
 ## Lire un lien public
 

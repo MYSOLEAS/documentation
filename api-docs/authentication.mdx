@@ -49,6 +49,20 @@ https://mysoleas.com
   Pour une application web ou mobile cote utilisateur, preferez `authorization_code` avec PKCE. Ne placez jamais un `client_secret` dans une application frontend.
 </Tip>
 
+### Configuration des frais applicatifs SoleasPay
+
+Une application de paiement/API SoleasPay peut definir `feeBearer` pour indiquer qui supporte les frais des paiements API directs inities avec ses credentials.
+
+Cette configuration ne concerne pas le client OAuth2 utilise uniquement pour **Se connecter avec Mysoleas**. Elle concerne les applications qui appellent ensuite les services metier de paiement.
+
+| Valeur | Role |
+| --- | --- |
+| `CUSTOMER` | Les frais sont ajoutes au montant payable par le client |
+| `MERCHANT` | Les frais sont supportes par le marchand |
+| `null` ou absent | Le comportement historique de l'application est conserve |
+
+Cette configuration est lue depuis l'application authentifiee. Ne transmettez pas un `applicationId` libre dans un paiement pour essayer de changer le porteur des frais.
+
 ## Trois usages differents
 
 | Usage | Domaine | Credential obtenu | Header ensuite utilise |

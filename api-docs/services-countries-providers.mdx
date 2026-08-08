@@ -33,6 +33,24 @@ Un pays utilisable doit avoir `active: true`.
 }
 ```
 
+## Pays d'exercice principal
+
+Le pays d'exercice principal est porte par la relation `TenantCountry.isPrimary`. Il sert de contexte par defaut pour router les paiements et calculer les frais lorsqu'aucun pays explicite fiable n'est fourni.
+
+```bash
+curl "https://api.mysoleas.com/country/primary" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Pour le modifier, utilisez l'identifiant de la relation `TenantCountry`, pas seulement le code pays.
+
+```bash
+curl -X PATCH "https://api.mysoleas.com/country/tenant-countries/42/primary" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Le changement est applique cote User Service de maniere transactionnelle: l'ancien pays primaire est desactive et le nouveau devient l'unique primaire du tenant. Si aucun pays primaire n'est configure sur un ancien compte, les flux de paiement conservent le fallback historique.
+
 ## Lister les services
 
 ```bash
@@ -54,6 +72,68 @@ Un service de paiement retourne les capacites dont votre integration a besoin.
 | `is_can_collect` | Le service accepte les collections |
 | `is_can_disburse` | Le service accepte les disbursements |
 | `confirmation_method` | `MSISDN`, `LINK` ou `QRCODE` |
+| `confirmation_helper` | Instruction affichee au payeur pour finaliser la confirmation, par exemple `Veuillez composer le #150*50# pour finaliser le paiement.` |
+
+## Lister les frais
+
+```bash
+curl "https://api.mysoleas.com/pricing-rule/fees?country=CMR&service_code=mtn_cmr" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+La gateway retourne les frais du pays demande uniquement si votre token donne acces a ce pays.
+Sinon, l'API retourne `403 access_denied`.
+
+Vous pouvez filtrer par `service_code`, ou separer le sens avec `incoming_service_code` et `outgoing_service_code`.
+Ajoutez `operation` et `user_tier` pour obtenir les frais d'un cas precis.
+
+```json
+{
+  "id": 12,
+  "operation": "COLLECTION",
+  "user_tier": 1,
+  "fee_value": 1.5,
+  "fee_type": "PERCENTAGE",
+  "incoming_service": {
+    "code": "mtn_cmr",
+    "country": "CMR",
+    "currency": "XAF"
+  },
+  "outgoing_service": null
+}
+```
+
+## Obtenir un devis de frais
+
+Avant d'initialiser une transaction, votre backend peut demander le montant des frais calcule cote serveur.
+
+```bash
+curl -X POST "https://api.mysoleas.com/transactions/fees/quote" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serviceId": 1,
+    "amount": 10000,
+    "currency": "XAF"
+  }'
+```
+
+Pour une application API directe, `feeBearer` vient de la configuration de l'application. Pour un plugin, envoyez `feeBearer` dans le payload ou la query string; le payload est prioritaire.
+
+```json
+{
+  "baseAmount": 10000,
+  "feeAmount": 350,
+  "payableAmount": 10350,
+  "currency": "XAF",
+  "feeBearer": "CUSTOMER",
+  "countryCode": "CMR",
+  "userTier": 5,
+  "source": "APPLICATION_CONFIGURATION"
+}
+```
+
+Les transactions stockent ensuite un snapshot immuable dans `metadata.fees` avec le montant, la devise, le porteur des frais, la source, le pays, le tier et la version de calcul.
 
 ## Lister les providers
 

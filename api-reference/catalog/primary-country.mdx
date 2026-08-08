@@ -1,0 +1,11 @@
+---
+title: "Definir le pays principal"
+description: "Marquer une relation TenantCountry comme pays d'exercice principal du tenant."
+openapi: "PATCH /country/tenant-countries/{id}/primary"
+---
+
+Cette route definit le `TenantCountry` indique comme unique pays principal du tenant courant.
+
+Utilisez l'identifiant de la relation `TenantCountry`, pas le code pays. Par exemple, envoyez `42` si la relation tenant-pays `CMR` porte l'identifiant `42`.
+
+Le changement est transactionnel: l'ancien pays primaire est desactive et la relation cible devient la seule relation primaire du tenant.

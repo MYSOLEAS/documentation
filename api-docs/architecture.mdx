@@ -33,9 +33,9 @@ flowchart LR
 | Infrastructure | Mysoleas API Gateway | Point d'entree unique pour les routes metier protegees |
 | Infrastructure | Mysoleas Identity Cloud | Authentification, gestion utilisateur, OAuth2/OIDC, JWT, userinfo et bouton de connexion |
 | Metier | SoleasPay | Payment service processor, collections, disbursements, liens, souscriptions et providers |
-| Metier | MyShup | Gestion et automatisation des ventes |
-| Metier | Notification Service | Communications transactionnelles et notifications applicatives |
-| Metier | MyBoost | Campagnes boost et marketing |
+| Metier | MyShup | Produits, commandes et automatisation commerciale |
+| Metier | Notification Service | Communications transactionnelles, contacts, audiences et campagnes marketing V2 |
+| Metier | MyBoost | Campagnes boost, challenges UGC, promotions et marketing |
 
 ## `account.mysoleas.com`
 
@@ -106,15 +106,15 @@ Identity Cloud gere les utilisateurs, les applications OAuth2, les tokens JWT et
 
 ### MyShup
 
-MyShup porte la gestion et l'automatisation des ventes. Il intervient dans les parcours commerciaux, les commandes et les operations marchandes.
+MyShup porte la gestion et l'automatisation des ventes. Il intervient dans les parcours commerciaux, les produits, les commandes mono-produit ou multi-produits, et les operations marchandes.
 
 ### Notification Service
 
-Le Notification Service centralise les communications transactionnelles: confirmations, alertes, messages systeme et notifications liees aux evenements.
+Le Notification Service centralise les communications transactionnelles: confirmations, alertes, messages systeme et notifications liees aux evenements. Il porte aussi l'API marketing V2 pour les contacts, audiences, templates et campagnes, avec Listmonk comme moteur interne.
 
 ### MyBoost
 
-MyBoost couvre le marketing à travers des campagnes de challenges personalisé pour favoriser le marketing UGC, des promotions.
+MyBoost couvre le marketing a travers des campagnes boost, des challenges UGC, des promotions, l'activation client et la relance marketing.
 
 ## Flux de paiement standard
 

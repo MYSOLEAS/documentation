@@ -1,0 +1,22 @@
+---
+title: "Liste des frais"
+description: "Lister les regles de frais accessibles pour un pays, un service et un tier utilisateur."
+openapi: "GET /pricing-rule/fees"
+---
+
+Cette route retourne les regles de frais visibles par le token courant.
+
+Pour un utilisateur non-admin, la gateway verifie que le token donne acces au pays demande. Si le pays n'est pas autorise, la reponse est `403 access_denied`.
+
+Parametres utiles:
+
+| Parametre | Role |
+| --- | --- |
+| `country` | Pays ISO alpha-3, par exemple `CMR` |
+| `service_code` | Service en entree ou en sortie, par exemple `mtn_cmr` |
+| `incoming_service_code` | Service entrant a filtrer |
+| `outgoing_service_code` | Service sortant a filtrer |
+| `operation` | `COLLECTION` ou `DISBURSEMENT` |
+| `user_tier` | Niveau utilisateur a appliquer au calcul |
+
+Si `user_tier` est absent, le service utilise le tier courant du token.

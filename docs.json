@@ -99,7 +99,8 @@
             "pages": [
               "api-reference/gateway/collection-intent",
               "api-reference/gateway/collection-execute",
-              "api-reference/gateway/collection-status"
+              "api-reference/gateway/collection-status",
+              "api-reference/gateway/transaction-fees-quote"
             ]
           },
           {
@@ -114,7 +115,10 @@
             "group": "Catalogue",
             "pages": [
               "api-reference/catalog/services-list",
+              "api-reference/catalog/pricing-rule-fees",
               "api-reference/catalog/countries-list",
+              "api-reference/catalog/primary-country-read",
+              "api-reference/catalog/primary-country",
               "api-reference/catalog/providers-list"
             ]
           }

@@ -1,0 +1,24 @@
+---
+title: "Devis des frais de transaction"
+description: "Calculer le montant des frais, le montant payable et le porteur des frais avant une transaction."
+openapi: "POST /transactions/fees/quote"
+---
+
+Cette route calcule les frais cote serveur avant de lancer une collection ou un disbursement.
+
+Vous pouvez identifier le service avec `serviceId`, `service_id`, `provider`, `serviceCode` ou `service_code`.
+
+Pour une application API directe, le porteur des frais vient de la configuration de l'application authentifiee ou du header interne `X-SP-Fee-Bearer`.
+
+Pour un plugin, envoyez `origin: "PLUGIN"` et fournissez `feeBearer` dans le payload ou dans la query string. Le payload est prioritaire.
+
+| Champ | Role |
+| --- | --- |
+| `amount` | Montant de base a facturer |
+| `currency` | Devise attendue par le service |
+| `operation` | `COLLECTION` par defaut, ou `DISBURSEMENT` |
+| `provider` | Code service, par exemple `mtn_cmr` |
+| `origin` | `APPLICATION` par defaut, ou `PLUGIN` |
+| `feeBearer` | `CUSTOMER` ou `MERCHANT` |
+
+Lorsque `feeBearer` vaut `CUSTOMER`, `payableAmount` inclut les frais. Lorsque `feeBearer` vaut `MERCHANT`, `merchantNetAmount` indique le montant net marchand apres frais.
