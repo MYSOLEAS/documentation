@@ -1,0 +1,24 @@
+---
+title: "Transaction fee quote"
+description: "Calculate the fee amount, payable amount, and fee bearer before a transaction."
+openapi: "/en/api-reference/openapi.json POST /transactions/fees/quote"
+---
+
+This route calculates fees server-side before launching a collection or disbursement.
+
+You can identify the service with `serviceId`, `service_id`, `provider`, `serviceCode`, or `service_code`.
+
+For a direct API application, the fee bearer comes from the authenticated application configuration or the internal `X-SP-Fee-Bearer` header.
+
+For a plugin, send `origin: "PLUGIN"` and provide `feeBearer` in the payload or query string. The payload has priority.
+
+| Field | Role |
+| --- | --- |
+| `amount` | Base amount to charge |
+| `currency` | Currency expected by the service |
+| `operation` | `COLLECTION` by default, or `DISBURSEMENT` |
+| `provider` | Service code, for example `mtn_cmr` |
+| `origin` | `APPLICATION` by default, or `PLUGIN` |
+| `feeBearer` | `CUSTOMER` or `MERCHANT` |
+
+When `feeBearer` is `CUSTOMER`, `payableAmount` includes fees. When `feeBearer` is `MERCHANT`, `merchantNetAmount` indicates the merchant net amount after fees.

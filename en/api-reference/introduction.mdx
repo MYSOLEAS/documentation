@@ -1,0 +1,75 @@
+---
+title: "Introduction"
+description: "Technical reference for the Mysoleas gateway, Identity Cloud, and business domains."
+---
+
+The Mysoleas API reference is organized around the shared infrastructure and the business domains.
+
+| Layer | Server | URL | Role |
+| --- | --- | --- | --- |
+| Infrastructure | Gateway | `https://api.mysoleas.com` | Routes calls to business services |
+| Infrastructure | Mysoleas Identity Cloud | `https://account.mysoleas.com` | OAuth2/OIDC, **Sign in with Mysoleas**, user management, JWT, and userinfo |
+| Business | SoleasPay | via `api.mysoleas.com` | Payments, links, subscriptions, collections, disbursements, countries, services, and providers |
+
+Mysoleas Identity Cloud can be integrated on its own to manage authentication and users for a third-party application. In that case, your application uses `account.mysoleas.com`, validates the JWT, reads `userinfo`, then continues with its own APIs.
+
+To create an OAuth2 application, sign in to the Mysoleas dashboard:
+
+```txt
+https://mysoleas.com
+```
+
+Protected gateway routes use this header:
+
+```txt
+x-sp-auth-token: Bearer <access_token>
+```
+
+The token is a JWT issued by Mysoleas Identity Cloud.
+
+<Note>
+  OAuth2 endpoints themselves live on `account.mysoleas.com`. SoleasPay v4 plugins use a merchant `apikey` and do not require this header.
+</Note>
+
+The public payment-link route exposed in this reference is:
+
+- `POST https://api.mysoleas.com/pay/{shortCode}/pay` to submit the payment.
+
+## Success format
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {},
+  "locale": "en",
+  "message": "transaction_submitted"
+}
+```
+
+## Error format
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "message": "empty_data"
+}
+```
+
+## Pagination
+
+Lists generally accept `page` and `limit`. The response can contain `meta.pagination`.
+
+```json
+{
+  "pagination": {
+    "page": 1,
+    "limit": 25,
+    "total": 120,
+    "pages": 5,
+    "has_next": true,
+    "has_previous": false
+  }
+}
+```

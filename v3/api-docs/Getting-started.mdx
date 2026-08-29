@@ -1,0 +1,117 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Getting Started
+
+SoleasPay is a payment gateway provider offering most valuable services in order to help merchands and professionals to build, promote and scale any businesses.
+
+## Requirement
+
+<Note>
+  To consume our APIs you need some basic technical skills in development.
+</Note>
+
+Step by step, you need to :
+
+* Create a SoleasPay account
+* Verify this account to preparing it for production
+* Store your Apikey
+* Generate your Private Key
+* Setting up your application
+* Test integration
+* Go Live
+
+### 1. Create a Soleaspay Account
+
+Firstly, create a free SoleasPay account here : [https://app.soleaspay.com/auth/register](https://app.soleaspay.com/auth/register).
+
+* Fill the form and save it.
+* Verify your mailbox and click on the link in the mail you received to activate your account (Verify the spam folder if you not receive the mail)
+* Log in to your account at [https://app.soleaspay.com/auth/login](https://app.soleaspay.com/auth/login)
+* Navigate to your profile and fill all needed informations
+
+Your account is now created and need just one step to be ready.
+
+### 2. Verify your Soleaspay Account
+
+Now your SoleasPay account is created.
+Navigate to your profile and start your account verification
+
+Wait for your account to be approval. The process will be done soon
+
+### 3. Store your Apikey
+
+On your SoleasPay account dashboard,
+
+* Go to **Setting**,
+* Click to **Get the informations for the API**
+* On **API ACCESS** copy your API Key
+
+### 4. Generate your Private Key
+
+On your SoleasPay account dashboard,
+
+* Go to **Setting**,
+* Click on **Get the informations for the API**
+* On **API ACCESS** click on **Generate secret Key**
+* You will receive and email with your private secret key
+
+We don't store your Secret key so keep it in safe place and do not share it with someone.
+
+### 5. Setting up your application
+
+Prepare your app and integrate our APIs
+
+Set Up Callbacks (Optional)
+
+* Log in to your SoleasPay dashboard.
+* Go to **Setting**,
+* Click on **Account Setting**
+* Add a Notification Link (Whebhook)
+* Click “Save Changes”.
+
+### 6. Test integration
+
+Use our [Soleaspay Sandbox](http://sandbox.soleaspay.com) to test your implementation
+
+In your API testing tool:
+
+* Go to **Environments** and click the “+” button.
+* Name the environment (e.g., "Soleaspay Sandbox").
+* Add the following variables:
+
+| Variable  | Value                           |
+| --------- | ------------------------------- |
+| `apikey`  | Paste the token you generated   |
+| `baseUrl` | `https://sandbox.soleaspay.com` |
+
+Save the environment and select it from the top-right dropdown.
+
+### 7. Go Live
+
+You're All Set!
+
+You can now start sending requests to the Soleaspay API in the sandbox environment.
+
+We recommend starting with `Payin Request`, then exploring the following:
+
+<CardGroup cols={2}>
+  <Card title="Collection" icon="file" href="https://doc.soleaspay.com/api-docs/Collection">
+    Learn how to collect payments from your customers.
+  </Card>
+
+  <Card title="Disbursement" icon="square-code" href="https://doc.soleaspay.com/api-docs/Disbursement">
+    Learn how to disburse funds to your customers.
+  </Card>
+
+  <Card title="Refunds" icon="image" href="https://doc.soleaspay.com/api-docs/Refund">
+    Learn how to refund transactions.
+  </Card>
+
+  <Card title="Configuration" icon="puzzle-piece" href="#">
+    Retrieve your setup and all required parameters.
+  </Card>
+</CardGroup>
+
+Explore our API sandbox at [Soleaspay Sandbox](https://sandbox.soleaspay.com) for more.

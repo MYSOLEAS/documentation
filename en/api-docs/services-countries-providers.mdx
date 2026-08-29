@@ -1,0 +1,234 @@
+---
+title: "Services, countries, and providers"
+description: "Identify available countries, choose a service, and verify provider status."
+---
+
+Before you launch a payment, your backend must know three things:
+
+- the active country;
+- the payment service to use;
+- the provider's operational status.
+
+<Note>
+  Countries are identified with ISO alpha-3 codes. Use `CMR`, not `CM`.
+</Note>
+
+Service codes used in transaction payloads follow the `provider_country_code` format, for example `mtn_cmr` or `orange_cmr`.
+
+## Verify a mobile number
+
+Before sending a phone wallet in a collection or disbursement, you can verify the number through the public gateway:
+
+```txt
+POST https://api.mysoleas.com/phone-numbers/verify
+```
+
+This route uses your SoleasPay merchant API key and returns the detected country, the number type, the mobile operator when available, and `provider_wallet`, meaning the national number without the international calling code expected by providers.
+
+```bash
+curl -X POST "https://api.mysoleas.com/phone-numbers/verify" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "wallet": "650020109",
+    "country": "CMR"
+  }'
+```
+
+```json
+{
+  "valid": true,
+  "country": {
+    "alpha2": "CM",
+    "alpha3": "CMR",
+    "calling_code": "237"
+  },
+  "number": {
+    "e164": "+237650020109",
+    "international": "+237 6 50 02 01 09",
+    "national": "650020109",
+    "provider_wallet": "650020109"
+  },
+  "type": "MOBILE",
+  "operator": "MTN Cameroon",
+  "supported_country": true,
+  "support_message": null
+}
+```
+
+Accepted formats for a Cameroonian number:
+
+| Input | Country required | `provider_wallet` |
+| --- | --- | --- |
+| `+237650020109` | No | `650020109` |
+| `00237650020109` | No | `650020109` |
+| `237650020109` | Yes | `650020109` |
+| `650020109` | Yes | `650020109` |
+
+<Warning>
+  Always send `country` for numbers without an international `+` or `00` prefix. Mysoleas keeps countries in alpha-3 (`CMR`, `CIV`, `SEN`, and so on). Alpha-2 can appear in the response to help interoperability, but it does not replace the alpha-3 code.
+</Warning>
+
+See the full reference: [Verify a phone number](/en/api-reference/gateway/phone-number-verify).
+
+## List countries
+
+```bash
+curl "https://api.mysoleas.com/country/list?page=1&limit=100" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+A usable country must have `active: true`.
+
+```json
+{
+  "id": 1,
+  "code": "CMR",
+  "name": "Cameroon",
+  "active": true
+}
+```
+
+## Primary operating country
+
+The primary operating country is carried by the `TenantCountry.isPrimary` relation. It is used as the default context to route payments and calculate fees when no reliable explicit country is provided.
+
+```bash
+curl "https://api.mysoleas.com/country/primary" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+To change it, use the `TenantCountry` relation identifier, not only the country code.
+
+```bash
+curl -X PATCH "https://api.mysoleas.com/country/tenant-countries/42/primary" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+The change is applied transactionally on the User Service side: the previous primary country is disabled and the new one becomes the tenant's only primary country. If no primary country is configured on an older account, payment flows keep the historical fallback.
+
+## List services
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+A payment service returns the capabilities your integration needs.
+
+| Field | Role |
+| --- | --- |
+| `code` | Value to send in `provider` during a transaction, for example `mtn_cmr` |
+| `provider` | Technical provider that executes the operation |
+| `country` | Service country |
+| `currency` | Currency |
+| `is_active` | The service is available on the Mysoleas side |
+| `is_public` | The service can be exposed to merchants |
+| `is_need_otp` | Execution requires `otp` |
+| `is_can_collect` | The service accepts collections |
+| `is_can_disburse` | The service accepts disbursements |
+| `confirmation_method` | `MSISDN`, `LINK`, or `QRCODE` |
+| `confirmation_helper` | Instruction displayed to the payer to complete confirmation, for example `Dial #150*50# to complete the payment.` |
+
+## List fees
+
+```bash
+curl "https://api.mysoleas.com/pricing-rule/fees?country=CMR&service_code=mtn_cmr" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+The gateway returns fees for the requested country only if your token grants access to that country.
+Otherwise, the API returns `403 access_denied`.
+
+You can filter by `service_code`, or separate the direction with `incoming_service_code` and `outgoing_service_code`.
+Add `operation` and `user_tier` to get fees for a precise case.
+
+```json
+{
+  "id": 12,
+  "operation": "COLLECTION",
+  "user_tier": 1,
+  "fee_value": 1.5,
+  "fee_type": "PERCENTAGE",
+  "incoming_service": {
+    "code": "mtn_cmr",
+    "country": "CMR",
+    "currency": "XAF"
+  },
+  "outgoing_service": null
+}
+```
+
+## Get a fee quote
+
+Before initializing a transaction, your backend can request the fee amount calculated server-side.
+
+```bash
+curl -X POST "https://api.mysoleas.com/transactions/fees/quote" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "serviceId": 1,
+    "amount": 10000,
+    "currency": "XAF"
+  }'
+```
+
+For a direct API application, `feeBearer` comes from application configuration. For a plugin, send `feeBearer` in the payload or query string; the payload has priority.
+
+```json
+{
+  "baseAmount": 10000,
+  "feeAmount": 350,
+  "payableAmount": 10350,
+  "currency": "XAF",
+  "feeBearer": "CUSTOMER",
+  "countryCode": "CMR",
+  "userTier": 5,
+  "source": "APPLICATION_CONFIGURATION"
+}
+```
+
+Transactions then store an immutable snapshot in `metadata.fees` with the amount, currency, fee bearer, source, country, tier, and calculation version.
+
+## List providers
+
+```bash
+curl "https://api.mysoleas.com/provider/list?page=1&limit=100" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Read provider status in `is_active`.
+
+```json
+{
+  "id": 1,
+  "code": "mtn_cmr",
+  "name": "MTN Cameroon",
+  "is_active": true,
+  "countries": ["CMR"],
+  "updated_at": "2026-07-28 13:20:10"
+}
+```
+
+## Choose correctly
+
+For a collection:
+
+1. Verify that the country is active.
+2. Filter services by `country` and `currency`.
+3. Keep services with `is_active: true` and `is_can_collect: true`.
+4. If `is_need_otp` is `true`, ask the customer for the OTP before `execute`.
+5. Send `service.code` in the `provider` field.
+
+For a disbursement:
+
+1. Verify that the country is active.
+2. Filter services by `country` and `currency`.
+3. Keep services with `is_active: true` and `is_can_disburse: true`.
+4. Check your balance before launching high volumes.
+5. Send `service.code` in the `provider` field.
+
+## Inactive provider
+
+If `is_active` is `false`, hide the payment method from your checkout. If a provider becomes unavailable after the customer selected it, show a clear message and suggest another active service from the same country.

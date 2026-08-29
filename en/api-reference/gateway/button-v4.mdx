@@ -1,0 +1,89 @@
+---
+title: "Button v4"
+description: "Integration reference for the SoleasPay JavaScript button with an API key."
+---
+
+Button v4 integrates with a JavaScript script and a merchant API key. No OAuth token is required.
+
+Use Button v4 if you want to display payment directly in a product page, cart, invoice, or customer area.
+
+## Script
+
+Add a container to your page, then load the SoleasPay script.
+
+```html
+<div id="soleaspay_btn_v4_1"></div>
+
+<script
+  id="SBScript"
+  type="text/javascript"
+  data-lang="en"
+  data-apikey="YOUR_API_KEY"
+  src="https://btn.soleaspay.com/main.js">
+</script>
+```
+
+| Attribute | Required | Description |
+| --- | --- | --- |
+| `id` | Yes | Must remain `SBScript` so the plugin can read its configuration |
+| `data-lang` | No | Interface language, for example `fr` or `en` |
+| `data-apikey` | Yes | SoleasPay merchant API key |
+| `src` | Yes | Button v4 plugin URL |
+
+## Options
+
+```js
+const options = {
+  btnTitle: "Pay",
+  amount: 25,
+  currency: "USD",
+  orderId: "MLS00000025F",
+  description: "Test sopay button payment",
+  businessName: "Shop Name",
+  loadInvoice: true,
+  successUrl: "https://yourdomain.com/receivePayment",
+  mode: "BILLING"
+};
+```
+
+| Option | Type | Required | Description |
+| --- | --- | --- | --- |
+| `btnTitle` | `string` | No | Button text |
+| `amount` | `number` | Yes in `BILLING` | Payment amount |
+| `currency` | `string` | Yes | Currency |
+| `orderId` | `string` | Yes | Unique merchant-side reference |
+| `description` | `string` | Yes | Payment description |
+| `businessName` | `string` | Yes | Name shown to the customer |
+| `loadInvoice` | `boolean` | No | Loads or creates the invoice |
+| `successUrl` | `string` | Yes | Success URL |
+| `mode` | `string` | Yes | `BILLING` or `TIPING` |
+
+## Modes
+
+| Mode | Description |
+| --- | --- |
+| `BILLING` | Your application sets the amount before payment opens |
+| `TIPING` | The customer can enter the amount in the plugin interface |
+
+## Initialization
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err));
+}
+
+initButton();
+```
+
+`SopayButton.pay(options)` returns a promise. Use `then` to handle the result, `catch` to show an error, and `finally` if you want to reload the button after an attempt.
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err))
+    .finally(initButton);
+}
+```

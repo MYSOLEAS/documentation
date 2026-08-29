@@ -70,7 +70,7 @@ Cette configuration est lue depuis l'application authentifiee. Ne transmettez pa
 | Authentifier vos utilisateurs uniquement | `account.mysoleas.com` | JWT utilisateur et claims | Votre session applicative |
 | Authentifier puis appeler la gateway | `account.mysoleas.com` puis `api.mysoleas.com` | JWT utilisateur ou application | `x-sp-auth-token: Bearer <JWT>` |
 | Appel serveur a serveur vers vos propres backends | `account.mysoleas.com` | JWT application | Validation cote backend |
-| Plugin Checkout v3 ou Button v3 | `pay.soleaspay.com` ou `btn.soleaspay.com` | Aucun JWT | `apiKey` ou `data-apikey` |
+| Plugin Checkout v4 ou Button v4 | `pay.soleaspay.com` ou `btn.soleaspay.com` | Aucun JWT | `apiKey` ou `data-apikey` |
 
 <Warning>
   Si vous appelez la gateway Mysoleas, les routes protegees n'attendent pas le token dans `Authorization`. Envoyez le Bearer JWT dans `x-sp-auth-token`.

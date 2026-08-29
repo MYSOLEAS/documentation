@@ -1,0 +1,11 @@
+---
+title: "Get a JWT"
+description: "Exchange an OAuth2 code or server credentials for a Mysoleas JWT."
+openapi: "/en/api-reference/openapi.json POST /oauth/v2/token"
+---
+
+This endpoint returns a Mysoleas JWT.
+
+For a user sign-in, call it after `/oauth/v2/authorize` with the OAuth `code` and PKCE `code_verifier`. For a backend integration, use `client_credentials`.
+
+Once you have the JWT, you can use it to open a session in your application, call `userinfo`, or consume gateway routes with `x-sp-auth-token`.

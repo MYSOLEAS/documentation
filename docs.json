@@ -9,122 +9,6 @@
   },
   "favicon": "/favicon.svg",
   "navigation": {
-    "tabs": [
-      {
-        "tab": "Api Docs",
-        "groups": [
-          {
-            "group": "Demarrer",
-            "pages": [
-              "index",
-              "quickstart",
-              "api-docs/architecture",
-              "api-docs/ecosysteme",
-              "api-docs/authentication"
-            ]
-          },
-          {
-            "group": "Paiements",
-            "pages": [
-              "api-docs/plugin",
-              "api-docs/payment-links",
-              "api-docs/subscriptions",
-              "api-docs/collections",
-              "api-docs/disbursements",
-              "api-docs/transaction-statuses"
-            ]
-          },
-          {
-            "group": "Catalogue",
-            "pages": [
-              "api-docs/services-countries-providers",
-              "api-docs/webhooks",
-              "api-docs/best-practices"
-            ]
-          }
-        ]
-      },
-      {
-        "tab": "Api reference",
-        "groups": [
-          {
-            "group": "Introduction",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Mysoleas Identity Cloud",
-            "pages": [
-              "api-reference/oauth/discovery",
-              "api-reference/oauth/authorize",
-              "api-reference/oauth/token",
-              "api-reference/oauth/userinfo",
-              "api-reference/oauth/introspect",
-              "api-reference/oauth/revoke"
-            ]
-          },
-          {
-            "group": "Plugin",
-            "pages": [
-              "api-reference/gateway/checkout-v3",
-              "api-reference/gateway/button-v3"
-            ]
-          },
-          {
-            "group": "Liens de paiement",
-            "pages": [
-              "api-reference/gateway/payment-link-create",
-              "api-reference/gateway/payment-link-list",
-              "api-reference/gateway/payment-link-public",
-              "api-reference/gateway/payment-link-pay"
-            ]
-          },
-          {
-            "group": "Souscriptions",
-            "pages": [
-              "api-reference/gateway/subscription-create",
-              "api-reference/gateway/subscription-list",
-              "api-reference/gateway/subscription-detail",
-              "api-reference/gateway/subscription-suspend",
-              "api-reference/gateway/subscription-reactivate",
-              "api-reference/gateway/subscription-cancel",
-              "api-reference/gateway/subscription-payments",
-              "api-reference/gateway/subscription-payment-detail",
-              "api-reference/gateway/subscribers"
-            ]
-          },
-          {
-            "group": "Collections",
-            "pages": [
-              "api-reference/gateway/collection-intent",
-              "api-reference/gateway/collection-execute",
-              "api-reference/gateway/collection-status",
-              "api-reference/gateway/transaction-fees-quote"
-            ]
-          },
-          {
-            "group": "Disbursements",
-            "pages": [
-              "api-reference/gateway/disbursement-intent",
-              "api-reference/gateway/disbursement-execute",
-              "api-reference/gateway/disbursement-status"
-            ]
-          },
-          {
-            "group": "Catalogue",
-            "pages": [
-              "api-reference/catalog/services-list",
-              "api-reference/catalog/pricing-rule-fees",
-              "api-reference/catalog/countries-list",
-              "api-reference/catalog/primary-country-read",
-              "api-reference/catalog/primary-country",
-              "api-reference/catalog/providers-list"
-            ]
-          }
-        ]
-      }
-    ],
     "global": {
       "anchors": [
         {
@@ -138,7 +22,442 @@
           "icon": "life-ring"
         }
       ]
-    }
+    },
+    "languages": [
+      {
+        "language": "fr",
+        "default": true,
+        "versions": [
+          {
+            "version": "V4",
+            "default": true,
+            "tabs": [
+              {
+                "tab": "Api Docs",
+                "groups": [
+                  {
+                    "group": "Demarrer",
+                    "pages": [
+                      "index",
+                      "quickstart",
+                      "api-docs/architecture",
+                      "api-docs/ecosysteme",
+                      "api-docs/authentication"
+                    ]
+                  },
+                  {
+                    "group": "Paiements",
+                    "pages": [
+                      "api-docs/plugin",
+                      "api-docs/payment-links",
+                      "api-docs/subscriptions",
+                      "api-docs/collections",
+                      "api-docs/disbursements",
+                      "api-docs/transaction-statuses"
+                    ]
+                  },
+                  {
+                    "group": "Catalogue",
+                    "pages": [
+                      "api-docs/services-countries-providers",
+                      "api-docs/webhooks",
+                      "api-docs/best-practices"
+                    ]
+                  }
+                ]
+              },
+              {
+                "tab": "Api reference",
+                "groups": [
+                  {
+                    "group": "Introduction",
+                    "pages": [
+                      "api-reference/introduction"
+                    ]
+                  },
+                  {
+                    "group": "Mysoleas Identity Cloud",
+                    "pages": [
+                      "api-reference/oauth/discovery",
+                      "api-reference/oauth/authorize",
+                      "api-reference/oauth/token",
+                      "api-reference/oauth/userinfo",
+                      "api-reference/oauth/introspect",
+                      "api-reference/oauth/revoke"
+                    ]
+                  },
+                  {
+                    "group": "Plugin",
+                    "pages": [
+                      "api-reference/gateway/checkout-v4",
+                      "api-reference/gateway/button-v4"
+                    ]
+                  },
+                  {
+                    "group": "Liens de paiement",
+                    "pages": [
+                      "api-reference/gateway/payment-link-create",
+                      "api-reference/gateway/payment-link-list",
+                      "api-reference/gateway/payment-link-pay"
+                    ]
+                  },
+                  {
+                    "group": "Souscriptions",
+                    "pages": [
+                      "api-reference/gateway/subscription-create",
+                      "api-reference/gateway/subscription-list",
+                      "api-reference/gateway/subscription-detail",
+                      "api-reference/gateway/subscription-suspend",
+                      "api-reference/gateway/subscription-reactivate",
+                      "api-reference/gateway/subscription-cancel",
+                      "api-reference/gateway/subscription-payments",
+                      "api-reference/gateway/subscription-payment-detail",
+                      "api-reference/gateway/subscribers"
+                    ]
+                  },
+                  {
+                    "group": "Collections",
+                    "pages": [
+                      "api-reference/gateway/collection-intent",
+                      "api-reference/gateway/collection-execute",
+                      "api-reference/gateway/collection-status",
+                      "api-reference/gateway/transaction-fees-quote"
+                    ]
+                  },
+                  {
+                    "group": "Disbursements",
+                    "pages": [
+                      "api-reference/gateway/disbursement-intent",
+                      "api-reference/gateway/disbursement-execute",
+                      "api-reference/gateway/disbursement-status"
+                    ]
+                  },
+                  {
+                    "group": "Catalogue",
+                    "pages": [
+                      "api-reference/catalog/services-list",
+                      "api-reference/catalog/pricing-rule-fees",
+                      "api-reference/catalog/countries-list",
+                      "api-reference/catalog/primary-country-read",
+                      "api-reference/catalog/primary-country",
+                      "api-reference/catalog/providers-list",
+                      "api-reference/gateway/phone-number-verify"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "version": "V3",
+            "tabs": [
+              {
+                "tab": "Api Docs",
+                "groups": [
+                  {
+                    "group": "Demarrer",
+                    "pages": [
+                      "v3/index",
+                      "v3/api-docs/Getting-started",
+                      "v3/api-docs/Mobile-Money",
+                      "v3/api-docs/Faas",
+                      "v3/api-docs/Using-the-API",
+                      "v3/api-docs/Moving-to-production"
+                    ]
+                  },
+                  {
+                    "group": "Paiements",
+                    "pages": [
+                      "v3/api-docs/Collection",
+                      "v3/api-docs/Disbursement",
+                      "v3/api-docs/Refund",
+                      "v3/api-docs/SoleasPay-Checkout",
+                      "v3/api-docs/SoleasPay-Button",
+                      "v3/api-docs/PayLink",
+                      "v3/api-docs/Ebill",
+                      "v3/api-docs/Plugins",
+                      "v3/api-docs/Verify-Transaction"
+                    ]
+                  },
+                  {
+                    "group": "Services",
+                    "pages": [
+                      "v3/api-docs/E-business",
+                      "v3/api-docs/Virtual-card",
+                      "v3/api-docs/So-connect"
+                    ]
+                  },
+                  {
+                    "group": "Dashboard",
+                    "pages": [
+                      "v3/dashboard-doc/sigin",
+                      "v3/dashboard-doc/search",
+                      "v3/dashboard-doc/contact",
+                      "v3/dashboard-doc/wallet",
+                      "v3/dashboard-doc/history"
+                    ]
+                  }
+                ]
+              },
+              {
+                "tab": "Api reference",
+                "groups": [
+                  {
+                    "group": "Authentification",
+                    "pages": [
+                      "v3/api-reference/endpoint/getApikey",
+                      "v3/api-reference/endpoint/getBearer"
+                    ]
+                  },
+                  {
+                    "group": "Paiements",
+                    "pages": [
+                      "v3/api-reference/endpoint/collection",
+                      "v3/api-reference/endpoint/disbursement",
+                      "v3/api-reference/endpoint/converter"
+                    ]
+                  },
+                  {
+                    "group": "Cartes",
+                    "pages": [
+                      "v3/api-reference/endpoint/userCard",
+                      "v3/api-reference/endpoint/listUser",
+                      "v3/api-reference/endpoint/create",
+                      "v3/api-reference/endpoint/getDetails",
+                      "v3/api-reference/endpoint/cardTrans"
+                    ]
+                  },
+                  {
+                    "group": "SoleasPay Connect",
+                    "pages": [
+                      "v3/link/endpoint/initWallet",
+                      "v3/link/endpoint/initTrans",
+                      "v3/link/endpoint/fiat"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "language": "en",
+        "versions": [
+          {
+            "version": "V4",
+            "default": true,
+            "tabs": [
+              {
+                "tab": "API docs",
+                "groups": [
+                  {
+                    "group": "Get started",
+                    "pages": [
+                      "en/index",
+                      "en/quickstart",
+                      "en/api-docs/architecture",
+                      "en/api-docs/ecosysteme",
+                      "en/api-docs/authentication"
+                    ]
+                  },
+                  {
+                    "group": "Payments",
+                    "pages": [
+                      "en/api-docs/plugin",
+                      "en/api-docs/payment-links",
+                      "en/api-docs/subscriptions",
+                      "en/api-docs/collections",
+                      "en/api-docs/disbursements",
+                      "en/api-docs/transaction-statuses"
+                    ]
+                  },
+                  {
+                    "group": "Catalog",
+                    "pages": [
+                      "en/api-docs/services-countries-providers",
+                      "en/api-docs/webhooks",
+                      "en/api-docs/best-practices"
+                    ]
+                  }
+                ]
+              },
+              {
+                "tab": "API reference",
+                "groups": [
+                  {
+                    "group": "Introduction",
+                    "pages": [
+                      "en/api-reference/introduction"
+                    ]
+                  },
+                  {
+                    "group": "Mysoleas Identity Cloud",
+                    "pages": [
+                      "en/api-reference/oauth/discovery",
+                      "en/api-reference/oauth/authorize",
+                      "en/api-reference/oauth/token",
+                      "en/api-reference/oauth/userinfo",
+                      "en/api-reference/oauth/introspect",
+                      "en/api-reference/oauth/revoke"
+                    ]
+                  },
+                  {
+                    "group": "Plugin",
+                    "pages": [
+                      "en/api-reference/gateway/checkout-v4",
+                      "en/api-reference/gateway/button-v4"
+                    ]
+                  },
+                  {
+                    "group": "Payment links",
+                    "pages": [
+                      "en/api-reference/gateway/payment-link-create",
+                      "en/api-reference/gateway/payment-link-list",
+                      "en/api-reference/gateway/payment-link-pay"
+                    ]
+                  },
+                  {
+                    "group": "Subscriptions",
+                    "pages": [
+                      "en/api-reference/gateway/subscription-create",
+                      "en/api-reference/gateway/subscription-list",
+                      "en/api-reference/gateway/subscription-detail",
+                      "en/api-reference/gateway/subscription-suspend",
+                      "en/api-reference/gateway/subscription-reactivate",
+                      "en/api-reference/gateway/subscription-cancel",
+                      "en/api-reference/gateway/subscription-payments",
+                      "en/api-reference/gateway/subscription-payment-detail",
+                      "en/api-reference/gateway/subscribers"
+                    ]
+                  },
+                  {
+                    "group": "Collections",
+                    "pages": [
+                      "en/api-reference/gateway/collection-intent",
+                      "en/api-reference/gateway/collection-execute",
+                      "en/api-reference/gateway/collection-status",
+                      "en/api-reference/gateway/transaction-fees-quote"
+                    ]
+                  },
+                  {
+                    "group": "Disbursements",
+                    "pages": [
+                      "en/api-reference/gateway/disbursement-intent",
+                      "en/api-reference/gateway/disbursement-execute",
+                      "en/api-reference/gateway/disbursement-status"
+                    ]
+                  },
+                  {
+                    "group": "Catalog",
+                    "pages": [
+                      "en/api-reference/catalog/services-list",
+                      "en/api-reference/catalog/pricing-rule-fees",
+                      "en/api-reference/catalog/countries-list",
+                      "en/api-reference/catalog/primary-country-read",
+                      "en/api-reference/catalog/primary-country",
+                      "en/api-reference/catalog/providers-list",
+                      "en/api-reference/gateway/phone-number-verify"
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "version": "V3",
+            "tabs": [
+              {
+                "tab": "API docs",
+                "groups": [
+                  {
+                    "group": "Get started",
+                    "pages": [
+                      "en/v3/index",
+                      "en/v3/api-docs/Getting-started",
+                      "en/v3/api-docs/Mobile-Money",
+                      "en/v3/api-docs/Faas",
+                      "en/v3/api-docs/Using-the-API",
+                      "en/v3/api-docs/Moving-to-production"
+                    ]
+                  },
+                  {
+                    "group": "Payments",
+                    "pages": [
+                      "en/v3/api-docs/Collection",
+                      "en/v3/api-docs/Disbursement",
+                      "en/v3/api-docs/Refund",
+                      "en/v3/api-docs/SoleasPay-Checkout",
+                      "en/v3/api-docs/SoleasPay-Button",
+                      "en/v3/api-docs/PayLink",
+                      "en/v3/api-docs/Ebill",
+                      "en/v3/api-docs/Plugins",
+                      "en/v3/api-docs/Verify-Transaction"
+                    ]
+                  },
+                  {
+                    "group": "Services",
+                    "pages": [
+                      "en/v3/api-docs/E-business",
+                      "en/v3/api-docs/Virtual-card",
+                      "en/v3/api-docs/So-connect"
+                    ]
+                  },
+                  {
+                    "group": "Dashboard",
+                    "pages": [
+                      "en/v3/dashboard-doc/sigin",
+                      "en/v3/dashboard-doc/search",
+                      "en/v3/dashboard-doc/contact",
+                      "en/v3/dashboard-doc/wallet",
+                      "en/v3/dashboard-doc/history"
+                    ]
+                  }
+                ]
+              },
+              {
+                "tab": "API reference",
+                "groups": [
+                  {
+                    "group": "Authentication",
+                    "pages": [
+                      "en/v3/api-reference/endpoint/getApikey",
+                      "en/v3/api-reference/endpoint/getBearer"
+                    ]
+                  },
+                  {
+                    "group": "Payments",
+                    "pages": [
+                      "en/v3/api-reference/endpoint/collection",
+                      "en/v3/api-reference/endpoint/disbursement",
+                      "en/v3/api-reference/endpoint/converter"
+                    ]
+                  },
+                  {
+                    "group": "Cards",
+                    "pages": [
+                      "en/v3/api-reference/endpoint/userCard",
+                      "en/v3/api-reference/endpoint/listUser",
+                      "en/v3/api-reference/endpoint/create",
+                      "en/v3/api-reference/endpoint/getDetails",
+                      "en/v3/api-reference/endpoint/cardTrans"
+                    ]
+                  },
+                  {
+                    "group": "SoleasPay Connect",
+                    "pages": [
+                      "en/v3/link/endpoint/initWallet",
+                      "en/v3/link/endpoint/initTrans",
+                      "en/v3/link/endpoint/fiat"
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    ]
   },
   "logo": {
     "light": "/logo/logo.png",
@@ -156,18 +475,6 @@
       "label": "Dashboard",
       "href": "https://mysoleas.com"
     }
-  },
-  "contextual": {
-    "options": [
-      "copy",
-      "view",
-      "chatgpt",
-      "claude",
-      "perplexity",
-      "mcp",
-      "cursor",
-      "vscode"
-    ]
   },
   "footer": {
     "socials": {

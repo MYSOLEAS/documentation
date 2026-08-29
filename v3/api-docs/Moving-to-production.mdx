@@ -1,0 +1,61 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Moving to production
+
+When transitioning from sandbox to **production**, ensure your integration is updated with the following changes:
+
+## Key Differences Between Environments
+
+There are two authentifications types in SoleasPay environment
+
+| Parameter           | Sandbox                                                        | Production                                     |
+| ------------------- | -------------------------------------------------------------- | ---------------------------------------------- |
+| **Base URL**        | [https://sandbox.soleaspay.com](https://sandbox.soleaspay.com) | [https://soleaspay.com](https://soleaspay.com) |
+| **Token**           | Sandbox Bearer Token                                           | Production Bearer Token                        |
+| **MMO Environment** | Simulated Transactions                                         | Live Mobile Wallet Transactions                |
+
+## 🔐 IP Whitelisting (Optional)
+
+If your production system uses **IP whitelisting**, don’t forget to whitelist SoleasPay’s callback IPs, or **your server won’t receive status updates** for transactions.
+
+# Go-Live Testing (Pre-Launch Checklist)
+
+Before releasing to customers, perform a **live transaction test** with each MMO you plan to support.
+
+We recommend toggling a **feature flag** (e.g. `USE_SOLEASPAY_LIVE = true`) in your code for switching to live tests without affecting all traffic.
+
+## 📋 What You'll Need:
+
+1. 📱 A **real phone number** subscribed to the desired MMO.
+2. 💳 An **active mobile money wallet** on that number.
+3. 💰 **Sufficient funds** in that wallet.
+4. 🔐 Be ready to **enter the wallet PIN** within **1–60 seconds** of initiating a transaction.
+
+## ✅ Why Go-Live Testing Is Important
+
+* Ensures your app handles **real-time mobile prompts** (PIN, confirmations).
+* Validates that **callbacks** are correctly received and processed.
+* Detects any production-specific issues **before** customers do.
+
+***
+
+## Example Test Flow
+
+To disburse money from your SoleasPay account to a final customer you just need to call this endpoint,
+
+```bash theme={null}
+curl -i -X POST \
+  --url https://soleaspay.com/api/action/account/withdraw \
+  --header 'Authorization: Bearer <received token>' \
+  --header 'Content-Type: application/json' \
+  --header 'operation: <operation>' \
+  --header 'service: <service>' \
+  -data '{
+    "wallet": "677777777",
+    "amount": 10000,
+    "currency": "XAF"
+    "description": "withdraw reason"
+  }'
+```

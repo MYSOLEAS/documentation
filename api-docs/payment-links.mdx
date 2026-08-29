@@ -41,7 +41,7 @@ La reponse contient `payment_url`. Redirigez le client vers cette URL ou partage
 {
   "reference": "PLK-20260728-000001",
   "short_code": "A1B2C3D4",
-  "payment_url": "https://api.mysoleas.com/pay/A1B2C3D4",
+  "payment_url": "https://pay.soleaspay.com/link/A1B2C3D4",
   "status": "ACTIVE",
   "amount": 15000,
   "currency": "XAF"
@@ -68,7 +68,7 @@ Les alias historiques `customerPaysFees`, `customer_pays_fees`, `customerPaidFee
 ## Lire un lien public
 
 ```bash
-curl "https://api.mysoleas.com/pay/A1B2C3D4"
+curl "https://pay.soleaspay.com/link/A1B2C3D4"
 ```
 
 Cette route est publique. Elle retourne les informations necessaires a l'affichage du checkout.

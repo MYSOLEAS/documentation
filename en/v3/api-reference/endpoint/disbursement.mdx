@@ -1,0 +1,151 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Disburse payment (Pay-out)
+
+> Withdraw cash from your SoleasPay account to your personal account. The request is queued for processing. Requires bearer token and headers: `operation=4`, `service=SERVICE_ID`.
+
+
+
+## OpenAPI
+
+````yaml POST /api/action/account/withdraw
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://sandbox.soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/action/account/withdraw:
+    post:
+      summary: Withdraw funds
+      description: >-
+        Withdraw cash from your SoleasPay account to your personal account. The
+        request is queued for processing. Requires bearer token and headers:
+        `operation=4`, `service=SERVICE_ID`.
+      parameters:
+        - name: operation
+          in: header
+          required: true
+          schema:
+            type: integer
+            example: 4
+          description: Operation type (must be 4 for withdrawal)
+        - name: service
+          in: header
+          required: true
+          schema:
+            type: integer
+            example: 1
+          description: The service through which the customer will receive funds
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet:
+                  type: string
+                  example: '677347922'
+                amount:
+                  type: number
+                  format: float
+                  example: 250
+                currency:
+                  type: string
+                  example: XAF
+                  description: Optional. Currency for the transaction (e.g. XAF, CAD)
+              required:
+                - wallet
+                - amount
+      responses:
+        '201':
+          description: Withdrawal request accepted and queued
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  code:
+                    type: integer
+                    example: 201
+                  status:
+                    type: string
+                    example: PROCESSING
+                  created_at:
+                    type: string
+                    format: date-time
+                    example: '2024-12-16 10:05:01'
+                  data:
+                    type: object
+                    properties:
+                      reference:
+                        type: string
+                        example: MLS109P
+                      external_reference:
+                        type: string
+                        example: withdraw reference
+                      transaction_reference:
+                        type: string
+                        example: partner transaction reference
+                      amount:
+                        type: number
+                        example: 1000
+                      currency:
+                        type: string
+                        example: XAF
+                      operation:
+                        type: string
+                        example: WITHDRAW
+                  message:
+                    type: string
+                    example: withdraw saved to queue
+        '400':
+          description: Invalid request (e.g. wrong operation value)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Invalid operation provide
+        '500':
+          description: Internal processing error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  status:
+                    type: string
+                    example: FAILED
+                  message:
+                    type: string
+                    example: INTERNAL_PROCESSING_ERROR
+      security:
+        - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

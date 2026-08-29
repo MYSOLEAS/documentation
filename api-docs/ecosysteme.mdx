@@ -115,15 +115,15 @@ Le parcours recommande pour une application web est le flow OAuth2 `authorizatio
 
 Pour un backend qui agit en son propre nom, utilisez `client_credentials`.
 
-## Plugins SoleasPay v3
+## Plugins SoleasPay v4
 
-Les plugins `Checkout v3` et `Button v3` sont un cas volontairement plus simple.
+Les plugins `Checkout v4` et `Button v4` sont un cas volontairement plus simple.
 
 Ils servent a integrer rapidement SoleasPay dans une application tierce avec une `apikey` marchand, sans OAuth2, sans JWT et sans appels gateway manuels.
 
 | Plugin | Authentification | Quand l'utiliser |
 | --- | --- | --- |
-| Checkout v3 | `apiKey` | Rediriger le client vers la checkout hebergee `https://pay.soleaspay.com` |
-| Button v3 | `data-apikey` | Afficher le bouton JavaScript `https://btn.soleaspay.com/main.js` dans votre page |
+| Checkout v4 | `apiKey` | Rediriger le client vers la checkout hebergee `https://pay.soleaspay.com` |
+| Button v4 | `data-apikey` | Afficher le bouton JavaScript `https://btn.soleaspay.com/main.js` dans votre page |
 
-Si vous construisez un parcours de paiement complet avec vos propres appels backend, utilisez la gateway. Si vous voulez une integration paiement rapide avec tres peu de code, utilisez les plugins v3.
+Si vous construisez un parcours de paiement complet avec vos propres appels backend, utilisez la gateway. Si vous voulez une integration paiement rapide avec tres peu de code, utilisez les plugins v4.

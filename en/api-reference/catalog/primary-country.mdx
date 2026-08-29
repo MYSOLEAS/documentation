@@ -1,0 +1,11 @@
+---
+title: "Set the primary country"
+description: "Mark a TenantCountry relation as the tenant primary operating country."
+openapi: "/en/api-reference/openapi.json PATCH /country/tenant-countries/{id}/primary"
+---
+
+This route sets the provided `TenantCountry` as the only primary country for the current tenant.
+
+Use the `TenantCountry` relation identifier, not the country code. For example, send `42` if the tenant-country relation for `CMR` has identifier `42`.
+
+The change is transactional: the previous primary country is disabled and the target relation becomes the tenant's only primary relation.

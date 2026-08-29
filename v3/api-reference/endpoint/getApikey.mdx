@@ -1,0 +1,101 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Get Apikey
+
+> The life cycle of the generated token is 60 minutes.
+
+**Parameters:**
+- `public_apikey` (string): Your x-api-key from the SoleasPay dashboard.
+- `private_secretkey` (string): Your private secret key from the SoleasPay dashboard.
+
+
+
+## OpenAPI
+
+````yaml POST /api/action/auth
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://sandbox.soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/action/auth:
+    post:
+      summary: Generate Bearer Token
+      description: >-
+        The life cycle of the generated token is 60 minutes.
+
+
+        **Parameters:**
+
+        - `public_apikey` (string): Your x-api-key from the SoleasPay dashboard.
+
+        - `private_secretkey` (string): Your private secret key from the
+        SoleasPay dashboard.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                public_apikey:
+                  type: string
+                  example: your_api_key
+                private_secretkey:
+                  type: string
+                  example: your_secret_key
+              required:
+                - public_apikey
+                - private_secretkey
+      responses:
+        '200':
+          description: Bearer token response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: JWT Bearer token
+                  data:
+                    type: object
+                    properties:
+                      expireAt:
+                        type: string
+                        format: date-time
+                        description: Expiration timestamp
+        '400':
+          description: Invalid credentials or request format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  schemas:
+    Error:
+      required:
+        - error
+        - message
+      type: object
+      properties:
+        error:
+          type: integer
+          format: int32
+        message:
+          type: string
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

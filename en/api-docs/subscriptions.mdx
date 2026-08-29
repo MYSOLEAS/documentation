@@ -1,0 +1,96 @@
+---
+title: "Subscriptions"
+description: "Create, list, and manage recurring payments."
+---
+
+A subscription represents a recurring payment agreement between a merchant and a customer. Mysoleas stores the frequency, amount, customer, and subscription state.
+
+## Supported frequencies
+
+| Frequency | Description |
+| --- | --- |
+| `DAILY` | Daily billing |
+| `WEEKLY` | Weekly billing |
+| `MONTHLY` | Monthly billing |
+| `QUARTERLY` | Quarterly billing |
+| `YEARLY` | Yearly billing |
+
+## Create a subscription
+
+```bash
+curl -X POST "https://api.mysoleas.com/merchand/billing/subscribe" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "X-Idempotency-Key: sub-client-42-basic-monthly" \
+  -d '{
+    "customer_email": "client@example.com",
+    "customer_phone_number": "237670000000",
+    "amount": 5000,
+    "currency": "XAF",
+    "frequency": "MONTHLY",
+    "description": "Basic monthly plan",
+    "metadata": {
+      "plan": "basic",
+      "customer_id": "cust_42"
+    }
+  }'
+```
+
+The response returns a `reference`. Store it in your database.
+
+## List subscriptions
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions?status=ACTIVE" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+You can filter by:
+
+| Filter | Description |
+| --- | --- |
+| `status` | `ACTIVE`, `SUSPENDED`, `CANCELLED`, `EXPIRED` |
+| `customer_email` | Customer email |
+
+## Read details
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions/detail/SUB-20260728-000001?for=merchant" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+The details include subscription information and the latest related payments.
+
+## Suspend, reactivate, or cancel
+
+```bash
+curl -X POST "https://api.mysoleas.com/merchand/billing/subscriptions/suspend/SUB-20260728-000001" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{ "reason": "Payment waiting for regularization" }'
+```
+
+Management endpoints accept an optional `reason`.
+
+| Action | Endpoint |
+| --- | --- |
+| Suspend | `POST /merchand/billing/subscriptions/suspend/{reference}` |
+| Reactivate | `POST /merchand/billing/subscriptions/reactivate/{reference}` |
+| Cancel | `POST /merchand/billing/subscriptions/cancel/{reference}` |
+
+## Track subscription payments
+
+```bash
+curl "https://api.mysoleas.com/merchand/billing/subscriptions/payments/SUB-20260728-000001" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+Each payment has its own status.
+
+| Payment status | Meaning |
+| --- | --- |
+| `PENDING` | Payment scheduled or prepared |
+| `PROCESSING` | Payment in progress |
+| `PAID` | Payment succeeded |
+| `FAILED` | Payment failed |
+| `CANCELLED` | Payment cancelled |

@@ -1,0 +1,1300 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "SoleasPay API",
+    "description": "API to authenticate and receive a bearer token from SoleasPay",
+    "license": {
+      "name": "MIT"
+    },
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "https://sandbox.soleaspay.com"
+    }
+  ],
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/action/auth": {
+  "post": {
+    "summary": "Generate Bearer Token",
+    "description": "The life cycle of the generated token is 60 minutes.\n\n**Parameters:**\n- `public_apikey` (string): Your x-api-key from the SoleasPay dashboard.\n- `private_secretkey` (string): Your private secret key from the SoleasPay dashboard.",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "public_apikey": {
+                "type": "string",
+                "example": "your_api_key"
+              },
+              "private_secretkey": {
+                "type": "string",
+                "example": "your_secret_key"
+              }
+            },
+            "required": ["public_apikey", "private_secretkey"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Bearer token response",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "token": {
+                  "type": "string",
+                  "description": "JWT Bearer token"
+                },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "expireAt": {
+                      "type": "string",
+                      "format": "date-time",
+                      "description": "Expiration timestamp"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid credentials or request format",
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/Error"
+            }
+          }
+        }
+      }
+    }
+  }
+},
+
+    "/api/action/account/withdraw": {
+  "post": {
+    "summary": "Withdraw funds",
+    "description": "Withdraw cash from your SoleasPay account to your personal account. The request is queued for processing. Requires bearer token and headers: `operation=4`, `service=SERVICE_ID`.",
+    "parameters": [
+      {
+        "name": "operation",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "example": 4
+        },
+        "description": "Operation type (must be 4 for withdrawal)"
+      },
+      {
+        "name": "service",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "example": 1
+        },
+        "description": "The service through which the customer will receive funds"
+      }
+    ],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "wallet": {
+                "type": "string",
+                "example": "677347922"
+              },
+              "amount": {
+                "type": "number",
+                "format": "float",
+                "example": 250
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF",
+                "description": "Optional. Currency for the transaction (e.g. XAF, CAD)"
+              }
+            },
+            "required": ["wallet", "amount"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "Withdrawal request accepted and queued",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": true },
+                "code": { "type": "integer", "example": 201 },
+                "status": { "type": "string", "example": "PROCESSING" },
+                "created_at": { "type": "string", "format": "date-time", "example": "2024-12-16 10:05:01" },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "reference": { "type": "string", "example": "MLS109P" },
+                    "external_reference": { "type": "string", "example": "withdraw reference" },
+                    "transaction_reference": { "type": "string", "example": "partner transaction reference" },
+                    "amount": { "type": "number", "example": 1000 },
+                    "currency": { "type": "string", "example": "XAF" },
+                    "operation": { "type": "string", "example": "WITHDRAW" }
+                  }
+                },
+                "message": { "type": "string", "example": "withdraw saved to queue" }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request (e.g. wrong operation value)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Invalid operation provide" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal processing error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": false },
+                "status": { "type": "string", "example": "FAILED" },
+                "message": { "type": "string", "example": "INTERNAL_PROCESSING_ERROR" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/api/user/transfert": {
+  "post": {
+    "summary": "Transfer funds to another SoleasPay user",
+    "description": "Transfers a specified amount from the authenticated user's account to another SoleasPay user. Requires bearer token and headers: `operation=5`, `receiver=MATRICULE`. Optional headers include `service`, `security`, `code`, and `duration`.",
+    "parameters": [
+      {
+        "name": "operation",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "example": 5
+        },
+        "description": "Operation type (must be 5 for transfer)"
+      },
+      {
+        "name": "receiver",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "R10231"
+        },
+        "description": "The recipient's SoleasPay matricule"
+      },
+      {
+        "name": "service",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 2
+        },
+        "description": "Optional service ID"
+      },
+      {
+        "name": "security",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "boolean",
+          "example": true
+        },
+        "description": "Optional security flag to indicate secured transfer"
+      },
+      {
+        "name": "code",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "XYZ123"
+        },
+        "description": "Optional security code for receiver"
+      },
+      {
+        "name": "duration",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 3
+        },
+        "description": "Optional duration (in days) for security code expiration"
+      }
+    ],
+    "security": [
+      {
+        "bearerAuth": []
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "amount": {
+                "type": "number",
+                "format": "float",
+                "example": 100
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF",
+                "description": "Optional. Currency for the transaction (e.g. XAF, CAD)"
+              }
+            },
+            "required": ["amount"]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Transfer processed successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": true },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "status": { "type": "string", "example": "SUCCESS" },
+                    "balance": {
+                      "type": "object",
+                      "properties": {
+                        "balance": { "type": "number", "example": 835.07 },
+                        "rewards": { "type": "number", "example": 0.0325 }
+                      }
+                    },
+                    "payId": { "type": "string", "example": "MLS5T" }
+                  }
+                },
+                "message": { "type": "string", "example": "Transfert success" }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request (e.g. missing headers or bad operation)",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": false },
+                "message": { "type": "string", "example": "Invalid operation provide" }
+              }
+            }
+          }
+        }
+      },
+      "500": {
+        "description": "Internal processing error",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": false },
+                "status": { "type": "string", "example": "FAILED" },
+                "message": { "type": "string", "example": "INTERNAL_PROCESSING_ERROR" }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/api/agent/verif-pay": {
+  "get": {
+    "summary": "Verify Transaction",
+    "description": "Check if the payment is validated by the customer using the unique order ID and the SoleasPay payment reference (payId). Requires x-api-key and optional headers like operation and service.",
+    "parameters": [
+      {
+        "name": "x-api-key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "g-fFowNzY7t2Yk-osvI8qmZ18BNL5TF-OwQNfANd6_ss"
+        },
+        "description": "Your API key for authentication"
+      },
+      {
+        "name": "operation",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 2
+        },
+        "description": "Optional operation header"
+      },
+      {
+        "name": "service",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "integer",
+          "example": 1
+        },
+        "description": "Optional service header"
+      },
+      {
+        "name": "orderId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "3234173428"
+        },
+        "description": "Your unique order ID for checking the payment"
+      },
+      {
+        "name": "payId",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "MLS383B"
+        },
+        "description": "The SoleasPay payment reference (received from Pay-In API)"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Transaction verification result",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "code": { "type": "integer", "example": 200 },
+                    "status": { "type": "string", "example": "STATUS" },
+                    "created_at": { "type": "string", "format": "date-time", "example": "2024-12-16 10:05:01" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "operation": { "type": "string", "example": "OPERATION NAME" },
+                        "reference": { "type": "string", "example": "MLS2021B" },
+                        "external_reference": { "type": "string", "example": "abc1234" },
+                        "transaction_reference": { "type": "string", "example": "transaction partner reference" },
+                        "amount": { "type": "number", "example": 1000 },
+                        "currency": { "type": "string", "example": "XAF" }
+                      }
+                    },
+                    "message": { "type": "string", "example": "Transaction is completed successfully" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Invalid Transaction informations" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+},
+"/api/user/history/{document}": {
+  "get": {
+    "summary": "Get Transaction Details",
+    "description": "Retrieve details of a specific payment transaction using its internal reference ID.",
+    "parameters": [
+      {
+        "name": "Authorization",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "Bearer <your-token>"
+        },
+        "description": "Bearer token for user authentication"
+      },
+      {
+        "name": "document",
+        "in": "path",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "MLS109P"
+        },
+        "description": "The internal transaction reference ID"
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Transaction detail retrieved successfully",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "ext_id": { "type": "string", "example": "MLS109P" },
+                "amount": { "type": "number", "example": 250.0 },
+                "wallet": { "type": "string", "example": "677347922" },
+                "currency": { "type": "string", "example": "XAF" },
+                "operation": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "example": 4 },
+                    "name": { "type": "string", "example": "WITHDRAW" },
+                    "description": { "type": "string", "example": "WITHDRAW FUND TO PERSONAL ACCOUNT" }
+                  }
+                },
+                "service": {
+                  "type": "object",
+                  "properties": {
+                    "id": { "type": "integer", "example": 1 },
+                    "name": { "type": "string", "example": "MOMO" },
+                    "type": { "type": "string", "example": "TRUSTEECURRENCY" },
+                    "is_active": { "type": "boolean", "example": true }
+                  }
+                },
+                "status": { "type": "string", "example": "SUCCESS" },
+                "short_description": { "type": ["string", "null"], "example": null },
+                "proceed_at": { "type": "string", "format": "date-time", "example": "2021-11-19T14:32:45+00:00" },
+                "is_verif": { "type": "boolean", "example": true },
+                "other": { "type": "string", "example": "bfb168dd-2f1c-409b-a156-ad3aaee6d8e7" }
+              }
+            }
+          }
+        }
+      },
+      "401": {
+        "description": "Unauthorized - invalid or missing token"
+      },
+      "404": {
+        "description": "Transaction not found"
+      }
+    }
+  }
+},
+"/api/convert": {
+  "get": {
+    "summary": "Currency Converter",
+    "description": "Convert an amount from one currency to another using ISO 4217 codes. If the 'to' parameter is omitted, conversion is performed to all supported currencies.",
+    "parameters": [
+      {
+        "name": "amount",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "number",
+          "format": "float",
+          "example": 1.0
+        },
+        "description": "The amount to convert"
+      },
+      {
+        "name": "from",
+        "in": "query",
+        "required": true,
+        "schema": {
+          "type": "string",
+          "example": "USD"
+        },
+        "description": "The currency code of the amount you want to convert (ISO 4217)"
+      },
+      {
+        "name": "to",
+        "in": "query",
+        "required": false,
+        "schema": {
+          "type": "string",
+          "example": "XAF"
+        },
+        "description": "The currency code to convert the amount to (ISO 4217). If not provided, conversion to all supported currencies will be returned."
+      }
+    ],
+    "responses": {
+      "200": {
+        "description": "Conversion result",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "value": { "type": "string", "example": "624.28" },
+                        "devise": { "type": "string", "example": "XAF" }
+                      }
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": true },
+                    "data": {
+                      "type": "object",
+                      "additionalProperties": { "type": "string" }
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Convertion of 1 USD to all supported currency"
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request parameters"
+      }
+    }
+  }
+},
+"/api/services-list": {
+  "get": {
+    "summary": "Get Available Services",
+    "description": "Fetch the updated list of supported services from SoleasPay. Each service includes its name, type, and whether it is currently active.",
+    "responses": {
+      "200": {
+        "description": "List of supported services",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": {
+                  "type": "boolean",
+                  "example": true
+                },
+                "data": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "integer",
+                        "example": 1
+                      },
+                      "name": {
+                        "type": "string",
+                        "example": "MOMO"
+                      },
+                      "type": {
+                        "type": "string",
+                        "example": "TRUSTEECURRENCY"
+                      },
+                      "is_active": {
+                        "type": "boolean",
+                        "example": true
+                      }
+                    }
+                  }
+                },
+                "message": {
+                  "type": "string",
+                  "example": "SoPay Services list"
+                }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request"
+      }
+    }
+  }
+},
+"/api/agent/bills/v3": {
+  "post": {
+    "summary": "Collect payment (Pay-In)",
+    "description": "To collect payment by API call.",
+    "parameters": [
+      {
+        "name": "x-api-key",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Your API key"
+      },
+      {
+        "name": "operation",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "example": 2
+        },
+        "description": "Operation code. For this endpoint, must be 2"
+      },
+      {
+        "name": "service",
+        "in": "header",
+        "required": true,
+        "schema": {
+          "type": "integer",
+          "example": 2
+        },
+        "description": "The service your customer will pay for"
+      },
+      {
+        "name": "otp",
+        "in": "header",
+        "required": false,
+        "schema": {
+          "type": "integer"
+        },
+        "description": "For Orange Money service, provide OTP code if required by your logic"
+      }
+    ],
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "properties": {
+              "wallet": {
+                "type": "string",
+                "example": "690000001",
+                "description": "The wallet where we proceed the payment"
+              },
+              "amount": {
+                "type": "number",
+                "format": "float",
+                "example": 1000,
+                "description": "Amount of current payment"
+              },
+              "currency": {
+                "type": "string",
+                "example": "XAF",
+                "description": "Currency in which the payment is processed"
+              },
+              "order_id": {
+                "type": "string",
+                "example": "abc1234",
+                "description": "Unique order ID in your app for the current payment"
+              },
+              "description": {
+                "type": "string",
+                "example": "pay for rent",
+                "description": "Short description of the current payment"
+              },
+              "payer": {
+                "type": "string",
+                "example": "John",
+                "description": "Name of your customer"
+              },
+              "payerEmail": {
+                "type": "string",
+                "format": "email",
+                "example": "john@mail.com",
+                "description": "Customer email to receive payment receipt after confirmation"
+              },
+              "successUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://successurl.com/receive-payment",
+                "description": "URL to notify when payment succeeds"
+              },
+              "failureUrl": {
+                "type": "string",
+                "format": "uri",
+                "example": "https://failureurl.com/payment-fail",
+                "description": "URL to notify when payment fails"
+              }
+            },
+            "required": [
+              "wallet",
+              "amount",
+              "currency",
+              "order_id",
+              "description",
+              "payer",
+              "payerEmail",
+              "successUrl",
+              "failureUrl"
+            ]
+          }
+        }
+      }
+    },
+    "responses": {
+      "200": {
+        "description": "Success request - Transaction is processing",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "success": { "type": "boolean", "example": true },
+                "code": { "type": "integer", "example": 200 },
+                "status": { "type": "string", "example": "PROCESSING" },
+                "created_at": { "type": "string", "example": "2024-12-16 10:05:01" },
+                "data": {
+                  "type": "object",
+                  "properties": {
+                    "operation": { "type": "string", "example": "PURCHASE" },
+                    "reference": { "type": "string", "example": "MLS2021B" },
+                    "external_reference": { "type": "string", "example": "abc1234" },
+                    "transaction_reference": { "type": ["string", "null"], "nullable": true },
+                    "transaction_category": { "type": "string", "example": "direct" },
+                    "transaction_channel": { "type": "string", "example": "MSISDN" },
+                    "amount": { "type": "string", "example": "1000" },
+                    "currency": { "type": "string", "example": "XAF" }
+                  }
+                },
+                "message": { "type": "string", "example": "transaction processing" }
+              }
+            }
+          }
+        }
+      },
+      "400": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "message": { "type": "string", "example": "Invalid operation provide" }
+                  }
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "success": { "type": "boolean", "example": false },
+                    "code": { "type": "integer", "example": 400 },
+                    "status": { "type": "string", "example": "FAILURE" },
+                    "created_at": { "type": "string", "example": "2024-12-16 10:05:01" },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "operation": { "type": "string", "example": "PURCHASE" },
+                        "reference": { "type": "string", "example": "MLS2021B" },
+                        "external_reference": { "type": "string", "example": "abc1234" },
+                        "transaction_reference": { "type": ["string", "null"], "nullable": true },
+                        "transaction_category": { "type": "string", "example": "direct" },
+                        "transaction_channel": { "type": "string", "example": "MSISDN" },
+                        "amount": { "type": "string", "example": "1000" },
+                        "currency": { "type": "string", "example": "XAF" }
+                      }
+                    },
+                    "message": { "type": "string", "example": "transaction processing" }
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+},
+    "/api/action/card/user": {
+      "post": {
+        "summary": "Create a new user",
+        "description": "Create a user who can own virtual cards",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "first_name": {"type": "string", "example": "John"},
+                  "last_name": {"type": "string", "example": "Doe"},
+                  "email": {"type": "string", "format": "email", "example": "john@gmail.com"},
+                  "country_code": {"type": "string", "example": "CM"},
+                  "contact": {"type": "string", "example": "698479723"},
+                  "dob": {"type": "string", "format": "date", "example": "2010-01-01"},
+                  "is_business": {"type": "boolean", "example": false},
+                  "business_name": {"type": "string", "example": "NAN"},
+                  "billing_adress": {"type": "string", "example": "kotto"},
+                  "billing_city": {"type": "string", "example": "DOUALA"},
+                  "billing_country": {"type": "string", "example": "CAMEROON"},
+                  "billing_state": {"type": "string", "example": "littoral"},
+                  "billing_postal_code": {"type": "string", "example": "237"},
+                  "id_number": {"type": "string", "example": "00858574849"}
+                },
+                "required": [
+                  "first_name", "last_name", "email", "country_code",
+                  "contact", "dob", "is_business", "billing_adress",
+                  "billing_city", "billing_country", "id_number"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "User created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": {"type": "string", "example": "SP6VC"},
+                    "reference": {"type": "string", "example": "USR12345"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "List all users",
+        "description": "Get a list of all card users",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "user_id": {"type": "string"},
+                      "name": {"type": "string"},
+                      "email": {"type": "string"},
+                      "created_at": {"type": "string", "format": "date-time"}
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/action/card/user/{reference}": {
+      "get": {
+        "summary": "Get user details",
+        "description": "Get details for a specific user",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "reference",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "User details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user_id": {"type": "string"},
+                    "first_name": {"type": "string"},
+                    "last_name": {"type": "string"},
+                    "email": {"type": "string"},
+                    "cards": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/action/card/{userId}": {
+      "post": {
+        "summary": "Create a virtual card",
+        "description": "Create a new virtual card for a user",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "userId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "balance": {"type": "string", "example": "10"},
+                  "currency": {"type": "string", "example": "USD"},
+                  "card_type": {"type": "string", "enum": ["VISA", "MASTERCARD"]},
+                  "category": {"type": "string", "enum": ["PERSONAL", "BUSINESS"]},
+                  "grade": {"type": "string", "enum": ["BASIC", "PREMIUM"]}
+                },
+                "required": ["balance", "currency", "card_type", "category", "grade"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Card created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "card_id": {"type": "string"},
+                    "card_number": {"type": "string"},
+                    "expiry": {"type": "string"},
+                    "cvv": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/action/card/{id}": {
+      "get": {
+        "summary": "Get card details",
+        "description": "Get details for a specific virtual card",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Card details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "card_id": {"type": "string"},
+                    "card_number": {"type": "string"},
+                    "expiry": {"type": "string"},
+                    "balance": {"type": "string"},
+                    "currency": {"type": "string"},
+                    "status": {"type": "string"}
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/action/card/transaction/{id}": {
+      "get": {
+        "summary": "Perform card operations",
+        "description": "Top-up, withdraw, enable/disable, or get transactions for a card",
+        "security": [{"bearerAuth": []}],
+        "parameters": [
+          {
+            "name": "x-sp-auth-token",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "action",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "enum": ["topup", "withdraw", "disabled", "enabled", "transactions", "terminate"]
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Required for topup/withdraw"
+          },
+          {
+            "name": "amount",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            },
+            "description": "Required for topup/withdraw"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Operation successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "oneOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "new_balance": {"type": "string"},
+                        "transaction_id": {"type": "string"}
+                      },
+                      "description": "For topup/withdraw"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {"type": "string"}
+                      },
+                      "description": "For enable/disable/terminate"
+                    },
+                    {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "date": {"type": "string"},
+                          "amount": {"type": "string"},
+                          "type": {"type": "string"}
+                        }
+                      },
+                      "description": "For transactions list"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+
+
+
+
+
+
+  },
+  "webhooks": {
+    "/plant/webhook": {
+      "post": {
+        "description": "Information about a new plant added to the store",
+        "requestBody": {
+          "description": "Plant added to the store",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/NewPlant"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Return a 200 status to indicate that the data was received successfully"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Plant": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "description": "The name of the plant",
+            "type": "string"
+          },
+          "tag": {
+            "description": "Tag to specify the type",
+            "type": "string"
+          }
+        }
+      },
+      "NewPlant": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Plant"
+          },
+          {
+            "required": [
+              "id"
+            ],
+            "type": "object",
+            "properties": {
+              "id": {
+                "description": "Identification number of the plant",
+                "type": "integer",
+                "format": "int64"
+              }
+            }
+          }
+        ]
+      },
+      "Error": {
+        "required": [
+          "error",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "integer",
+            "format": "int32"
+          },
+          "message": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

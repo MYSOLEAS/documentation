@@ -1,0 +1,131 @@
+---
+title: "Quickstart"
+description: "The shortest path to understand Identity Cloud, call the gateway, and launch your first transaction."
+---
+
+This guide takes you from identity to the status tracking of a first SoleasPay transaction.
+
+## 1. Prepare your domains
+
+All protected business requests go through the gateway.
+
+```txt
+https://api.mysoleas.com
+```
+
+All OAuth2/OIDC requests go through Mysoleas Identity Cloud.
+
+```txt
+https://account.mysoleas.com
+```
+
+<Tip>
+  Store these URLs in environment variables. This makes tests, workers, and back-office tools easier to maintain.
+</Tip>
+
+## 2. Get a JWT
+
+If you integrate the **Sign in with Mysoleas** button, use `authorization_code` with PKCE. If your backend acts on its own behalf, use `client_credentials`.
+
+```bash
+curl -X POST "https://account.mysoleas.com/oauth/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "client_credentials",
+    "sp_client_id": "YOUR_APPLICATION_CLIENT_ID",
+    "sp_client_secret": "YOUR_APPLICATION_CLIENT_SECRET"
+  }'
+```
+
+The response contains an `access_token`. This token is the JWT you send to the gateway.
+
+```json
+{
+  "access_token": "eyJ...",
+  "token_type": "Bearer",
+  "token_expired_at": 1785259148
+}
+```
+
+## 3. Call the gateway
+
+Send the token in `x-sp-auth-token`.
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Accept: application/json"
+```
+
+You can also send context headers when your application manages several environments or countries.
+
+| Header | Usage |
+| --- | --- |
+| `x-sp-auth-token` | Required Bearer JWT for gateway routes |
+| `X-Request-Id` | Merchant-side trace identifier |
+| `X-Idempotency-Key` | Explicit idempotency key for sensitive operations |
+| `X-SP-Country` | Active country, for example `CMR` |
+| `X-SP-Environment` | Logical environment, for example `prod` or `dev` |
+
+## 4. Choose a service
+
+List available services before you create a transaction. The service `code` becomes the `provider` value in payment payloads.
+
+```bash
+curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
+```
+
+A service that can be used for a collection must have `is_active: true` and `is_can_collect: true`.
+
+A service that can be used for a disbursement must have `is_active: true` and `is_can_disburse: true`.
+
+## 5. Launch a collection
+
+The standard flow uses three calls: `intent`, `execute`, then `status`.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/intent" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 2500,
+    "currency": "XAF",
+    "transaction_uuid": "2f8b9a68-1ad3-4a0c-a187-40b91a4c44a1",
+    "provider": "mtn_cmr",
+    "channel": "PROVIDER",
+    "customer_wallet": "670000000",
+    "description": "Order MS-10045"
+  }'
+```
+
+<Note>
+  In the request, `customer_wallet` must not include the country calling code.
+</Note>
+
+The response contains `transaction_reference`. Use this value to execute and track the transaction.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/execute" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_reference": "TRX-20260728-000001",
+    "invoice_reference": "MS-10045"
+  }'
+```
+
+## 6. Track the status
+
+Poll the status until you get a final state.
+
+```bash
+curl -X POST "https://api.mysoleas.com/collection/status" \
+  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "transaction_reference": "TRX-20260728-000001"
+  }'
+```
+
+Final states are `COMPLETED`, `SUCCESS`, `FAILED`, `CANCELLED`, and `REFUNDED`.

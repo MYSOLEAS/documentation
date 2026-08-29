@@ -35,6 +35,9 @@
       "name": "Disbursements"
     },
     {
+      "name": "Verification"
+    },
+    {
       "name": "Catalog"
     }
   ],
@@ -447,28 +450,6 @@
         "responses": {
           "200": {
             "$ref": "#/components/responses/PaymentLinkListSuccess"
-          }
-        }
-      }
-    },
-    "/pay/{shortCode}": {
-      "get": {
-        "tags": [
-          "Payment links"
-        ],
-        "summary": "Lire un lien de paiement public",
-        "security": [],
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/ShortCode"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/PublicPaymentLinkSuccess"
-          },
-          "404": {
-            "$ref": "#/components/responses/NotFound"
           }
         }
       }
@@ -1020,6 +1001,147 @@
         }
       }
     },
+    "/phone-numbers/verify": {
+      "post": {
+        "tags": [
+          "Verification"
+        ],
+        "operationId": "verifyPhoneNumber",
+        "summary": "Verifier un numero de telephone",
+        "description": "Valide un numero mobile via la gateway publique, detecte son pays lorsque le format international le permet et retourne le wallet national attendu par les providers SoleasPay.",
+        "security": [
+          {
+            "merchantApiKey": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "wallet": {
+                    "type": "string",
+                    "description": "Numero ou wallet client a verifier."
+                  },
+                  "phone_number": {
+                    "type": "string",
+                    "description": "Alias de `wallet`."
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Alias de `wallet`."
+                  },
+                  "country": {
+                    "type": "string",
+                    "description": "Pays attendu en ISO alpha-3, par exemple `CMR`. Requis pour un numero national ou un indicatif colle sans `+` ni `00`."
+                  }
+                },
+                "oneOf": [
+                  {
+                    "required": [
+                      "wallet"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "phone_number"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "phone"
+                    ]
+                  }
+                ]
+              },
+              "examples": {
+                "national": {
+                  "summary": "Numero national avec pays",
+                  "value": {
+                    "wallet": "650020109",
+                    "country": "CMR"
+                  }
+                },
+                "international": {
+                  "summary": "Numero international auto-detectable",
+                  "value": {
+                    "phone_number": "+237650020109"
+                  }
+                },
+                "callingCodeWithoutPlus": {
+                  "summary": "Indicatif colle avec pays",
+                  "value": {
+                    "wallet": "237650020109",
+                    "country": "CMR"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Numero valide.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "code": 200,
+                  "success": true,
+                  "data": {
+                    "valid": true,
+                    "country": {
+                      "alpha2": "CM",
+                      "alpha3": "CMR",
+                      "calling_code": "237"
+                    },
+                    "number": {
+                      "e164": "+237650020109",
+                      "international": "+237 6 50 02 01 09",
+                      "national": "650020109",
+                      "provider_wallet": "650020109"
+                    },
+                    "type": "MOBILE",
+                    "operator": "MTN Cameroon",
+                    "supported_country": true,
+                    "support_message": null
+                  },
+                  "locale": "fr",
+                  "message": "Numero de telephone verifie."
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Numero invalide, pays manquant ou pays incoherent.",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "countryRequired": {
+                    "value": {
+                      "success": false,
+                      "code": 400,
+                      "message": "phone_country_required"
+                    }
+                  },
+                  "invalidPhoneCountry": {
+                    "value": {
+                      "success": false,
+                      "code": 400,
+                      "message": "invalid_phone_country"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "API key manquante ou invalide."
+          }
+        }
+      }
+    },
     "/transactions/fees/quote": {
       "post": {
         "tags": [
@@ -1449,6 +1571,12 @@
         "in": "header",
         "name": "x-sp-auth-token",
         "description": "JWT Bearer emis par Mysoleas Identity Cloud. Format: Bearer <access_token>."
+      },
+      "merchantApiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-API-Key",
+        "description": "API key marchand SoleasPay. Utilisee pour les endpoints publics plugin ou verification telephone."
       }
     },
     "parameters": {

@@ -1,0 +1,22 @@
+---
+title: "List fees"
+description: "List fee rules available for a country, service, and user tier."
+openapi: "/en/api-reference/openapi.json GET /pricing-rule/fees"
+---
+
+This route returns the fee rules visible to the current token.
+
+For a non-admin user, the gateway verifies that the token grants access to the requested country. If the country is not authorized, the response is `403 access_denied`.
+
+Useful parameters:
+
+| Parameter | Role |
+| --- | --- |
+| `country` | ISO alpha-3 country, for example `CMR` |
+| `service_code` | Incoming or outgoing service, for example `mtn_cmr` |
+| `incoming_service_code` | Incoming service to filter |
+| `outgoing_service_code` | Outgoing service to filter |
+| `operation` | `COLLECTION` or `DISBURSEMENT` |
+| `user_tier` | User tier to apply to the calculation |
+
+If `user_tier` is absent, the service uses the current token tier.

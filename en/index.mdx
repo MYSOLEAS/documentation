@@ -1,0 +1,106 @@
+---
+title: "Mysoleas API"
+description: "Integrate the Mysoleas ecosystem with a unified gateway, Identity Cloud, and specialized business services."
+---
+
+Mysoleas exposes a modular architecture that lets your applications connect to several business domains without being coupled to internal microservices.
+
+The platform is easier to understand in two layers:
+
+- **Mysoleas infrastructure**, which carries identity, security, routing, and the gateway;
+- **business domains**, which carry business use cases such as payments, sales, notifications, and marketing.
+
+## Public entry points
+
+| Domain | Role |
+| --- | --- |
+| `https://api.mysoleas.com` | Application gateway for all protected business routes |
+| `https://account.mysoleas.com` | Mysoleas Identity Cloud: OAuth2, OIDC, JWT, user profile, and **Sign in with Mysoleas** |
+
+All gateway routes expect a Bearer JWT in the `x-sp-auth-token` header.
+
+```txt
+x-sp-auth-token: Bearer <JWT>
+```
+
+<Note>
+  SoleasPay `Checkout v4` and `Button v4` are the deliberate exception: they integrate with a merchant `apikey` to make payment integrations faster.
+</Note>
+
+<CardGroup cols={2}>
+  <Card title="Start the integration" icon="rocket" href="/en/quickstart">
+    Get a JWT, call the gateway, and launch your first transaction.
+  </Card>
+  <Card title="Understand the architecture" icon="diagram-project" href="/en/api-docs/architecture">
+    See how the gateway, Identity Cloud, and business domains work together.
+  </Card>
+  <Card title="Explore the ecosystem" icon="grid-2x2" href="/en/api-docs/ecosysteme">
+    Place SoleasPay, MyShup, Notification Service, MyBoost, and Identity Cloud in the right context.
+  </Card>
+  <Card title="Sign in with Mysoleas" icon="user-round-check" href="/en/api-docs/authentication">
+    Integrate OAuth2/OIDC and use the JWT to call the gateway when needed.
+  </Card>
+  <Card title="SoleasPay v4 plugins" icon="puzzle-piece" href="/en/api-docs/plugin">
+    Add Checkout v4 or Button v4 with a simple merchant API key.
+  </Card>
+  <Card title="API reference" icon="brackets-curly" href="/en/api-reference/introduction">
+    Find endpoints, payloads, headers, and schemas for each resource.
+  </Card>
+</CardGroup>
+
+## Mysoleas business domains
+
+| Product | Domain | What you integrate |
+| --- | --- | --- |
+| SoleasPay | Payment service processor | Collections, disbursements, payment links, subscriptions, services, countries, and providers |
+| Mysoleas Identity Cloud | Identity | OAuth2/OIDC sign-in, JWT, userinfo, and third-party applications |
+| MyShup | Sales | Products, orders, merchant journeys, and sales automation |
+| Notification Service | Communication | Transactional notifications, contacts, audiences, and V2 marketing campaigns |
+| MyBoost | Marketing | Boost campaigns, UGC challenges, promotions, and customer activation |
+
+## What you can build with SoleasPay
+
+### Collect payments
+
+Use collections to request a payment from a customer. Mysoleas returns a reference, drives the provider, and lets you follow the status until a final state.
+
+### Send payouts
+
+Use disbursements to send funds from your Mysoleas balance to a customer wallet. The flow checks the balance, reserves the funds, executes the payout, and synchronizes the status.
+
+### Automate billing
+
+Use subscriptions to charge a customer on a defined frequency. Each subscription payment has its own reference and status.
+
+### Simplify checkout
+
+Use payment links to create a shareable URL. The customer pays on a public page while your backend keeps the reference and follows the lifecycle.
+
+### Integrate quickly
+
+Use `Checkout v4` or `Button v4` when you want to add SoleasPay to a third-party application with an `apikey`, without managing OAuth2 or direct gateway calls.
+
+## Gateway response convention
+
+Application APIs return a stable JSON envelope.
+
+```json
+{
+  "code": 200,
+  "success": true,
+  "data": {},
+  "locale": "en",
+  "message": "transaction_submitted",
+  "meta": {}
+}
+```
+
+When an error occurs, `success` is `false` and `message` contains the reason your backend can act on.
+
+```json
+{
+  "success": false,
+  "code": 400,
+  "message": "empty_data"
+}
+```

@@ -1,0 +1,21 @@
+---
+title: "Authorize a sign-in"
+description: "Redirect a user to Sign in with Mysoleas with OAuth2 and PKCE."
+openapi: "/en/api-reference/openapi.json GET /oauth/v2/authorize"
+---
+
+This endpoint starts the **Sign in with Mysoleas** flow.
+
+Before calling this endpoint, the user must have a Mysoleas account and create an OAuth2 application from the dashboard:
+
+```txt
+https://mysoleas.com
+```
+
+The dashboard lets you configure the `client_id`, allowed redirect URLs, scopes, and the information displayed during consent.
+
+Your application redirects the user there with `client_id`, `redirect_uri`, `scope`, `state`, and PKCE parameters. After authentication and consent, Mysoleas sends a `code` to your `redirect_uri`.
+
+Then exchange this `code` for a JWT through `/oauth/v2/token`.
+
+You can use this JWT to open a session in your own application. If you then call the Mysoleas gateway, send it in `x-sp-auth-token`.

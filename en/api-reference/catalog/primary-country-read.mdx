@@ -1,0 +1,21 @@
+---
+title: "Read the primary country"
+description: "Return the primary operating country for the current tenant."
+openapi: "/en/api-reference/openapi.json GET /country/primary"
+---
+
+This route returns the `TenantCountry` relation marked as primary for the tenant of the current token.
+
+The primary country is used as the default context when some flows need to calculate fees or route a payment without a reliable explicit country.
+
+If no primary country is configured on an older account, the response can contain `data: null`. In that case, existing flows keep their historical fallback.
+
+```json
+{
+  "id": 42,
+  "is_primary": true,
+  "tenant": "tenant_123",
+  "Country": "CMR",
+  "updated_at": "2026-08-08 12:30:00"
+}
+```

@@ -1,0 +1,101 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Card Transactions
+
+> Top-up, withdraw, enable/disable, or get transactions for a card
+
+
+
+## OpenAPI
+
+````yaml GET /api/action/card/transaction/{id}
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://sandbox.soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/action/card/transaction/{id}:
+    get:
+      summary: Perform card operations
+      description: Top-up, withdraw, enable/disable, or get transactions for a card
+      parameters:
+        - name: x-sp-auth-token
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: action
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - topup
+              - withdraw
+              - disabled
+              - enabled
+              - transactions
+              - terminate
+        - name: currency
+          in: query
+          schema:
+            type: string
+          description: Required for topup/withdraw
+        - name: amount
+          in: query
+          schema:
+            type: string
+          description: Required for topup/withdraw
+      responses:
+        '200':
+          description: Operation successful
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      new_balance:
+                        type: string
+                      transaction_id:
+                        type: string
+                    description: For topup/withdraw
+                  - type: object
+                    properties:
+                      status:
+                        type: string
+                    description: For enable/disable/terminate
+                  - type: array
+                    items:
+                      type: object
+                      properties:
+                        date:
+                          type: string
+                        amount:
+                          type: string
+                        type:
+                          type: string
+                    description: For transactions list
+      security:
+        - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

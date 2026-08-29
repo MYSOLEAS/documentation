@@ -1,0 +1,125 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Fiat Payment Distribution
+
+> Redistribute a fiat payment received outside SoPay by specifying payer details and distribution breakdown.
+
+
+
+## OpenAPI
+
+````yaml POST /api/agent/link/fiat-distribution
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/agent/link/fiat-distribution:
+    post:
+      tags:
+        - Transactions
+      summary: Fiat Payment Distribution
+      description: >-
+        Redistribute a fiat payment received outside SoPay by specifying payer
+        details and distribution breakdown.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Your-Apikey-Here
+          description: Your authentication API key
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  type: object
+                  properties:
+                    payer:
+                      type: string
+                      example: SP202116A
+                      description: The SoPay ID of the user making the payment.
+                    currency:
+                      type: string
+                      example: XAF
+                      description: The currency of the received fiat payment.
+                    amount:
+                      type: number
+                      format: float
+                      example: 10000
+                      description: The total amount received in fiat.
+                    distribution:
+                      type: array
+                      description: Array of users who will receive a share of the payment.
+                      items:
+                        type: object
+                        properties:
+                          matricule:
+                            type: string
+                            example: SP20231M
+                            description: The SoPay ID of the beneficiary.
+                          rate:
+                            type: number
+                            format: float
+                            example: 15
+                            description: >-
+                              Percentage of the total amount allocated to the
+                              user.
+                        required:
+                          - matricule
+                          - rate
+                  required:
+                    - payer
+                    - currency
+                    - amount
+                    - distribution
+              required:
+                - data
+      responses:
+        '200':
+          description: Fiat distribution completed successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: fiat distribution success
+        '400':
+          description: Failed to process fiat distribution
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Error message
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

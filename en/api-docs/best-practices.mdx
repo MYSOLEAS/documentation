@@ -1,0 +1,48 @@
+---
+title: "Best practices"
+description: "Make your Mysoleas integration reliable, readable, and easy to maintain."
+---
+
+## Make every payment traceable
+
+Always store these values in your database:
+
+| Value | Why |
+| --- | --- |
+| `transaction_uuid` | Identify your local attempt |
+| `transaction_reference` | Track the transaction in Mysoleas |
+| `invoice_reference` | Link the payment to your order |
+| `provider_reference` | Diagnose provider-side cases |
+| `status` | Drive your business logic |
+
+## Use idempotency
+
+Do not generate a new `transaction_uuid` after a timeout. Replay the same intent with the same UUID, then call the status endpoint.
+
+For subscriptions, also send `X-Idempotency-Key` or `idempotency_key` when your system may replay a creation request.
+
+## Do not block your checkout
+
+Mobile money providers can take a few seconds or several minutes. Show a waiting state and let your backend follow `status`.
+
+## Cache the catalogue carefully
+
+You can cache countries, services, and providers for a few minutes. Do not cache them for too long, because `is_active` can change.
+
+## Interpret statuses correctly
+
+Validate an order only on `COMPLETED` or `SUCCESS`. Do not validate on `SUBMITTED` or `PROCESSING`.
+
+## Log useful errors
+
+For each error, keep:
+
+- called endpoint;
+- payload without sensitive data;
+- `transaction_reference`;
+- `invoice_reference`;
+- `X-Request-Id`;
+- Mysoleas response;
+- call date.
+
+This information strongly reduces resolution time with support.

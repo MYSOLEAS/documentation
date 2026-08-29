@@ -91,8 +91,8 @@ Cette convention evite de confondre l'authentification gateway avec d'autres hea
 | --- | --- | --- |
 | Connexion et gestion utilisateur | `account.mysoleas.com` | OAuth2/OIDC |
 | Appel gateway metier | `api.mysoleas.com` | `x-sp-auth-token: Bearer <JWT>` |
-| Checkout v3 | `pay.soleaspay.com` | `apiKey` marchand |
-| Button v3 | `btn.soleaspay.com` | `data-apikey` marchand |
+| Checkout v4 | `pay.soleaspay.com` | `apiKey` marchand |
+| Button v4 | `btn.soleaspay.com` | `data-apikey` marchand |
 
 ## Domaines metier dans l'ecosysteme
 
@@ -130,12 +130,12 @@ Ce modele evite les doubles debits. Il vous donne aussi un point clair pour repr
 
 ## Flux plugin SoleasPay
 
-Les plugins SoleasPay v3 ne suivent pas le meme modele que les appels gateway serveur a serveur.
+Les plugins SoleasPay v4 ne suivent pas le meme modele que les appels gateway serveur a serveur.
 
 | Plugin | URL | Authentification | Role |
 | --- | --- | --- | --- |
-| Checkout v3 | `https://pay.soleaspay.com` | `apiKey` | Page de paiement hebergee |
-| Button v3 | `https://btn.soleaspay.com/main.js` | `data-apikey` | Bouton JavaScript integre dans votre page |
+| Checkout v4 | `https://pay.soleaspay.com` | `apiKey` | Page de paiement hebergee |
+| Button v4 | `https://btn.soleaspay.com/main.js` | `data-apikey` | Bouton JavaScript integre dans votre page |
 
 Utilisez ces plugins pour une integration paiement rapide lorsque vous ne voulez pas gerer directement OAuth2, JWT, `intent`, `execute` et `status`.
 

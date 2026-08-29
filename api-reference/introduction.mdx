@@ -28,13 +28,12 @@ x-sp-auth-token: Bearer <access_token>
 Le token est un JWT emis par Mysoleas Identity Cloud.
 
 <Note>
-  Les endpoints OAuth2 eux-memes vivent sur `account.mysoleas.com`. Les plugins SoleasPay v3 utilisent une `apikey` marchand et ne demandent pas ce header.
+  Les endpoints OAuth2 eux-memes vivent sur `account.mysoleas.com`. Les plugins SoleasPay v4 utilisent une `apikey` marchand et ne demandent pas ce header.
 </Note>
 
-Les routes publiques de paiement par lien sont:
+La route publique de paiement par lien exposee dans cette reference est:
 
-- `GET /pay/{shortCode}`;
-- `POST /pay/{shortCode}/pay`.
+- `POST https://api.mysoleas.com/pay/{shortCode}/pay` pour soumettre le paiement.
 
 ## Format de succes
 

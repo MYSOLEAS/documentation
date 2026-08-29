@@ -1,0 +1,232 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Collect payment (Pay-In)
+
+> To collect payment by API call.
+
+
+
+## OpenAPI
+
+````yaml POST /api/agent/bills/v3
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://sandbox.soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/agent/bills/v3:
+    post:
+      summary: Collect payment (Pay-In)
+      description: To collect payment by API call.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+          description: Your API key
+        - name: operation
+          in: header
+          required: true
+          schema:
+            type: integer
+            example: 2
+          description: Operation code. For this endpoint, must be 2
+        - name: service
+          in: header
+          required: true
+          schema:
+            type: integer
+            example: 2
+          description: The service your customer will pay for
+        - name: otp
+          in: header
+          required: false
+          schema:
+            type: integer
+          description: For Orange Money service, provide OTP code if required by your logic
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                wallet:
+                  type: string
+                  example: '690000001'
+                  description: The wallet where we proceed the payment
+                amount:
+                  type: number
+                  format: float
+                  example: 1000
+                  description: Amount of current payment
+                currency:
+                  type: string
+                  example: XAF
+                  description: Currency in which the payment is processed
+                order_id:
+                  type: string
+                  example: abc1234
+                  description: Unique order ID in your app for the current payment
+                description:
+                  type: string
+                  example: pay for rent
+                  description: Short description of the current payment
+                payer:
+                  type: string
+                  example: John
+                  description: Name of your customer
+                payerEmail:
+                  type: string
+                  format: email
+                  example: john@mail.com
+                  description: Customer email to receive payment receipt after confirmation
+                successUrl:
+                  type: string
+                  format: uri
+                  example: https://successurl.com/receive-payment
+                  description: URL to notify when payment succeeds
+                failureUrl:
+                  type: string
+                  format: uri
+                  example: https://failureurl.com/payment-fail
+                  description: URL to notify when payment fails
+              required:
+                - wallet
+                - amount
+                - currency
+                - order_id
+                - description
+                - payer
+                - payerEmail
+                - successUrl
+                - failureUrl
+      responses:
+        '200':
+          description: Success request - Transaction is processing
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  code:
+                    type: integer
+                    example: 200
+                  status:
+                    type: string
+                    example: PROCESSING
+                  created_at:
+                    type: string
+                    example: '2024-12-16 10:05:01'
+                  data:
+                    type: object
+                    properties:
+                      operation:
+                        type: string
+                        example: PURCHASE
+                      reference:
+                        type: string
+                        example: MLS2021B
+                      external_reference:
+                        type: string
+                        example: abc1234
+                      transaction_reference:
+                        type:
+                          - string
+                          - 'null'
+                        nullable: true
+                      transaction_category:
+                        type: string
+                        example: direct
+                      transaction_channel:
+                        type: string
+                        example: MSISDN
+                      amount:
+                        type: string
+                        example: '1000'
+                      currency:
+                        type: string
+                        example: XAF
+                  message:
+                    type: string
+                    example: transaction processing
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: false
+                      message:
+                        type: string
+                        example: Invalid operation provide
+                  - type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: false
+                      code:
+                        type: integer
+                        example: 400
+                      status:
+                        type: string
+                        example: FAILURE
+                      created_at:
+                        type: string
+                        example: '2024-12-16 10:05:01'
+                      data:
+                        type: object
+                        properties:
+                          operation:
+                            type: string
+                            example: PURCHASE
+                          reference:
+                            type: string
+                            example: MLS2021B
+                          external_reference:
+                            type: string
+                            example: abc1234
+                          transaction_reference:
+                            type:
+                              - string
+                              - 'null'
+                            nullable: true
+                          transaction_category:
+                            type: string
+                            example: direct
+                          transaction_channel:
+                            type: string
+                            example: MSISDN
+                          amount:
+                            type: string
+                            example: '1000'
+                          currency:
+                            type: string
+                            example: XAF
+                      message:
+                        type: string
+                        example: transaction processing
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

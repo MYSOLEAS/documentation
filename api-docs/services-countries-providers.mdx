@@ -15,6 +15,62 @@ Avant de lancer un paiement, votre backend doit connaitre trois choses:
 
 Les codes de services utilises dans les payloads de transaction suivent le format `provider_country_code`, par exemple `mtn_cmr` ou `orange_cmr`.
 
+## Verifier un numero mobile
+
+Avant d'envoyer un wallet telephone dans une collection ou un disbursement, vous pouvez verifier le numero via la gateway publique:
+
+```txt
+POST https://api.mysoleas.com/phone-numbers/verify
+```
+
+Cette route utilise votre API key marchand SoleasPay et retourne le pays detecte, le type de numero, l'operateur mobile si disponible et le `provider_wallet`, c'est-a-dire le numero national sans indicatif international attendu par les providers.
+
+```bash
+curl -X POST "https://api.mysoleas.com/phone-numbers/verify" \
+  -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "wallet": "650020109",
+    "country": "CMR"
+  }'
+```
+
+```json
+{
+  "valid": true,
+  "country": {
+    "alpha2": "CM",
+    "alpha3": "CMR",
+    "calling_code": "237"
+  },
+  "number": {
+    "e164": "+237650020109",
+    "international": "+237 6 50 02 01 09",
+    "national": "650020109",
+    "provider_wallet": "650020109"
+  },
+  "type": "MOBILE",
+  "operator": "MTN Cameroon",
+  "supported_country": true,
+  "support_message": null
+}
+```
+
+Formats acceptes pour un numero camerounais:
+
+| Entree | Pays requis | `provider_wallet` |
+| --- | --- | --- |
+| `+237650020109` | Non | `650020109` |
+| `00237650020109` | Non | `650020109` |
+| `237650020109` | Oui | `650020109` |
+| `650020109` | Oui | `650020109` |
+
+<Warning>
+  Envoyez toujours `country` pour les numeros sans prefixe international `+` ou `00`. Mysoleas garde les pays en alpha-3 (`CMR`, `CIV`, `SEN`, etc.). L'alpha-2 peut apparaitre dans la reponse pour faciliter l'interoperabilite, mais il ne remplace pas le code alpha-3.
+</Warning>
+
+Voir la reference complete: [Verifier un numero de telephone](/api-reference/gateway/phone-number-verify).
+
 ## Lister les pays
 
 ```bash

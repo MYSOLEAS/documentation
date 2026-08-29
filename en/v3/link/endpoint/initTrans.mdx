@@ -1,0 +1,120 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Init new transaction
+
+> Initialize a new transaction before sending a payment, to prepare redistribution for involved SoPay users.
+
+
+
+## OpenAPI
+
+````yaml  POST /api/agent/link/init
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/agent/link/init:
+    post:
+      tags:
+        - Transactions
+      summary: Init new transaction
+      description: >-
+        Initialize a new transaction before sending a payment, to prepare
+        redistribution for involved SoPay users.
+      parameters:
+        - name: x-api-key
+          in: header
+          required: true
+          schema:
+            type: string
+            example: Your-Apikey-Here
+          description: Your authentication API key.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payment_receiver:
+                  type: string
+                  example: SP20208U
+                  description: The SoPay ID of the main payment receiver.
+                payment_id:
+                  type: string
+                  example: 20000553G
+                  description: A unique order ID for the current payment.
+                amount:
+                  type: number
+                  format: float
+                  example: 10000
+                  description: The total amount of the transaction.
+                distribution:
+                  type: array
+                  description: >-
+                    List of users (by matricule) and the percentage they will
+                    receive.
+                  items:
+                    type: object
+                    properties:
+                      matricule:
+                        type: string
+                        example: SP20231M
+                        description: The SoPay matricule of a distribution recipient.
+                      rate:
+                        type: number
+                        format: float
+                        example: 15
+                        description: The percentage share this user receives.
+                    required:
+                      - matricule
+                      - rate
+              required:
+                - payment_receiver
+                - payment_id
+                - amount
+                - distribution
+      responses:
+        '200':
+          description: Transaction initialized successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: Transaction linked successfully
+        '400':
+          description: Invalid request or failed to initialize transaction
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: Error message
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

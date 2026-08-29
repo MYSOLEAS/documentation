@@ -1,0 +1,121 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Create User
+
+> Create a user who can own virtual cards
+
+
+
+## OpenAPI
+
+````yaml POST /api/action/card/user
+openapi: 3.1.0
+info:
+  title: SoleasPay API
+  description: API to authenticate and receive a bearer token from SoleasPay
+  license:
+    name: MIT
+  version: 1.0.0
+servers:
+  - url: https://sandbox.soleaspay.com
+security:
+  - bearerAuth: []
+paths:
+  /api/action/card/user:
+    post:
+      summary: Create a new user
+      description: Create a user who can own virtual cards
+      parameters:
+        - name: x-sp-auth-token
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                first_name:
+                  type: string
+                  example: John
+                last_name:
+                  type: string
+                  example: Doe
+                email:
+                  type: string
+                  format: email
+                  example: john@gmail.com
+                country_code:
+                  type: string
+                  example: CM
+                contact:
+                  type: string
+                  example: '698479723'
+                dob:
+                  type: string
+                  format: date
+                  example: '2010-01-01'
+                is_business:
+                  type: boolean
+                  example: false
+                business_name:
+                  type: string
+                  example: NAN
+                billing_adress:
+                  type: string
+                  example: kotto
+                billing_city:
+                  type: string
+                  example: DOUALA
+                billing_country:
+                  type: string
+                  example: CAMEROON
+                billing_state:
+                  type: string
+                  example: littoral
+                billing_postal_code:
+                  type: string
+                  example: '237'
+                id_number:
+                  type: string
+                  example: '00858574849'
+              required:
+                - first_name
+                - last_name
+                - email
+                - country_code
+                - contact
+                - dob
+                - is_business
+                - billing_adress
+                - billing_city
+                - billing_country
+                - id_number
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user_id:
+                    type: string
+                    example: SP6VC
+                  reference:
+                    type: string
+                    example: USR12345
+      security:
+        - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+````

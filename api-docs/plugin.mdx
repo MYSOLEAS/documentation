@@ -1,24 +1,24 @@
 ---
-title: "Plugins SoleasPay v3"
-description: "Integrez SoleasPay rapidement avec Checkout v3 ou Button v3, uniquement avec votre API key."
+title: "Plugins SoleasPay v4"
+description: "Integrez SoleasPay rapidement avec Checkout v4 ou Button v4, uniquement avec votre API key."
 ---
 
-Les plugins SoleasPay v3 sont concus pour integrer le paiement dans une application tierce sans gerer OAuth, JWT, intent, execute ou status cote marchand.
+Les plugins SoleasPay v4 sont concus pour integrer le paiement dans une application tierce sans gerer OAuth, JWT, intent, execute ou status cote marchand.
 
 Vous utilisez simplement votre `apikey` marchand SoleasPay. Le plugin se charge de charger les services disponibles, d'afficher l'interface de paiement, de collecter les informations client, de soumettre la transaction et de retourner le resultat.
 
 <Note>
-  Les plugins v3 sont distincts de l'API gateway serveur a serveur. Pour Checkout v3 et Button v3, l'integration se fait avec une API key, pas avec un access token OAuth.
+  Les plugins v4 sont distincts de l'API gateway serveur a serveur. Pour Checkout v4 et Button v4, l'integration se fait avec une API key, pas avec un access token OAuth.
 </Note>
 
 ## Choisir le bon plugin
 
 | Plugin | Integration | Experience utilisateur |
 | --- | --- | --- |
-| Checkout v3 | Formulaire ou payload envoye vers `https://pay.soleaspay.com` | Page de paiement complete hebergee par SoleasPay |
-| Button v3 | Script JavaScript `https://btn.soleaspay.com/main.js` | Bouton de paiement integre directement dans votre page |
+| Checkout v4 | Formulaire ou payload envoye vers `https://pay.soleaspay.com` | Page de paiement complete hebergee par SoleasPay |
+| Button v4 | Script JavaScript `https://btn.soleaspay.com/main.js` | Bouton de paiement integre directement dans votre page |
 
-Utilisez Checkout v3 si vous voulez rediriger le client vers une page de paiement complete. Utilisez Button v3 si vous voulez garder le bouton dans votre page produit, panier, facture ou espace client.
+Utilisez Checkout v4 si vous voulez rediriger le client vers une page de paiement complete. Utilisez Button v4 si vous voulez garder le bouton dans votre page produit, panier, facture ou espace client.
 
 ## Prerequis
 
@@ -32,9 +32,9 @@ Vous avez besoin de:
 
 Votre `apikey` identifie le marchand et permet au plugin de charger les moyens de paiement autorises. Ne publiez pas une cle qui donne acces a des actions sensibles hors contexte plugin.
 
-## Checkout v3
+## Checkout v4
 
-Checkout v3 affiche une page de paiement hebergee. Votre application soumet les donnees du paiement vers:
+Checkout v4 affiche une page de paiement hebergee. Votre application soumet les donnees du paiement vers:
 
 ```txt
 https://pay.soleaspay.com
@@ -84,7 +84,7 @@ curl -X POST "https://pay.soleaspay.com" \
   }'
 ```
 
-### Champs Checkout v3
+### Champs Checkout v4
 
 | Champ | Obligatoire | Description |
 | --- | --- | --- |
@@ -121,7 +121,7 @@ Valeurs canoniques:
 Les alias booleens `customerPaysFees` et `customer_pays_fees` sont acceptes temporairement a la frontiere HTTP puis normalises vers `CUSTOMER` ou `MERCHANT`.
 
 <Note>
-  Dans Checkout v3, le devis de frais est calcule par le plugin pendant la session de paiement. Votre integration continue d'utiliser `apiKey`; elle ne doit pas gerer un JWT pour ce calcul.
+  Dans Checkout v4, le devis de frais est calcule par le plugin pendant la session de paiement. Votre integration continue d'utiliser `apiKey`; elle ne doit pas gerer un JWT pour ce calcul.
 </Note>
 
 Le plugin relaie le calcul vers la gateway avec `origin: "PLUGIN"`, le service choisi, le montant, la devise et le contexte `feeBearer`.
@@ -141,7 +141,7 @@ Si vous construisez votre propre backend serveur a serveur hors plugin, utilisez
 
 ### Retour apres paiement
 
-Apres le paiement, Checkout v3 redirige le client vers l'URL appropriee avec les donnees de paiement dans `soleaspay_data`.
+Apres le paiement, Checkout v4 redirige le client vers l'URL appropriee avec les donnees de paiement dans `soleaspay_data`.
 
 ```txt
 https://yourdomain.com/receivePayment?soleaspay_data=<json-url-encoded>
@@ -168,7 +168,7 @@ Votre backend doit mettre a jour la commande avec `transaction_reference`, `stat
 
 ### Checkout avec split
 
-Checkout v3 peut recevoir un contexte de repartition.
+Checkout v4 peut recevoir un contexte de repartition.
 
 ```json
 {
@@ -198,16 +198,16 @@ Checkout v3 peut recevoir un contexte de repartition.
 
 La somme des `rate` ne doit pas depasser `100`.
 
-## Button v3
+## Button v4
 
-Button v3 ajoute un bouton SoleasPay dans votre page. Il se charge d'ouvrir l'interface de paiement, de charger les moyens de paiement et de retourner le resultat dans votre JavaScript.
+Button v4 ajoute un bouton SoleasPay dans votre page. Il se charge d'ouvrir l'interface de paiement, de charger les moyens de paiement et de retourner le resultat dans votre JavaScript.
 
 ### Installation du script
 
 Ajoutez un conteneur pour le bouton, puis chargez le script.
 
 ```html
-<div id="soleaspay_btn_V3_1"></div>
+<div id="soleaspay_btn_V4_1"></div>
 
 <script
   id="SBScript"
@@ -257,7 +257,7 @@ function initButton() {
 }
 ```
 
-### Options Button v3
+### Options Button v4
 
 | Option | Obligatoire | Description |
 | --- | --- | --- |
@@ -271,7 +271,7 @@ function initButton() {
 | `successUrl` | Oui | URL de retour apres succes |
 | `mode` | Oui | `BILLING` ou `TIPING` |
 
-### Modes Button v3
+### Modes Button v4
 
 | Mode | Comportement |
 | --- | --- |
@@ -304,8 +304,8 @@ Utilisez cette reponse pour afficher un message au client. Pour une commande sen
 ## Bonnes pratiques
 
 - Utilisez un `orderId` unique par paiement.
-- Chargez Button v3 une seule fois par page.
-- Ne melangez pas Checkout v3 et Button v3 sur le meme parcours utilisateur.
+- Chargez Button v4 une seule fois par page.
+- Ne melangez pas Checkout v4 et Button v4 sur le meme parcours utilisateur.
 - Verifiez que `successUrl` et `failureUrl` sont accessibles en HTTPS.
 - Enregistrez `transaction_reference` des que le plugin la retourne.
 - Ne considerez un paiement comme reussi que si `status` vaut `COMPLETED` ou `SUCCESS`.

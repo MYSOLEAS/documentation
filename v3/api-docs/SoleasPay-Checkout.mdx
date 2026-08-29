@@ -1,0 +1,101 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Checkout Form
+
+> SoleasPay's online payment form for e-commerce websites, sales funnel, web/mobile applications, or even desktop applications.
+
+<Note>
+  While the installation of this module is straightforward, it does require basic technical skills in website or web application development, particularly in JavaScript.
+</Note>
+
+## Requirement
+
+* A verified SoleasPay Account
+* A live Apikey
+
+## Usage
+
+This feature can be support two mode :
+
+* Normal mode :
+
+  You implement this form in your application at the end of your order checkout process to invite customer completed the payment. When he submit the checkout form, a custom payment page apear and he select the prefered service to completed the current transaction.
+* API mode :
+
+  In this mode, you submit the checkout form on your application and SoleasPay will return a payment link where you can redirect your customer to complete this transaction.
+
+## Integration
+
+Installing the SoleasPay Checkout involves implementing an HTML form as follows:
+
+### <a id="verify-trans" />
+
+[Verify Pay](https://doc.soleaspay.com/api-reference/endpoint/verifyTransaction)
+
+[Convert](https://doc.soleaspay.com/api-reference/endpoint/converter)
+
+Convert an amount from one currency to another using ISO 4217 codes. If the ‘to’ parameter is omitted, conversion is performed to all supported currencies.
+
+```html theme={null}
+<form action="https://checkout.soleaspay.com" method="post">
+  <div class="form-group">
+    <span>Amount:</span>
+    <input class="form-control" name="amount" type="number" required>
+  </div>
+
+  <div class="form-group">
+    <span>Currency:</span>
+    <input class="form-control" name="currency" type="text" required>
+  </div>
+
+  <div class="form-group">
+    <span>Description:</span>
+    <input class="form-control" name="description" type="text" required>
+  </div>
+
+  <div class="form-group">
+    <span>Order ID:</span>
+    <input class="form-control" name="orderId" type="text" required>
+  </div>
+
+  <div class="form-group">
+    <span>Service:</span>
+    <input class="form-control" name="service" type="number" required>
+  </div>
+
+  <div class="form-group">
+    <span>Customer Details:</span>
+    <input class="form-control" name="customer[name]" type="text" placeholder="Full name" required>
+    <input class="form-control" name="customer[email]" type="email" placeholder="Email" required>
+	<input class="form-control" name="customer[wallet]" type="tel" placeholder="Phone" required>
+  </div>
+
+  <div class="form-group">
+    <span>Success URL:</span>
+    <input class="form-control" name="successUrl" type="url" value="your_success_url" required>
+  </div>
+
+  <div class="form-group">
+    <span>Failure URL:</span>
+    <input class="form-control" name="failureUrl" type="url" value="your_failure_url" required>
+  </div>
+
+  <!-- Hidden fields -->
+  <input type="hidden" name="shopName" value="your_business_name">
+  <input type="hidden" name="apiKey" value="YOUR_API_KEY">
+  <input type="hidden" name="line" value="up">
+
+  <div class="form-group mt-2">
+    <button type="submit" class="btn btn-primary">Pay Now</button>
+  </div>
+</form>
+```
+
+<Warning>
+  Depending on your need choose between normal or api mode. The unique implementation difference is the form action link url:
+
+  * For normal mode it's : [https://checkout.soleaspay.com](https://checkout.soleaspay.com)
+  * For api mode it's : [https://checkout.soleaspay.com?mode=api](https://checkout.soleaspay.com?mode=api)
+</Warning>

@@ -1,0 +1,70 @@
+> ## Documentation Index
+> Fetch the complete documentation index at: https://doc.soleaspay.com/llms.txt
+> Use this file to discover all available pages before exploring further.
+
+# Using the API
+
+# Using the SoleasPay API
+
+## API Environments
+
+The base URL for the SoleasPay API is different between our sandbox and production environments:
+
+| Environment | Base URL                                                       |
+| ----------- | -------------------------------------------------------------- |
+| Sandbox     | [https://sandbox.soleaspay.com](https://sandbox.soleaspay.com) |
+| Production  | [https://soleaspay.com](https://soleaspay.com)                 |
+
+The specific operation can be called by appending the endpoint to the base URL. Example: `https://sandbox.soleaspay.com`
+
+## Authentication
+
+SoleasPay’s API support two Authentication flow :
+
+* header token flow
+  For this authentication, you need to provide your apikey in the request payload on headers
+
+<Note>
+  The authed parameter is : **x-api-key** : `<your api key>`
+
+  This authentication flow is need for all endpoint prefixed like **/api/agent/**
+</Note>
+
+* Bearer token flow
+  Here you need to request a bearer token and provide it for all requests on Authorization headers
+
+Request example
+
+```bash theme={null}
+    curl -i -X POST \
+      --url https://soleaspay.com/api/action/auth \
+      -H 'Content-Type: application/json' \
+      --header 'Content-Type: application/json' \
+      -data '{
+        "public_apikey": "YOUR_SOLEASPAY_APIKEY",
+        "private_secretkey": "YOUR_SOLEASPAY_PRIVATE_KEY"
+      }'
+```
+
+Response
+
+```bash theme={null}
+    {
+        "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpYXQiOjE2MzcyMjkyMjAsImV4cCI6MTYzNzIzMjgyMCwicm9sZXMiOlsiUk9MRV9BR0VOVCIsIlJPTEVfQVBJIl0sImVtYWlsIjoibXlzb2xlYXNAZ21haWwuY29tIn0.aQBVdzQ-hQbrMh2EP_s3iGjjREF7GiOTt6WMu6yKEUgZe3kQUSnNhvVeUu37SKE3zJNPevV-2ADdqpppfCnSx49_JD574PYqccVjxcV9KiCyngLH9QlpZcPSSZneq5uKFOaFGSDnbRhrAGjN6F8bmllFDKN78bqwUDwqhcJWZCmpFj10IG23k8gNIZ1lXE318i5NoVIiPLJul4vEFsFUqe4Y8QQ0hMyLuhQ-r8n7tyUNht92RgtJDoWPGydgjauAvlgcO2rXXKhVomJwTurRhp1klOYp4FUXwljUSqpUayywU8nsBMfKj0BZME7k2hMGvSEZHZzR1hjxOQCZHvXTWFwawbadd0PpAdccjkl_fwAZteL2bJL_MS2XY5outZ8cJbHeS1yJnDTPEU4bm7DGAOEIRVm1rralmIWg1AnCkksGrt4dMNFUY4VHNDbICl0wg0ZQbtszPM3LwYLXy1F0Qh6xsuy-cBAE6VrRefIv6_qsFLQv3cfOFrDXbKnDdk3XAYyDbqpcfLkF9yieHtVEChOQZXpypqmxAb0_cinLoqoci6H2Ii598QcpIrlYYbx6Vj72tiKWh_ToDSTmCaAhitDt9S5559PSBjK7cqcLQXP8jPgC02EEBUnC2nodo-Xi0F-_s0iMJ2KT3Au4EZ847uJWAdcHg3_KuNRDALYP7m0",
+        "data": {
+            "expireAt": "2021-11-18 10:08"
+        }
+    }
+```
+
+<Note>
+  The authed parameters are :
+
+  * **Authorization** : Bearer `<received token>`
+
+  * **X-SP-AUTH-TOKEN** : Bearer `<received token>`
+
+  This authentication flow is need for all endpoint prefixed like **/api/action/**
+
+  The Bearer token is valid for 3600 s
+</Note>

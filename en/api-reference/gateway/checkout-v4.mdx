@@ -1,0 +1,81 @@
+---
+title: "Checkout v4"
+description: "Integration reference for the SoleasPay hosted checkout with an API key."
+---
+
+Checkout v4 uses a merchant API key. No OAuth token is required.
+
+Your application submits the payment to the SoleasPay hosted page. The customer completes the payment on SoleasPay, then is redirected to your application with the result.
+
+```txt
+POST https://pay.soleaspay.com
+```
+
+## Use cases
+
+Use Checkout v4 if you want to:
+
+- redirect the customer to a full payment page;
+- avoid building a payment-method collection interface;
+- quickly offer the active services on your merchant account;
+- integrate SoleasPay with a simple HTML form.
+
+## Payload
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `apiKey` | `string` | Yes | SoleasPay merchant API key |
+| `amount` | `number` | Yes | Total amount to pay |
+| `currency` | `string` | Yes | Payment currency, for example `XAF`, `XOF`, or `USD` |
+| `orderId` | `string` | Yes | Unique reference in your system |
+| `description` | `string` | Yes | Label shown to the customer |
+| `shopName` | `string` | Yes | Store or service name |
+| `successUrl` | `string` | Yes | Return URL after a successful payment |
+| `failureUrl` | `string` | Yes | Return URL after a failed or cancelled payment |
+| `customer` | `object` | No | Customer information used to prefill the checkout |
+| `line` | `string` | No | Use `up` if currency conversion is allowed |
+| `area` | `string` | No | Desired area or country used to filter payment methods |
+| `settlement_mode` | `string` | No | Settlement mode, for example `SPLIT` |
+| `distribution` | `array` | No | Fund distribution when split settlement is enabled |
+
+## Example
+
+```json
+{
+  "apiKey": "YOUR_API_KEY",
+  "amount": 25000,
+  "currency": "XAF",
+  "orderId": "ORDER-2026-0001",
+  "description": "Payment for order ORDER-2026-0001",
+  "shopName": "Shop Name",
+  "successUrl": "https://yourdomain.com/receivePayment",
+  "failureUrl": "https://yourdomain.com/paymentFailed"
+}
+```
+
+## HTML form
+
+```html
+<form method="POST" action="https://pay.soleaspay.com">
+  <input type="hidden" name="apiKey" value="YOUR_API_KEY" />
+  <input type="hidden" name="amount" value="25000" />
+  <input type="hidden" name="currency" value="XAF" />
+  <input type="hidden" name="orderId" value="ORDER-2026-0001" />
+  <input type="hidden" name="description" value="Payment for order ORDER-2026-0001" />
+  <input type="hidden" name="shopName" value="Shop Name" />
+  <input type="hidden" name="successUrl" value="https://yourdomain.com/receivePayment" />
+  <input type="hidden" name="failureUrl" value="https://yourdomain.com/paymentFailed" />
+
+  <button type="submit">Pay with SoleasPay</button>
+</form>
+```
+
+## Return
+
+The customer is redirected to `successUrl` or `failureUrl` with `soleaspay_data` in the query string.
+
+```txt
+https://yourdomain.com/receivePayment?soleaspay_data=<json-url-encoded>
+```
+
+Decode `soleaspay_data`, store the transaction reference, then confirm the status before delivering a sensitive service.

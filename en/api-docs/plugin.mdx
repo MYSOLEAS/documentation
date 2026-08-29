@@ -1,0 +1,311 @@
+---
+title: "SoleasPay v4 plugins"
+description: "Integrate SoleasPay quickly with Checkout v4 or Button v4, using only your API key."
+---
+
+SoleasPay v4 plugins are designed to integrate payments into a third-party application without managing OAuth, JWT, intent, execute, or status on the merchant side.
+
+You only use your SoleasPay merchant `apikey`. The plugin loads available services, displays the payment interface, collects customer information, submits the transaction, and returns the result.
+
+<Note>
+  v4 plugins are separate from the server-to-server API gateway. For Checkout v4 and Button v4, the integration uses an API key, not an OAuth access token.
+</Note>
+
+## Choose the right plugin
+
+| Plugin | Integration | User experience |
+| --- | --- | --- |
+| Checkout v4 | Form or payload sent to `https://pay.soleaspay.com` | Full payment page hosted by SoleasPay |
+| Button v4 | JavaScript script `https://btn.soleaspay.com/main.js` | Payment button embedded directly in your page |
+
+Use Checkout v4 when you want to redirect the customer to a complete payment page. Use Button v4 when you want to keep the payment button inside your product page, cart, invoice, or customer area.
+
+## Requirements
+
+You need:
+
+- a SoleasPay merchant `apikey`;
+- an amount and currency;
+- a unique order reference;
+- a success URL;
+- a failure URL.
+
+Your `apikey` identifies the merchant and lets the plugin load authorized payment methods. Do not publish a key that grants access to sensitive actions outside the plugin context.
+
+## Checkout v4
+
+Checkout v4 displays a hosted payment page. Your application submits payment data to:
+
+```txt
+https://pay.soleaspay.com
+```
+
+The customer chooses a country and payment method, confirms the operation, then returns to `successUrl` or `failureUrl`.
+
+### HTML example
+
+You can create a standard HTML form.
+
+```html
+<form method="POST" action="https://pay.soleaspay.com">
+  <input type="hidden" name="apiKey" value="YOUR_API_KEY" />
+  <input type="hidden" name="amount" value="25000" />
+  <input type="hidden" name="currency" value="XAF" />
+  <input type="hidden" name="orderId" value="ORDER-2026-0001" />
+  <input type="hidden" name="description" value="Payment for order ORDER-2026-0001" />
+  <input type="hidden" name="shopName" value="Shop Name" />
+  <input type="hidden" name="successUrl" value="https://yourdomain.com/receivePayment" />
+  <input type="hidden" name="failureUrl" value="https://yourdomain.com/paymentFailed" />
+
+  <button type="submit">Pay with SoleasPay</button>
+</form>
+```
+
+### Server JSON example
+
+If your backend initiates the checkout, send the same payload.
+
+```bash
+curl -X POST "https://pay.soleaspay.com" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "apiKey": "YOUR_API_KEY",
+    "amount": 25000,
+    "currency": "XAF",
+    "orderId": "ORDER-2026-0001",
+    "description": "Payment for order ORDER-2026-0001",
+    "shopName": "Shop Name",
+    "successUrl": "https://yourdomain.com/receivePayment",
+    "failureUrl": "https://yourdomain.com/paymentFailed",
+    "customer": {
+      "name": "Ada Client",
+      "email": "ada@example.com"
+    }
+  }'
+```
+
+### Checkout v4 fields
+
+| Field | Required | Description |
+| --- | --- | --- |
+| `apiKey` | Yes | SoleasPay merchant API key |
+| `amount` | Yes | Amount to pay |
+| `currency` | Yes | Amount currency, for example `XAF`, `XOF`, `USD` |
+| `orderId` | Yes | Unique merchant-side order reference |
+| `description` | Yes | Description shown to the customer |
+| `shopName` | Yes | Store or service name |
+| `successUrl` | Yes | URL called after a successful payment |
+| `failureUrl` | Yes | URL called after a failed or cancelled payment |
+| `customer` | No | Customer data used to prefill the checkout |
+| `line` | No | `up` to allow currency conversion |
+| `area` | No | Desired area or country used to filter services |
+| `feeBearer` | No | `CUSTOMER` if the customer pays fees, `MERCHANT` if the merchant absorbs them |
+
+### Plugin fees
+
+Plugins can indicate who pays the fees for each payment. The backend normalizes this value and recalculates fees server-side during `collect`.
+
+Resolution priority:
+
+1. `feeBearer` in the collect payload.
+2. `feeBearer` in the query string.
+3. Historical fallback when no value is provided.
+
+Canonical values:
+
+| Value | Effect |
+| --- | --- |
+| `CUSTOMER` | Fees are added to the amount paid by the customer |
+| `MERCHANT` | Fees are paid by the merchant |
+
+The boolean aliases `customerPaysFees` and `customer_pays_fees` are temporarily accepted at the HTTP boundary, then normalized to `CUSTOMER` or `MERCHANT`.
+
+<Note>
+  In Checkout v4, the fee quote is calculated by the plugin during the payment session. Your integration still uses `apiKey`; it does not need to manage a JWT for this calculation.
+</Note>
+
+The plugin forwards the calculation to the gateway with `origin: "PLUGIN"`, the selected service, the amount, the currency, and the `feeBearer` context.
+
+```json
+{
+  "origin": "PLUGIN",
+  "provider": "mtn_cmr",
+  "amount": 25000,
+  "currency": "XAF",
+  "plugin": "CHECKOUT",
+  "feeBearer": "CUSTOMER"
+}
+```
+
+If you build your own server-to-server backend outside the plugin, use the gateway route `POST /transactions/fees/quote` with `x-sp-auth-token`.
+
+### Return after payment
+
+After payment, Checkout v4 redirects the customer to the appropriate URL with payment data in `soleaspay_data`.
+
+```txt
+https://yourdomain.com/receivePayment?soleaspay_data=<json-url-encoded>
+```
+
+Once decoded, `soleaspay_data` contains transaction information.
+
+```json
+{
+  "transaction_reference": "TRX-123456",
+  "reference": "TRX-123456",
+  "invoice_reference": "ORDER-2026-0001",
+  "provider_reference": "PROVIDER-789",
+  "status": "SUCCESS",
+  "success": true,
+  "operation": "COLLECTION",
+  "channel": "PROVIDER",
+  "amount": 25000,
+  "currency": "XAF"
+}
+```
+
+Your backend should update the order with `transaction_reference`, `status`, `amount`, `currency`, and `invoice_reference`.
+
+### Checkout with split settlement
+
+Checkout v4 can receive a split context.
+
+```json
+{
+  "apiKey": "YOUR_API_KEY",
+  "amount": 25000,
+  "currency": "XAF",
+  "orderId": "ORDER-SPLIT-001",
+  "description": "Marketplace order",
+  "shopName": "Marketplace",
+  "successUrl": "https://yourdomain.com/receivePayment",
+  "failureUrl": "https://yourdomain.com/paymentFailed",
+  "settlement_mode": "SPLIT",
+  "distribution": [
+    {
+      "matricule": "SELLER-001",
+      "rate": 80,
+      "description": "Seller share"
+    },
+    {
+      "matricule": "MARKET-001",
+      "rate": 20,
+      "description": "Marketplace commission"
+    }
+  ]
+}
+```
+
+The sum of `rate` values must not exceed `100`.
+
+## Button v4
+
+Button v4 adds a SoleasPay button to your page. It opens the payment interface, loads payment methods, and returns the result to your JavaScript.
+
+### Script installation
+
+Add a container for the button, then load the script.
+
+```html
+<div id="soleaspay_btn_V4_1"></div>
+
+<script
+  id="SBScript"
+  type="text/javascript"
+  data-lang="en"
+  data-apikey="YOUR_API_KEY"
+  src="https://btn.soleaspay.com/main.js">
+</script>
+```
+
+`data-lang` controls the interface language. Use `fr` or `en`.
+
+### Initialize the payment
+
+```html
+<script type="text/javascript">
+  const options = {
+    btnTitle: "Pay",
+    amount: 25,
+    currency: "USD",
+    orderId: "MLS00000025F",
+    description: "Test sopay button payment",
+    businessName: "Shop Name",
+    loadInvoice: true,
+    successUrl: "https://yourdomain.com/receivePayment",
+    mode: "BILLING"
+  };
+
+  function initButton() {
+    return SopayButton.pay(options)
+      .then((res) => console.log(res))
+      .catch((err) => console.log(err));
+  }
+
+  initButton();
+</script>
+```
+
+If you want to recreate the button automatically after each payment attempt, you can call `initButton()` again in `finally`.
+
+```js
+function initButton() {
+  return SopayButton.pay(options)
+    .then((res) => console.log(res))
+    .catch((err) => console.log(err))
+    .finally(initButton);
+}
+```
+
+### Button v4 options
+
+| Option | Required | Description |
+| --- | --- | --- |
+| `btnTitle` | No | Text displayed on the button |
+| `amount` | Yes in `BILLING` | Amount to pay |
+| `currency` | Yes | Payment currency |
+| `orderId` | Yes | Unique payment reference |
+| `description` | Yes | Description shown to the customer |
+| `businessName` | Yes | Store or service name |
+| `loadInvoice` | No | Loads or creates the invoice on the plugin side |
+| `successUrl` | Yes | Return URL after success |
+| `mode` | Yes | `BILLING` or `TIPING` |
+
+### Button v4 modes
+
+| Mode | Behavior |
+| --- | --- |
+| `BILLING` | The amount is fixed by your application |
+| `TIPING` | The customer can enter the amount to pay |
+
+Keep the spelling `TIPING` if your integration uses this mode, because it is the value expected by the plugin.
+
+### JavaScript response
+
+`SopayButton.pay(options)` returns a promise. On success, you receive an object you can use in your interface.
+
+```json
+{
+  "success": true,
+  "status": "SUCCESS",
+  "message": "Transaction submitted",
+  "data": {
+    "transaction_reference": "TRX-123456",
+    "reference": "TRX-123456",
+    "status": "SUCCESS",
+    "amount": 25,
+    "currency": "USD"
+  }
+}
+```
+
+Use this response to show a message to the customer. For a sensitive order, your backend should also verify the transaction before delivering the service.
+
+## Best practices
+
+- Use a unique `orderId` per payment.
+- Load Button v4 only once per page.
+- Do not mix Checkout v4 and Button v4 in the same user journey.
+- Make sure `successUrl` and `failureUrl` are available over HTTPS.
+- Store `transaction_reference` as soon as the plugin returns it.
+- Treat a payment as successful only when `status` is `COMPLETED` or `SUCCESS`.
