@@ -1,13 +1,13 @@
 ---
-title: "Services, pays et providers"
-description: "Identifier les pays disponibles, choisir un service et verifier le statut des providers."
+title: "Services, pays et frais"
+description: "Identifier les pays disponibles, choisir un service et verifier son statut."
 ---
 
 Avant de lancer un paiement, votre backend doit connaitre trois choses:
 
 - le pays actif;
 - le service de paiement a utiliser;
-- le statut operationnel du provider.
+- le statut operationnel de ce service.
 
 <Note>
   Les pays sont identifies en ISO alpha-3. Utilisez par exemple `CMR`, pas `CM`.
@@ -191,25 +191,6 @@ Pour une application API directe, `feeBearer` vient de la configuration de l'app
 
 Les transactions stockent ensuite un snapshot immuable dans `metadata.fees` avec le montant, la devise, le porteur des frais, la source, le pays, le tier et la version de calcul.
 
-## Lister les providers
-
-```bash
-curl "https://api.mysoleas.com/provider/list?page=1&limit=100" \
-  -H "x-sp-auth-token: Bearer YOUR_ACCESS_TOKEN"
-```
-
-Le statut d'un provider se lit dans `is_active`.
-
-```json
-{
-  "id": 1,
-  "code": "mtn_cmr",
-  "name": "MTN Cameroon",
-  "is_active": true,
-  "countries": ["CMR"],
-  "updated_at": "2026-07-28 13:20:10"
-}
-```
 
 ## Choisir correctement
 
@@ -229,6 +210,6 @@ Pour un disbursement:
 4. Verifiez votre solde avant de lancer de gros volumes.
 5. Envoyez `service.code` dans le champ `provider`.
 
-## Provider inactif
+## Service inactif
 
-Si `is_active` vaut `false`, masquez le moyen de paiement dans votre checkout. Si un provider devient indisponible apres la selection du client, affichez un message clair et proposez un autre service actif du meme pays.
+Si `is_active` vaut `false`, masquez le moyen de paiement dans votre checkout. Si un service devient indisponible apres la selection du client, affichez un message clair et proposez un autre service actif du meme pays.

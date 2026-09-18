@@ -980,27 +980,6 @@
         }
       }
     },
-    "/provider/list": {
-      "get": {
-        "tags": [
-          "Catalog"
-        ],
-        "summary": "Lister les providers et leur statut",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Page"
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/ProviderListSuccess"
-          }
-        }
-      }
-    },
     "/phone-numbers/verify": {
       "post": {
         "tags": [
