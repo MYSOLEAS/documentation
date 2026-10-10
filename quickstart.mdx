@@ -1,9 +1,13 @@
 ---
 title: "Demarrage rapide"
-description: "Le chemin le plus court pour comprendre Identity Cloud, appeler la gateway et lancer une premiere transaction."
+description: "Le chemin le plus court pour creer une application dans SoleasPay, obtenir un token gateway et lancer une premiere transaction."
 ---
 
-Ce guide vous accompagne de l'identite jusqu'au suivi d'une premiere transaction SoleasPay.
+Ce guide vous accompagne depuis la creation d'une application dans SoleasPay jusqu'au suivi d'une premiere transaction.
+
+<Note>
+  Mysoleas Identity Cloud gere l'authentification et les utilisateurs de vos applications. Il ne remplace pas l'application creee dans SoleasPay qui fournit les credentials API pour consommer la gateway.
+</Note>
 
 ## 1. Preparez vos domaines
 
@@ -13,7 +17,7 @@ Toutes les requetes metier protegees partent vers la gateway.
 https://api.mysoleas.com
 ```
 
-Toutes les requetes OAuth2/OIDC partent vers Mysoleas Identity Cloud.
+Les parcours utilisateurs OAuth2/OIDC partent vers Mysoleas Identity Cloud.
 
 ```txt
 https://account.mysoleas.com
@@ -23,21 +27,35 @@ https://account.mysoleas.com
   Stockez ces URLs dans des variables d'environnement. Cela rend vos tests, vos workers et votre backoffice plus faciles a maintenir.
 </Tip>
 
-## 2. Obtenez un JWT
+## 2. Creez une application dans SoleasPay
 
-Si vous integrez le bouton **Se connecter avec Mysoleas**, utilisez `authorization_code` avec PKCE. Si votre backend agit en son propre nom, utilisez `client_credentials`.
+Avant d'appeler les endpoints gateway, creez une application dans SoleasPay depuis votre espace marchand. Cette application represente votre integration API.
+
+Conservez les deux credentials generes:
+
+| Credential | Role |
+| --- | --- |
+| `client_id` | Identifie l'application creee dans SoleasPay |
+| `client_secret` | Secret serveur utilise pour obtenir un token gateway |
+
+<Warning>
+  Ne mettez jamais `client_secret` dans un frontend, une application mobile ou un depot public. Il doit rester cote backend.
+</Warning>
+
+## 3. Obtenez un token gateway
+
+Utilisez les credentials de l'application creee dans SoleasPay.
 
 ```bash
 curl -X POST "https://account.mysoleas.com/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "grant_type": "client_credentials",
-    "sp_client_id": "YOUR_APPLICATION_CLIENT_ID",
-    "sp_client_secret": "YOUR_APPLICATION_CLIENT_SECRET"
+    "sp_client_id": "YOUR_SOLEASEPAY_APP_CLIENT_ID",
+    "sp_client_secret": "YOUR_SOLEASEPAY_APP_CLIENT_SECRET"
   }'
 ```
 
-La reponse contient un `access_token`. Ce token est le JWT a transmettre a la gateway.
+La reponse contient un `access_token`. Ce token represente l'application creee dans SoleasPay et se transmet a la gateway.
 
 ```json
 {
@@ -47,7 +65,11 @@ La reponse contient un `access_token`. Ce token est le JWT a transmettre a la ga
 }
 ```
 
-## 3. Appelez la gateway
+<Tip>
+  Le token obtenu ici sert aux appels API gateway. Le JWT utilisateur issu de **Se connecter avec Mysoleas** sert a ouvrir une session utilisateur dans votre propre application.
+</Tip>
+
+## 4. Appelez la gateway
 
 Transmettez le jeton dans `x-sp-auth-token`.
 
@@ -61,13 +83,13 @@ Vous pouvez aussi transmettre des headers de contexte lorsque votre application 
 
 | Header | Usage |
 | --- | --- |
-| `x-sp-auth-token` | Jeton Bearer JWT obligatoire pour les routes gateway |
+| `x-sp-auth-token` | Token Bearer obtenu depuis une application creee dans SoleasPay |
 | `X-Request-Id` | Identifiant de trace cote marchand |
 | `X-Idempotency-Key` | Cle d'idempotence explicite pour les operations sensibles |
 | `X-SP-Country` | Pays actif, par exemple `CMR` |
 | `X-SP-Environment` | Environnement logique, par exemple `prod` ou `dev` |
 
-## 4. Choisissez un service
+## 5. Choisissez un service
 
 Listez les services disponibles avant de creer une transaction. Le champ `code` du service devient la valeur `provider` dans les payloads de paiement.
 
@@ -80,7 +102,7 @@ Un service utilisable pour une collection doit avoir `is_active: true` et `is_ca
 
 Un service utilisable pour un disbursement doit avoir `is_active: true` et `is_can_disburse: true`.
 
-## 5. Lancez une collection
+## 6. Lancez une collection
 
 Le flux standard se fait en trois appels: `intent`, `execute`, puis `status`.
 
@@ -115,7 +137,7 @@ curl -X POST "https://api.mysoleas.com/collection/execute" \
   }'
 ```
 
-## 6. Suivez le statut
+## 7. Suivez le statut
 
 Interrogez le statut jusqu'a obtenir un etat final.
 

@@ -16,6 +16,6 @@ The dashboard lets you configure the `client_id`, allowed redirect URLs, scopes,
 
 Your application redirects the user there with `client_id`, `redirect_uri`, `scope`, `state`, and PKCE parameters. After authentication and consent, Mysoleas sends a `code` to your `redirect_uri`.
 
-Then exchange this `code` for a JWT through `/oauth/v2/token`.
+Then exchange this `code` for a user JWT through `/oauth/v2/token`.
 
-You can use this JWT to open a session in your own application. If you then call the Mysoleas gateway, send it in `x-sp-auth-token`.
+You can use this JWT to open a session in your own application. If you then call the SoleasPay gateway, get a separate token with the `client_id` and `client_secret` of the application created in SoleasPay.

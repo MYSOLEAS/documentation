@@ -1,11 +1,15 @@
 ---
-title: "Obtenir un JWT"
-description: "Echanger un code OAuth2 ou des credentials serveur contre un JWT Mysoleas."
+title: "Obtenir un JWT utilisateur"
+description: "Echanger un code OAuth2 contre un JWT utilisateur Mysoleas Identity Cloud."
 openapi: "POST /oauth/v2/token"
 ---
 
-Cet endpoint retourne un JWT Mysoleas.
+Cet endpoint retourne un JWT utilisateur Mysoleas Identity Cloud.
 
-Pour une connexion utilisateur, appelez-le apres `/oauth/v2/authorize` avec le `code` et le `code_verifier` PKCE. Pour une integration backend, utilisez `client_credentials`.
+Pour une connexion utilisateur, appelez-le apres `/oauth/v2/authorize` avec le `code` et le `code_verifier` PKCE.
 
-Une fois le JWT obtenu, vous pouvez l'utiliser pour ouvrir une session dans votre application, appeler `userinfo`, ou consommer les routes gateway avec `x-sp-auth-token`.
+Une fois le JWT obtenu, vous pouvez l'utiliser pour ouvrir une session dans votre application ou appeler `userinfo`.
+
+<Note>
+  Pour consommer les endpoints gateway SoleasPay, utilisez les credentials de l'application creee dans SoleasPay afin d'obtenir un token d'application, puis envoyez-le dans `x-sp-auth-token`.
+</Note>

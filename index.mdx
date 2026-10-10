@@ -15,12 +15,12 @@ La plateforme se lit en deux couches:
 | Domaine | Role |
 | --- | --- |
 | `https://api.mysoleas.com` | Gateway applicative pour toutes les routes metier protegees |
-| `https://account.mysoleas.com` | Mysoleas Identity Cloud: OAuth2, OIDC, JWT, profil utilisateur et bouton **Se connecter avec Mysoleas** |
+| `https://account.mysoleas.com` | Mysoleas Identity Cloud: OAuth2, OIDC, JWT utilisateur, profil utilisateur et bouton **Se connecter avec Mysoleas** |
 
-Toutes les routes de la gateway attendent un JWT Bearer dans le header `x-sp-auth-token`.
+Toutes les routes de la gateway attendent un token Bearer obtenu depuis une application creee dans SoleasPay dans le header `x-sp-auth-token`.
 
 ```txt
-x-sp-auth-token: Bearer <JWT>
+x-sp-auth-token: Bearer <SOLEASEPAY_APP_TOKEN>
 ```
 
 <Note>
@@ -29,7 +29,7 @@ x-sp-auth-token: Bearer <JWT>
 
 <CardGroup cols={2}>
   <Card title="Demarrer l'integration" icon="rocket" href="/quickstart">
-    Obtenez un JWT, appelez la gateway et lancez votre premiere transaction.
+    Creez une application dans SoleasPay, obtenez un token gateway et lancez votre premiere transaction.
   </Card>
   <Card title="Comprendre l'architecture" icon="diagram-project" href="/api-docs/architecture">
     Voyez comment la gateway, Identity Cloud et les domaines metier cooperent.
@@ -38,7 +38,7 @@ x-sp-auth-token: Bearer <JWT>
     Situez SoleasPay, MyShup, Notification Service, MyBoost et Identity Cloud.
   </Card>
   <Card title="Se connecter avec Mysoleas" icon="user-round-check" href="/api-docs/authentication">
-    Integrez OAuth2/OIDC et utilisez le JWT obtenu pour appeler la gateway.
+    Integrez OAuth2/OIDC pour gerer les utilisateurs de votre application.
   </Card>
   <Card title="Plugins SoleasPay v4" icon="puzzle-piece" href="/api-docs/plugin">
     Ajoutez Checkout v4 ou Button v4 avec une simple API key marchand.
@@ -53,7 +53,7 @@ x-sp-auth-token: Bearer <JWT>
 | Produit | Domaine | Ce que vous integrez |
 | --- | --- | --- |
 | SoleasPay | Payment service processor | Collections, disbursements, liens de paiement, souscriptions, services, pays et providers |
-| Mysoleas Identity Cloud | Identité | Connexion OAuth2/OIDC, JWT, userinfo et applications tierces |
+| Mysoleas Identity Cloud | Identité | Connexion OAuth2/OIDC, JWT utilisateur, userinfo et gestion des utilisateurs |
 | MyShup | Ventes | Produits, commandes, parcours marchands et automatisation commerciale |
 | Notification Service | Communication | Notifications transactionnelles, contacts, audiences et campagnes marketing V2 |
 | MyBoost | Marketing | Campagnes boost, challenges UGC, promotions et activation client |

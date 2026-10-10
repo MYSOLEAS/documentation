@@ -3,18 +3,20 @@ title: "Identity Cloud and OAuth2"
 description: "Integrate Mysoleas Identity Cloud to authenticate your users and manage your OAuth2 applications."
 ---
 
-Mysoleas Identity Cloud is the identity service of the Mysoleas ecosystem. You can integrate it into your website, mobile application, or SaaS to manage authentication and user management without rebuilding that whole layer yourself.
+Mysoleas Identity Cloud is the user management service of the Mysoleas ecosystem. You can integrate it into your website, mobile application, or SaaS to manage authentication, user sessions, and profiles without rebuilding that whole layer yourself.
 
 In practice, your application can use Mysoleas Identity Cloud to:
 
 - display the **Sign in with Mysoleas** button;
 - authenticate a user with OAuth2/OIDC;
-- retrieve a JWT and user claims;
+- retrieve a user JWT and user claims;
 - read the user profile with `userinfo`;
 - delegate session and identity management to Mysoleas;
 - focus on your application's own business logic.
 
-You do not need to call the gateway to use Identity Cloud. The gateway becomes useful only if your application then consumes Mysoleas business services, such as SoleasPay.
+You do not need to call the gateway to use Identity Cloud. Identity Cloud should not be presented as the main way to connect to the Mysoleas business ecosystem: it manages your users.
+
+If your application then consumes SoleasPay gateway endpoints, create an application in SoleasPay and use its `client_id` and `client_secret` to get the application token expected by `x-sp-auth-token`.
 
 The public authentication service is:
 
@@ -49,31 +51,17 @@ https://mysoleas.com
   For a user-facing web or mobile application, prefer `authorization_code` with PKCE. Never place a `client_secret` in a frontend application.
 </Tip>
 
-### SoleasPay application fee configuration
-
-A SoleasPay payment/API application can define `feeBearer` to indicate who pays the fees for direct API payments initiated with its credentials.
-
-This configuration does not concern the OAuth2 client used only for **Sign in with Mysoleas**. It concerns applications that later call payment business services.
-
-| Value | Role |
-| --- | --- |
-| `CUSTOMER` | Fees are added to the amount paid by the customer |
-| `MERCHANT` | Fees are paid by the merchant |
-| `null` or absent | The application's historical behavior is preserved |
-
-This configuration is read from the authenticated application. Do not send an arbitrary `applicationId` in a payment to try to change who pays the fees.
-
 ## Three different uses
 
 | Use | Domain | Credential obtained | Header used afterward |
 | --- | --- | --- | --- |
 | Authenticate your users only | `account.mysoleas.com` | User JWT and claims | Your application session |
-| Authenticate then call the gateway | `account.mysoleas.com` then `api.mysoleas.com` | User or application JWT | `x-sp-auth-token: Bearer <JWT>` |
+| Call the SoleasPay gateway | Application created in SoleasPay then `api.mysoleas.com` | Token obtained from that application | `x-sp-auth-token: Bearer <SOLEASEPAY_APP_TOKEN>` |
 | Server-to-server calls to your own backends | `account.mysoleas.com` | Application JWT | Backend-side validation |
 | Checkout v4 or Button v4 plugin | `pay.soleaspay.com` or `btn.soleaspay.com` | No JWT | `apiKey` or `data-apikey` |
 
 <Warning>
-  If you call the Mysoleas gateway, protected routes do not expect the token in `Authorization`. Send the Bearer JWT in `x-sp-auth-token`.
+  If you call the Mysoleas gateway for SoleasPay endpoints, protected routes do not expect the Identity Cloud user JWT. Send the token obtained from the application created in SoleasPay in `x-sp-auth-token`.
 </Warning>
 
 ## Choose the right flow
@@ -81,7 +69,7 @@ This configuration is read from the authenticated application. Do not send an ar
 | Flow | When to use it |
 | --- | --- |
 | `authorization_code` with PKCE | Website, mobile application, or third-party application that displays **Sign in with Mysoleas** |
-| `client_credentials` | Backend, worker, status synchronization, or integration that acts on its own behalf |
+| `client_credentials` | Getting the token of an application created in SoleasPay for a backend, worker, or status synchronization |
 | `refresh_token` | Renew a long-lived session without asking for credentials again |
 
 ## Integrate Sign in with Mysoleas
@@ -136,20 +124,20 @@ Your backend can then:
 
 In this mode, Mysoleas Identity Cloud replaces the identity building block of your application. It does not force you to use the gateway.
 
-## Request a token
+## Request a user token
 
-After the OAuth2 callback, your backend exchanges the `code` for a token.
-
-For a server-to-server integration, use the `client_credentials` grant directly.
+After the OAuth2 callback, your backend exchanges the `code` for a user token.
 
 ```bash
 curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "grant_type": "client_credentials",
+    "grant_type": "authorization_code",
     "client_id": "YOUR_CLIENT_ID",
     "client_secret": "YOUR_CLIENT_SECRET",
-    "scope": "payments services countries providers"
+    "code": "AUTHORIZATION_CODE",
+    "code_verifier": "PKCE_CODE_VERIFIER",
+    "redirect_uri": "https://yourdomain.com/oauth/callback"
   }'
 ```
 
@@ -163,9 +151,21 @@ The response follows the OAuth format.
 }
 ```
 
-## Call the API
+## Call the SoleasPay gateway
 
-If your application then consumes Mysoleas business services, all protected gateway routes expect the token in `x-sp-auth-token`.
+If your application consumes SoleasPay endpoints through the gateway, use the credentials of the application created in SoleasPay.
+
+```bash
+curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "grant_type": "client_credentials",
+    "client_id": "YOUR_SOLEASEPAY_APP_CLIENT_ID",
+    "client_secret": "YOUR_SOLEASEPAY_APP_CLIENT_SECRET"
+  }'
+```
+
+All protected gateway routes then expect this token in `x-sp-auth-token`.
 
 ```bash
 curl "https://api.mysoleas.com/service/list" \
@@ -179,7 +179,7 @@ These headers are useful for multi-country integrations, separated environments,
 
 | Header | Description |
 | --- | --- |
-| `x-sp-auth-token` | Required Bearer JWT for the gateway |
+| `x-sp-auth-token` | Required Bearer token obtained from an application created in SoleasPay |
 | `X-Request-Id` | Trace id created by your system |
 | `X-Idempotency-Key` | External idempotency key when the endpoint supports it |
 | `X-SP-Country` | Active country, for example `CMR` |

@@ -183,8 +183,8 @@
         "tags": [
           "Identity Cloud"
         ],
-        "summary": "Get a JWT",
-        "description": "Supports `authorization_code`, `client_credentials`, and `refresh_token`. The JWT can be used to open a session in your application, read `userinfo`, or call the gateway with `x-sp-auth-token`.",
+        "summary": "Get a user JWT",
+        "description": "Exchanges an OAuth2 code for a Mysoleas Identity Cloud user JWT. This JWT is used to open a session in your application or read `userinfo`. To call the SoleasPay gateway, use the `client_id` and `client_secret` of the application created in SoleasPay to get a distinct application token.",
         "security": [],
         "servers": [
           {
@@ -199,10 +199,11 @@
                 "$ref": "#/components/schemas/OAuthTokenRequest"
               },
               "example": {
-                "grant_type": "client_credentials",
-                "client_id": "YOUR_CLIENT_ID",
-                "client_secret": "YOUR_CLIENT_SECRET",
-                "scope": "payments services countries providers"
+                "grant_type": "authorization_code",
+                "client_id": "YOUR_OAUTH_CLIENT_ID",
+                "code": "AUTHORIZATION_CODE",
+                "code_verifier": "PKCE_CODE_VERIFIER",
+                "redirect_uri": "https://yourdomain.com/callback"
               }
             }
           }
@@ -980,27 +981,6 @@
         }
       }
     },
-    "/provider/list": {
-      "get": {
-        "tags": [
-          "Catalog"
-        ],
-        "summary": "List providers and their status",
-        "parameters": [
-          {
-            "$ref": "#/components/parameters/Page"
-          },
-          {
-            "$ref": "#/components/parameters/Limit"
-          }
-        ],
-        "responses": {
-          "200": {
-            "$ref": "#/components/responses/ProviderListSuccess"
-          }
-        }
-      }
-    },
     "/phone-numbers/verify": {
       "post": {
         "tags": [
@@ -1603,7 +1583,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-sp-auth-token",
-        "description": "JWT Bearer emis par Mysoleas Identity Cloud. Format: Bearer <access_token>."
+        "description": "Bearer token obtained with the client_id and client_secret of the application created in SoleasPay. Format: Bearer <access_token>."
       },
       "merchantApiKey": {
         "type": "apiKey",

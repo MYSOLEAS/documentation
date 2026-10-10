@@ -18,4 +18,4 @@ Votre application y redirige l'utilisateur avec `client_id`, `redirect_uri`, `sc
 
 Echangez ensuite ce `code` contre un JWT via `/oauth/v2/token`.
 
-Vous pouvez utiliser ce JWT pour ouvrir une session dans votre propre application. Si vous appelez ensuite la gateway Mysoleas, transmettez-le dans `x-sp-auth-token`.
+Vous pouvez utiliser ce JWT pour ouvrir une session dans votre propre application. Pour appeler ensuite la gateway SoleasPay, obtenez separement un token avec le `client_id` et le `client_secret` de l'application creee dans SoleasPay.

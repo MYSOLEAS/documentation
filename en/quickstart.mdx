@@ -1,9 +1,13 @@
 ---
 title: "Quickstart"
-description: "The shortest path to understand Identity Cloud, call the gateway, and launch your first transaction."
+description: "The shortest path to create an application in SoleasPay, get a gateway token, and launch your first transaction."
 ---
 
-This guide takes you from identity to the status tracking of a first SoleasPay transaction.
+This guide takes you from creating an application in SoleasPay to tracking your first transaction.
+
+<Note>
+  Mysoleas Identity Cloud manages authentication and users for your applications. It does not replace the application created in SoleasPay that provides API credentials for the gateway.
+</Note>
 
 ## 1. Prepare your domains
 
@@ -13,7 +17,7 @@ All protected business requests go through the gateway.
 https://api.mysoleas.com
 ```
 
-All OAuth2/OIDC requests go through Mysoleas Identity Cloud.
+User OAuth2/OIDC journeys go through Mysoleas Identity Cloud.
 
 ```txt
 https://account.mysoleas.com
@@ -23,21 +27,35 @@ https://account.mysoleas.com
   Store these URLs in environment variables. This makes tests, workers, and back-office tools easier to maintain.
 </Tip>
 
-## 2. Get a JWT
+## 2. Create an application in SoleasPay
 
-If you integrate the **Sign in with Mysoleas** button, use `authorization_code` with PKCE. If your backend acts on its own behalf, use `client_credentials`.
+Before calling gateway endpoints, create an application in SoleasPay from your merchant area. This application represents your API integration.
+
+Keep the two generated credentials:
+
+| Credential | Role |
+| --- | --- |
+| `client_id` | Identifies the application created in SoleasPay |
+| `client_secret` | Server-side secret used to get a gateway token |
+
+<Warning>
+  Never put `client_secret` in a frontend, mobile application, or public repository. It must stay on the backend.
+</Warning>
+
+## 3. Get a gateway token
+
+Use the credentials of the application created in SoleasPay.
 
 ```bash
 curl -X POST "https://account.mysoleas.com/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "grant_type": "client_credentials",
-    "sp_client_id": "YOUR_APPLICATION_CLIENT_ID",
-    "sp_client_secret": "YOUR_APPLICATION_CLIENT_SECRET"
+    "sp_client_id": "YOUR_SOLEASEPAY_APP_CLIENT_ID",
+    "sp_client_secret": "YOUR_SOLEASEPAY_APP_CLIENT_SECRET"
   }'
 ```
 
-The response contains an `access_token`. This token is the JWT you send to the gateway.
+The response contains an `access_token`. This token represents the application created in SoleasPay and is sent to the gateway.
 
 ```json
 {
@@ -47,7 +65,11 @@ The response contains an `access_token`. This token is the JWT you send to the g
 }
 ```
 
-## 3. Call the gateway
+<Tip>
+  The token obtained here is for API gateway calls. The user JWT from **Sign in with Mysoleas** is used to open a user session in your own application.
+</Tip>
+
+## 4. Call the gateway
 
 Send the token in `x-sp-auth-token`.
 
@@ -61,13 +83,13 @@ You can also send context headers when your application manages several environm
 
 | Header | Usage |
 | --- | --- |
-| `x-sp-auth-token` | Required Bearer JWT for gateway routes |
+| `x-sp-auth-token` | Required Bearer token obtained from an application created in SoleasPay |
 | `X-Request-Id` | Merchant-side trace identifier |
 | `X-Idempotency-Key` | Explicit idempotency key for sensitive operations |
 | `X-SP-Country` | Active country, for example `CMR` |
 | `X-SP-Environment` | Logical environment, for example `prod` or `dev` |
 
-## 4. Choose a service
+## 5. Choose a service
 
 List available services before you create a transaction. The service `code` becomes the `provider` value in payment payloads.
 
@@ -80,7 +102,7 @@ A service that can be used for a collection must have `is_active: true` and `is_
 
 A service that can be used for a disbursement must have `is_active: true` and `is_can_disburse: true`.
 
-## 5. Launch a collection
+## 6. Launch a collection
 
 The standard flow uses three calls: `intent`, `execute`, then `status`.
 
@@ -115,7 +137,7 @@ curl -X POST "https://api.mysoleas.com/collection/execute" \
   }'
 ```
 
-## 6. Track the status
+## 7. Track the status
 
 Poll the status until you get a final state.
 

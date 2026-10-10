@@ -8,10 +8,10 @@ La reference API de Mysoleas est organisee autour de l'infrastructure commune et
 | Couche | Serveur | URL | Role |
 | --- | --- | --- | --- |
 | Infrastructure | Gateway | `https://api.mysoleas.com` | Route les appels vers les services metier |
-| Infrastructure | Mysoleas Identity Cloud | `https://account.mysoleas.com` | OAuth2/OIDC, bouton **Se connecter avec Mysoleas**, gestion utilisateur, JWT et userinfo |
+| Infrastructure | Mysoleas Identity Cloud | `https://account.mysoleas.com` | OAuth2/OIDC, bouton **Se connecter avec Mysoleas**, gestion utilisateur, JWT utilisateur et userinfo |
 | Metier | SoleasPay | via `api.mysoleas.com` | Paiements, liens, souscriptions, collections, disbursements, pays, services et providers |
 
-Mysoleas Identity Cloud peut etre integre seul pour gerer l'authentification et les utilisateurs d'une application tierce. Dans ce cas, votre application utilise `account.mysoleas.com`, valide le JWT, lit `userinfo`, puis continue avec ses propres APIs.
+Mysoleas Identity Cloud peut etre integre seul pour gerer l'authentification et les utilisateurs d'une application tierce. Dans ce cas, votre application utilise `account.mysoleas.com`, valide le JWT utilisateur, lit `userinfo`, puis continue avec ses propres APIs.
 
 Pour creer une application OAuth2, connectez-vous au dashboard Mysoleas:
 
@@ -19,16 +19,16 @@ Pour creer une application OAuth2, connectez-vous au dashboard Mysoleas:
 https://mysoleas.com
 ```
 
-Les routes gateway protegees utilisent le header suivant:
+Les routes gateway protegees utilisent le header suivant avec un token obtenu depuis une application creee dans SoleasPay:
 
 ```txt
 x-sp-auth-token: Bearer <access_token>
 ```
 
-Le token est un JWT emis par Mysoleas Identity Cloud.
+Ce token est obtenu avec le `client_id` et le `client_secret` de l'application creee dans SoleasPay. Il est distinct du JWT utilisateur emis par Mysoleas Identity Cloud.
 
 <Note>
-  Les endpoints OAuth2 eux-memes vivent sur `account.mysoleas.com`. Les plugins SoleasPay v4 utilisent une `apikey` marchand et ne demandent pas ce header.
+  Les endpoints Identity Cloud vivent sur `account.mysoleas.com`. Les endpoints gateway SoleasPay utilisent un token obtenu depuis une application creee dans SoleasPay. Les plugins SoleasPay v4 utilisent une `apikey` marchand et ne demandent pas ce header.
 </Note>
 
 La route publique de paiement par lien exposee dans cette reference est:

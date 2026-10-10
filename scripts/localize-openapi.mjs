@@ -31,9 +31,9 @@ const translations = new Map(
     "Demarrer Se connecter avec Mysoleas": "Start Sign in with Mysoleas",
     "Redirige l'utilisateur vers Mysoleas Identity Cloud pour authentification OAuth2/OIDC avec PKCE. L'application OAuth2 doit etre creee et configuree au prealable dans le dashboard https://mysoleas.com.":
       "Redirects the user to Mysoleas Identity Cloud for OAuth2/OIDC authentication with PKCE. The OAuth2 application must be created and configured beforehand in the https://mysoleas.com dashboard.",
-    "Obtenir un JWT": "Get a JWT",
-    "Supporte `authorization_code`, `client_credentials` et `refresh_token`. Le JWT peut servir a ouvrir une session dans votre application, lire `userinfo` ou appeler la gateway avec `x-sp-auth-token`.":
-      "Supports `authorization_code`, `client_credentials`, and `refresh_token`. The JWT can be used to open a session in your application, read `userinfo`, or call the gateway with `x-sp-auth-token`.",
+    "Obtenir un JWT utilisateur": "Get a user JWT",
+    "Echange un code OAuth2 contre un JWT utilisateur Mysoleas Identity Cloud. Ce JWT sert a ouvrir une session dans votre application ou a lire `userinfo`. Pour appeler la gateway SoleasPay, utilisez le `client_id` et le `client_secret` de l'application creee dans SoleasPay afin d'obtenir un token d'application distinct.":
+      "Exchanges an OAuth2 code for a Mysoleas Identity Cloud user JWT. This JWT is used to open a session in your application or read `userinfo`. To call the SoleasPay gateway, use the `client_id` and `client_secret` of the application created in SoleasPay to get a distinct application token.",
     "Lire les claims utilisateur": "Read user claims",
     "Introspecter un token": "Introspect a token",
     "Revoquer un token": "Revoke a token",
@@ -120,6 +120,8 @@ const translations = new Map(
     "Non authentifie": "Unauthenticated",
     "API key marchand SoleasPay. Utilisee pour les endpoints publics plugin ou verification telephone.":
       "SoleasPay merchant API key. Used for public plugin endpoints or phone verification.",
+    "Token Bearer obtenu avec le client_id et le client_secret de l'application creee dans SoleasPay. Format: Bearer <access_token>.":
+      "Bearer token obtained with the client_id and client_secret of the application created in SoleasPay. Format: Bearer <access_token>.",
     "Cle d'idempotence optionnelle fournie par le marchand.":
       "Optional idempotency key provided by the merchant.",
     "Liste de pays": "Country list"

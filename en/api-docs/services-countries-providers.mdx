@@ -176,6 +176,18 @@ curl -X POST "https://api.mysoleas.com/transactions/fees/quote" \
 
 For a direct API application, `feeBearer` comes from application configuration. For a plugin, send `feeBearer` in the payload or query string; the payload has priority.
 
+### Configure who pays fees
+
+A payment/API application created in SoleasPay can define `feeBearer` to indicate who pays the fees for direct API payments initiated with its credentials.
+
+| Value | Role |
+| --- | --- |
+| `CUSTOMER` | Fees are added to the amount paid by the customer |
+| `MERCHANT` | Fees are paid by the merchant |
+| `null` or absent | The application's historical behavior is preserved |
+
+This configuration is read from the authenticated application. Do not send an arbitrary `applicationId` in a payment to try to change who pays the fees.
+
 ```json
 {
   "baseAmount": 10000,

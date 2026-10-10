@@ -23,8 +23,8 @@ flowchart LR
   Boost["MyBoost<br/>Campagnes marketing"]
 
   App -->|"Se connecter avec Mysoleas"| Identity
-  Identity -->|"JWT + userinfo"| App
-  App -.->|"Optionnel: x-sp-auth-token: Bearer JWT"| Gateway
+  Identity -->|"JWT utilisateur + userinfo"| App
+  App -.->|"Token application creee dans SoleasPay<br/>x-sp-auth-token"| Gateway
   Gateway --> Pay
   Gateway --> Shup
   Gateway --> Notify
@@ -38,12 +38,12 @@ L'infrastructure est la couche transversale. Elle ne remplace pas les produits m
 | Composant | Domaine | Role |
 | --- | --- | --- |
 | Mysoleas API Gateway | `https://api.mysoleas.com` | Point d'entree unique pour les routes metier protegees |
-| Mysoleas Identity Cloud | `https://account.mysoleas.com` | Authentification OAuth2/OIDC, gestion utilisateur, JWT, profil utilisateur et bouton de connexion |
+| Mysoleas Identity Cloud | `https://account.mysoleas.com` | Authentification OAuth2/OIDC, gestion utilisateur, JWT utilisateur, profil utilisateur et bouton de connexion |
 
 La gateway recoit les requetes de vos applications, verifie le contexte de securite, puis route vers le bon domaine metier.
 
 <Warning>
-  Toutes les routes de la gateway attendent un JWT Bearer dans le header `x-sp-auth-token`.
+  Toutes les routes de la gateway attendent un token Bearer obtenu depuis une application creee dans SoleasPay dans le header `x-sp-auth-token`.
 </Warning>
 
 ```bash
@@ -59,7 +59,7 @@ Chaque corps de metier a son vocabulaire, ses objets et ses flux.
 | Domaine | Produit | Ce qu'il permet |
 | --- | --- | --- |
 | Paiements | SoleasPay | Agregation de paiements, collections, disbursements, liens de paiement, souscriptions, providers et services |
-| Identite | Mysoleas Identity Cloud | Connexion utilisateur, gestion des utilisateurs, OAuth2, OIDC, JWT, claims, profil et applications tierces |
+| Identite | Mysoleas Identity Cloud | Connexion utilisateur, gestion des utilisateurs, OAuth2, OIDC, JWT utilisateur, claims, profil et applications tierces |
 | Ventes | MyShup | Produits, commandes, paniers multi-produits, parcours marchands et automatisation commerciale |
 | Communication | Notification Service | Notifications transactionnelles, messages systeme, contacts, audiences et campagnes marketing V2 |
 | Marketing | MyBoost | Campagnes boost, challenges UGC, promotions, activation client et relance marketing |
@@ -84,10 +84,10 @@ Ces routes passent par:
 https://api.mysoleas.com
 ```
 
-Elles utilisent:
+Elles utilisent un token genere avec le `client_id` et le `client_secret` de l'application creee dans SoleasPay:
 
 ```txt
-x-sp-auth-token: Bearer <JWT>
+x-sp-auth-token: Bearer <SOLEASEPAY_APP_TOKEN>
 ```
 
 ## Mysoleas Identity Cloud
@@ -111,9 +111,9 @@ Le parcours recommande pour une application web est le flow OAuth2 `authorizatio
 3. Mysoleas authentifie l'utilisateur et demande son consentement si necessaire.
 4. Votre application recoit un `code`.
 5. Votre backend echange le `code` contre un JWT.
-6. Votre application ouvre une session locale ou appelle la gateway avec `x-sp-auth-token` si elle consomme un service metier Mysoleas.
+6. Votre application ouvre une session locale et continue son propre parcours utilisateur.
 
-Pour un backend qui agit en son propre nom, utilisez `client_credentials`.
+Ce parcours ne remplace pas les credentials gateway. Pour consommer les endpoints SoleasPay via `api.mysoleas.com`, creez une application dans SoleasPay et utilisez son `client_id` et son `client_secret` pour obtenir le token transmis dans `x-sp-auth-token`.
 
 ## Plugins SoleasPay v4
 

@@ -18,8 +18,8 @@ flowchart LR
   Boost["MyBoost<br/>Marketing"]
 
   App -->|"OAuth2 / OIDC"| Auth
-  Auth -->|"JWT + user claims"| App
-  App -.->|"Optional: x-sp-auth-token: Bearer JWT"| Gateway
+  Auth -->|"User JWT + claims"| App
+  App -.->|"Token from an application created in SoleasPay<br/>x-sp-auth-token"| Gateway
   Gateway --> Pay
   Gateway --> Shup
   Gateway --> Notify
@@ -31,7 +31,7 @@ flowchart LR
 | Type | Name | Role |
 | --- | --- | --- |
 | Infrastructure | Mysoleas API Gateway | Single entry point for protected business routes |
-| Infrastructure | Mysoleas Identity Cloud | Authentication, user management, OAuth2/OIDC, JWT, userinfo, and sign-in button |
+| Infrastructure | Mysoleas Identity Cloud | Authentication, user management, OAuth2/OIDC, user JWT, userinfo, and sign-in button |
 | Business domain | SoleasPay | Payment service processor, collections, disbursements, links, subscriptions, and providers |
 | Business domain | MyShup | Products, orders, and sales automation |
 | Business domain | Notification Service | Transactional communications, contacts, audiences, and V2 marketing campaigns |
@@ -46,12 +46,14 @@ Use it to:
 - integrate the **Sign in with Mysoleas** button;
 - authenticate a user with OAuth2/OIDC;
 - manage the identity and user layer of a third-party application;
-- obtain a JWT;
+- obtain a user JWT to open an application session;
 - refresh or revoke a token;
 - read user claims with `/oauth/v2/userinfo`;
 - allow a third-party application to act in the context of an authorized user or customer.
 
 This service can be used without the gateway. If your only need is to authenticate users and open a session in your own application, you can stop at Identity Cloud.
+
+The Identity Cloud JWT is not the main credential for consuming gateway business endpoints. To call SoleasPay routes through `api.mysoleas.com`, create an application in SoleasPay and use its `client_id` and `client_secret` to get an application token.
 
 To create an OAuth2 application, the user must have a Mysoleas account, sign in to the dashboard at `https://mysoleas.com`, then configure the application, redirect URLs, and scopes.
 
@@ -59,7 +61,7 @@ To create an OAuth2 application, the user must have a Mysoleas account, sign in 
 
 The API domain is the public gateway. Your integration should not call internal microservices directly.
 
-All gateway routes expect the JWT in the `x-sp-auth-token` header.
+All gateway routes expect the token obtained from the application created in SoleasPay in the `x-sp-auth-token` header.
 
 ```bash
 curl "https://api.mysoleas.com/service/list?country=CMR&currency=XAF" \
@@ -82,15 +84,15 @@ Use it to:
 The gateway always expects the same header:
 
 ```txt
-x-sp-auth-token: Bearer <JWT>
+x-sp-auth-token: Bearer <SOLEASEPAY_APP_TOKEN>
 ```
 
 This convention prevents confusion between gateway authentication and other headers used by providers, plugins, or frontends.
 
 | Context | Domain | Credential |
 | --- | --- | --- |
-| Sign-in and user management | `account.mysoleas.com` | OAuth2/OIDC |
-| Business gateway call | `api.mysoleas.com` | `x-sp-auth-token: Bearer <JWT>` |
+| Sign-in and user management | `account.mysoleas.com` | Identity Cloud OAuth2/OIDC |
+| Business gateway call | `api.mysoleas.com` | Token from the application created in SoleasPay in `x-sp-auth-token` |
 | Checkout v4 | `pay.soleaspay.com` | Merchant `apiKey` |
 | Button v4 | `btn.soleaspay.com` | Merchant `data-apikey` |
 
@@ -102,7 +104,7 @@ SoleasPay is the Mysoleas payment service processor. It aggregates payment metho
 
 ### Mysoleas Identity Cloud
 
-Identity Cloud manages users, OAuth2 applications, JWT tokens, and claims. It can serve as a standalone identity service for a third-party application, or provide the JWT later used by the gateway.
+Identity Cloud manages users, OAuth2 applications, user JWT tokens, and claims. It serves as a standalone identity service for a third-party application. Gateway tokens come from applications created in SoleasPay for API integrations.
 
 ### MyShup
 
@@ -137,11 +139,11 @@ SoleasPay v4 plugins do not follow the same model as server-to-server gateway ca
 | Checkout v4 | `https://pay.soleaspay.com` | `apiKey` | Hosted payment page |
 | Button v4 | `https://btn.soleaspay.com/main.js` | `data-apikey` | JavaScript button embedded in your page |
 
-Use these plugins for a fast payment integration when you do not want to manage OAuth2, JWT, `intent`, `execute`, and `status` directly.
+Use these plugins for a fast payment integration when you do not want to manage credentials from an application created in SoleasPay, gateway tokens, `intent`, `execute`, and `status` directly.
 
 ## Context data
 
-The gateway transports the user and tenant context through token claims. It can also forward some internal or trace headers.
+The gateway transports the context of the application created in SoleasPay and the tenant through token claims. It can also forward some internal or trace headers.
 
 | Data | Recommended source |
 | --- | --- |

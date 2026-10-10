@@ -176,6 +176,18 @@ curl -X POST "https://api.mysoleas.com/transactions/fees/quote" \
 
 Pour une application API directe, `feeBearer` vient de la configuration de l'application. Pour un plugin, envoyez `feeBearer` dans le payload ou la query string; le payload est prioritaire.
 
+### Configurer le porteur des frais
+
+Une application de paiement/API creee dans SoleasPay peut definir `feeBearer` pour indiquer qui supporte les frais des paiements API directs inities avec ses credentials.
+
+| Valeur | Role |
+| --- | --- |
+| `CUSTOMER` | Les frais sont ajoutes au montant payable par le client |
+| `MERCHANT` | Les frais sont supportes par le marchand |
+| `null` ou absent | Le comportement historique de l'application est conserve |
+
+Cette configuration est lue depuis l'application authentifiee. Ne transmettez pas un `applicationId` libre dans un paiement pour essayer de changer le porteur des frais.
+
 ```json
 {
   "baseAmount": 10000,
