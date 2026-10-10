@@ -156,12 +156,11 @@ The response follows the OAuth format.
 If your application consumes SoleasPay endpoints through the gateway, use the credentials of the application created in SoleasPay.
 
 ```bash
-curl -X POST "https://account.mysoleas.com/oauth/v2/token" \
+curl -X POST "https://account.mysoleas.com/oauth/token" \
   -H "Content-Type: application/json" \
   -d '{
-    "grant_type": "client_credentials",
-    "client_id": "YOUR_SOLEASEPAY_APP_CLIENT_ID",
-    "client_secret": "YOUR_SOLEASEPAY_APP_CLIENT_SECRET"
+    "sp_client_id": "YOUR_SOLEASEPAY_APP_CLIENT_ID",
+    "sp_client_secret": "YOUR_SOLEASEPAY_APP_CLIENT_SECRET"
   }'
 ```
 
