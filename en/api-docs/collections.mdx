@@ -5,6 +5,10 @@ description: "Collect a customer payment with the intent, execute, and status fl
 
 A collection is a Pay-In operation. It debits the customer's wallet or account and credits the merchant's Mysoleas wallet.
 
+## Amounts and units
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).
+
 ## Overview
 
 ```mermaid

@@ -2,3 +2,7 @@
 title: "Plugin collection"
 openapi: "/en/api-reference/openapi.json POST /merchand/collection"
 ---
+
+## Amount unit
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).

@@ -5,6 +5,10 @@ description: "Create a shareable payment URL and track the related payment."
 
 A payment link lets you generate a public URL that you can send to a customer by email, SMS, WhatsApp, or display in your application.
 
+## Amounts and units
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).
+
 ## Use cases
 
 - invoice payment;

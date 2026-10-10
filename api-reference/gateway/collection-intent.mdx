@@ -2,3 +2,27 @@
 title: "Collection intent"
 openapi: "POST /collection/intent"
 ---
+
+## Unité du montant
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
+
+Déclarez `amount_unit` lors de la création de l’intent. Les requêtes `execute` et `status` suivantes utilisent `transaction_reference` et ne redéfinissent pas le montant.
+
+### Exemple USD
+
+Cet exemple d’intent utilise la valeur réelle. Choisissez un provider autorisé pour l’opération et la devise.
+
+```json
+{
+  "amount": 4.01,
+  "currency": "USD",
+  "amount_unit": "MAJOR",
+  "transaction_uuid": "2f8b9a68-1ad3-4a0c-a187-40b91a4c44a1",
+  "provider": "YOUR_USD_PROVIDER",
+  "channel": "PROVIDER",
+  "customer_wallet": "YOUR_CUSTOMER_WALLET"
+}
+```
+
+Si votre client stocke des centimes, remplacez les champs monétaires par `"amount": 401` et `"amount_unit": "MINOR"`. Les deux représentations ciblent 4,01 USD ; les réponses publiques restent en valeur réelle.

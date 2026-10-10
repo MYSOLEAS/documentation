@@ -18,6 +18,13 @@ for (const server of api.servers ?? []) {
 
 const translations = new Map(
   Object.entries({
+    "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401).": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401).",
+    "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité.": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit.",
+    "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100.": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again.",
+    "Unité de la réponse publique, indépendante de l’unité envoyée dans la requête.": "Unit of the public response, independent of the unit sent in the request.",
+    "Devise du paiement sélectionné ; la devise du lien est utilisée si ce champ est absent.": "Currency of the selected payment; the link currency is used if this field is omitted.",
+    "Montant du lien dans source_currency avant conversion. Suit le champ amount_unit à la racine.": "Link amount in source_currency before conversion. Follows root-level amount_unit.",
+    "Devise source du montant du lien avant conversion.": "Source currency of the link amount before conversion.",
     "Lire la configuration OpenID Connect": "Read the OpenID Connect configuration",
     "Retourne les endpoints OAuth, les grants supportes, les scopes et la cle JWKS.":
       "Returns OAuth endpoints, supported grants, scopes, and the JWKS key.",

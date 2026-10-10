@@ -14,6 +14,7 @@ Votre traitement webhook doit:
 - repondre rapidement avec HTTP `200`;
 - etre idempotent;
 - enregistrer le payload brut;
+- contenenir le header de x-private-key;
 - verifier ensuite le statut via l'API Mysoleas si l'action est sensible;
 - ignorer les duplications deja traitees.
 
@@ -33,6 +34,11 @@ Selon le provider et le flux, le payload peut varier. Structurez votre traitemen
   "updated_at": "2026-07-28T13:20:12+01:00"
 }
 ```
+## Validation d'une notification
+
+Premiere étape, veuillez hasher votre token webhook en sha256. \
+Ensuite vous devez comparer la valeur du header x-private-key avec le resultat obtenus.\
+Si vous n'optenez pas la meme valeur alors ignorer cette notification car elle est illégitime et ne provient peut être pas de nous.
 
 ## Verification defensive
 
@@ -56,3 +62,7 @@ Votre endpoint webhook doit retourner `200` des que l'evenement est bien recu.
   "received": true
 }
 ```
+
+## Unités monétaires des notifications
+
+Les notifications de transaction et de souscription portent des montants en valeur réelle : `4.01` pour 4,01 USD/EUR. Le core convertit le montant avant de publier l’événement. Votre récepteur doit conserver les décimales et ne doit pas diviser à nouveau ce montant par 100. Les callbacks bruts du provider conservent le contrat propre au provider. Consultez [les montants et devises](/api-docs/monetary-units).

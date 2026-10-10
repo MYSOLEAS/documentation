@@ -84,6 +84,10 @@ curl -X POST "https://pay.soleaspay.com" \
   }'
 ```
 
+### Checkout amounts
+
+Submit `amount` in major units: `4.01` for 4.01 USD or EUR. Hosted checkout does not support the API `amount_unit: "MINOR"` option. Convert stored cents before submitting the form. Checkout preserves cents in fee quotes and payment requests, displays USD/EUR with two decimals, and accepts cents for free-amount payment links. See [amounts and currencies](/en/api-docs/monetary-units).
+
 ### Checkout v4 fields
 
 | Field | Required | Description |
@@ -100,6 +104,10 @@ curl -X POST "https://pay.soleaspay.com" \
 | `line` | No | `up` to allow currency conversion |
 | `area` | No | Desired area or country used to filter services |
 | `feeBearer` | No | `CUSTOMER` if the customer pays fees, `MERCHANT` if the merchant absorbs them |
+
+### Units for direct API calls
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).
 
 ### Plugin fees
 

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mysoleas API",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "description": "Nouvelle architecture Mysoleas: gateway metier, Mysoleas Identity Cloud et ecosysteme SoleasPay."
   },
   "servers": [
@@ -1172,8 +1172,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1211,6 +1212,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
                   }
                 }
               }
@@ -1291,8 +1302,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1330,6 +1342,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
                   }
                 }
               }
@@ -1410,8 +1432,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1449,6 +1472,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
                   }
                 }
               }
@@ -1961,8 +1994,9 @@
         ],
         "properties": {
           "amount": {
-            "type": "integer",
-            "example": 2500
+            "type": "number",
+            "example": 2500,
+            "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401)."
           },
           "currency": {
             "type": "string",
@@ -2008,6 +2042,16 @@
             "items": {
               "$ref": "#/components/schemas/SplitDistributionItem"
             }
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
           }
         }
       },
@@ -2126,7 +2170,8 @@
             ]
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string"
@@ -2147,10 +2192,12 @@
             ]
           },
           "fee": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "required_total": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "settlement_mode": {
             "type": "string",
@@ -2178,6 +2225,14 @@
           },
           "updated_at": {
             "type": "string"
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR"
+            ],
+            "example": "MAJOR",
+            "description": "Unité de la réponse publique, indépendante de l’unité envoyée dans la requête."
           }
         }
       },
@@ -2202,8 +2257,9 @@
         ],
         "properties": {
           "amount": {
-            "type": "integer",
-            "minimum": 1
+            "type": "number",
+            "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401).",
+            "exclusiveMinimum": 0
           },
           "currency": {
             "type": "string",
@@ -2262,6 +2318,16 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
           }
         }
       },
@@ -2288,7 +2354,8 @@
             "format": "uuid"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401)."
           },
           "provider": {
             "type": "string"
@@ -2307,6 +2374,30 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD",
+            "description": "Devise du paiement sélectionné ; la devise du lien est utilisée si ce champ est absent."
+          },
+          "source_amount": {
+            "type": "number",
+            "description": "Montant du lien dans source_currency avant conversion. Suit le champ amount_unit à la racine."
+          },
+          "source_currency": {
+            "type": "string",
+            "example": "EUR",
+            "description": "Devise source du montant du lien avant conversion."
           }
         }
       },
@@ -2332,9 +2423,10 @@
           },
           "amount": {
             "type": [
-              "integer",
+              "number",
               "null"
-            ]
+            ],
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string"
@@ -2373,8 +2465,9 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer",
-            "minimum": 1
+            "type": "number",
+            "description": "Montant en valeur réelle par défaut : 4.01 pour 4,01 USD/EUR. Avec amount_unit MINOR à la racine, envoyez des centimes entiers (401).",
+            "exclusiveMinimum": 0
           },
           "currency": {
             "type": "string",
@@ -2399,6 +2492,16 @@
           },
           "idempotency_key": {
             "type": "string"
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unité des montants de la requête. Facultatif, MAJOR par défaut. Placez ce champ à la racine du corps JSON, pas dans metadata. MINOR conserve les montants déjà exprimés dans la plus petite unité."
           }
         }
       },
@@ -2424,7 +2527,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string"
@@ -2534,7 +2638,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string"
@@ -2620,7 +2725,8 @@
             ]
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string"
@@ -3186,20 +3292,24 @@
         "type": "object",
         "properties": {
           "baseAmount": {
-            "type": "integer",
-            "example": 10000
+            "type": "number",
+            "example": 10000,
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "feeAmount": {
-            "type": "integer",
-            "example": 350
+            "type": "number",
+            "example": 350,
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "payableAmount": {
-            "type": "integer",
-            "example": 10350
+            "type": "number",
+            "example": 10350,
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "merchantNetAmount": {
-            "type": "integer",
-            "example": 9650
+            "type": "number",
+            "example": 9650,
+            "description": "Montant retourné en valeur réelle dans la devise indiquée ; conservez les décimales USD/EUR sans diviser à nouveau par 100."
           },
           "currency": {
             "type": "string",

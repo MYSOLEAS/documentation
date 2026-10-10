@@ -25,7 +25,7 @@ Utilisez Checkout v4 si vous voulez:
 | Champ | Type | Obligatoire | Description |
 | --- | --- | --- | --- |
 | `apiKey` | `string` | Oui | API key marchand SoleasPay |
-| `amount` | `number` | Oui | Montant total a payer |
+| `amount` | `number` | Oui | Montant total en valeur réelle ; décimales acceptées pour USD/EUR |
 | `currency` | `string` | Oui | Devise du paiement, par exemple `XAF`, `XOF` ou `USD` |
 | `orderId` | `string` | Oui | Reference unique dans votre systeme |
 | `description` | `string` | Oui | Libelle affiche au client |
@@ -37,6 +37,19 @@ Utilisez Checkout v4 si vous voulez:
 | `area` | `string` | Non | Zone ou pays souhaite pour filtrer les moyens de paiement |
 | `settlement_mode` | `string` | Non | Mode de reglement, par exemple `SPLIT` |
 | `distribution` | `array` | Non | Repartition des fonds lorsque le split est active |
+
+## Montants et `amount_unit`
+
+Soumettez `amount` en valeur réelle : `4.01` pour 4,01 USD ou EUR. La checkout hébergée ne prend pas en charge l’option API `amount_unit: "MINOR"`. Convertissez vos centimes avant de soumettre le formulaire. La checkout conserve les centimes dans les devis et les paiements, affiche USD/EUR avec deux décimales et accepte les centimes pour les liens à montant libre. Consultez [les montants et devises](/api-docs/monetary-units).
+
+```json
+{
+  "amount": 4.01,
+  "currency": "USD"
+}
+```
+
+Ajoutez les autres champs obligatoires de la checkout à cet exemple.
 
 ## Exemple
 

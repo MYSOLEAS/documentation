@@ -2,3 +2,7 @@
 title: "Creer un lien de paiement"
 openapi: "POST /payment-links"
 ---
+
+## Unité du montant
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).

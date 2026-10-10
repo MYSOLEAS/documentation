@@ -78,3 +78,7 @@ Conservez ces references ensemble:
 | `provider_reference` | Provider | Diagnostic provider et support |
 
 Si votre appel `execute` timeout, appelez d'abord `status` avec `transaction_reference`. Relancez `execute` seulement si le statut montre que l'operation n'a pas encore ete soumise.
+
+## Confirmation d’un paiement par carte
+
+HTTP `200`, `success: true` et un lien de confirmation hébergé indiquent que la requête a été traitée. Ils ne prouvent pas que le paiement a réussi. Si le statut du paiement est `PROCESSING` ou si la transaction provider est `pending`, conservez la commande en attente et continuez à vérifier son statut. Confirmez la commande seulement lorsque le statut de transaction devient `COMPLETED` ou `SUCCESS`.

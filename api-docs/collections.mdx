@@ -5,6 +5,10 @@ description: "Encaisser un paiement client avec le flux intent, execute et statu
 
 Une collection est une operation Pay-In. Elle debite le wallet ou le compte du client et credite le wallet Mysoleas du marchand.
 
+## Montants et unités
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
+
 ## Vue d'ensemble
 
 ```mermaid

@@ -78,3 +78,7 @@ Store these references together:
 | `provider_reference` | Provider | Provider diagnostics and support |
 
 If your `execute` call times out, call `status` first with `transaction_reference`. Retry `execute` only if the status shows that the operation has not yet been submitted.
+
+## Card payment confirmation
+
+HTTP `200`, `success: true`, and a hosted confirmation link mean that the request was processed. They do not prove that the payment succeeded. If the payment status is `PROCESSING` or the provider transaction is `pending`, keep the order pending and continue checking its status. Only confirm the order when the transaction status becomes `COMPLETED` or `SUCCESS`.

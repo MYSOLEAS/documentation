@@ -1,0 +1,83 @@
+---
+title: "Montants et devises"
+description: "Envoyer et lire les montants en v4, avec les valeurs réelles par défaut et l'option amount_unit."
+---
+
+## Convention v4
+
+Envoyez les montants dans la valeur réelle de la devise. Pour USD et EUR, utilisez un nombre JSON avec un point décimal et au maximum deux décimales : `4.01` signifie 4,01 USD ou EUR. Pour XAF et XOF, envoyez un montant entier.
+
+| Devise | Montant réel | `amount` par défaut | `amount` avec `amount_unit: "MINOR"` |
+| --- | --- | --- | --- |
+| USD | 4,01 USD | `4.01` | `401` |
+| EUR | 0,99 EUR | `0.99` | `99` |
+| XAF | 2 500 XAF | `2500` | `2500` |
+| XOF | 2 500 XOF | `2500` | `2500` |
+
+Le système convertit USD et EUR en centimes entiers avant le traitement interne : validation, calcul des frais, réservation, règlement et écritures du wallet. Les règles de minimum et les services autorisés continuent de s'appliquer.
+
+## Déclarer l'unité dans une requête API
+
+`amount_unit` est facultatif. Placez-le à la racine du corps JSON, au même niveau que `amount` et `currency`. Ne le placez pas dans `metadata` pour sélectionner l'unité de la requête.
+
+| Valeur | Effet |
+| --- | --- |
+| Champ absent ou `MAJOR` | Le montant est en valeur réelle ; c'est le comportement par défaut |
+| `MINOR` | Le montant est déjà dans la plus petite unité ; envoyez un entier, par exemple des centimes USD/EUR |
+
+Ces deux corps représentent le même montant :
+
+```json
+{
+  "amount": 4.01,
+  "currency": "USD",
+  "amount_unit": "MAJOR"
+}
+```
+
+```json
+{
+  "amount": 401,
+  "currency": "USD",
+  "amount_unit": "MINOR"
+}
+```
+
+Ces extraits présentent les champs monétaires. Ajoutez les champs obligatoires de l'endpoint choisi.
+
+Aucune détection automatique ne dépend de la taille du nombre : `401` sans `amount_unit: "MINOR"` signifie **401 USD**, et non 4,01 USD. Utilisez `MINOR` pour conserver un client API qui envoie déjà des centimes.
+
+## Intents, frais et liens de paiement
+
+Déclarez l'unité lors de la création de l'intent avec `POST /collection/intent` ou `POST /disbursement/intent`. Les appels `execute` et `status` utilisent la référence retournée ; ils ne redéfinissent pas le montant ou son unité.
+
+La même convention s'applique à la collection plugin, aux devis de frais, à la création des liens de paiement et des souscriptions, et au montant fourni au paiement d'un lien. Un lien à montant fixe peut être payé sans renvoyer `amount`.
+
+Pour un paiement avec conversion, `source_amount` suit `source_currency` et le montant payé suit la devise du moyen de paiement. Dans l'API de paiement d'un lien, le `amount_unit` à la racine s'applique aussi aux champs source reconnus. Consultez [les liens de paiement](/api-docs/payment-links) pour ce flux.
+
+## Checkout v4
+
+Soumettez toujours un montant en valeur réelle à la [checkout hébergée](/api-reference/gateway/checkout-v4). Par exemple, le formulaire utilise `amount=4.01` et `currency=USD`.
+
+Le formulaire checkout ne prend pas en charge l'option API `amount_unit: "MINOR"`. Si votre application stocke `401` centimes, convertissez ce montant en `4.01` avant de soumettre le formulaire. Ne comptez pas sur un champ `amount_unit` dans le formulaire pour effectuer cette conversion.
+
+La checkout conserve les centimes lors des devis de frais et de l'envoi du paiement. Elle affiche USD/EUR avec deux décimales, y compris pour les liens de paiement et la page de statut. La saisie d'un montant libre USD/EUR accepte les centimes.
+
+## Lire les réponses et notifications
+
+Les réponses publiques retournent les valeurs réelles : montants des intents et transactions, frais, détails, répartitions, liens de paiement, souscriptions et soldes présentés au marchand. Les montants de conversion suivent leur devise source ou destination. Les taux de change et les pourcentages ne sont pas des montants et ne changent pas d'échelle.
+
+Un marqueur `amount_unit: "MAJOR"` peut apparaître dans la réponse ou dans les métadonnées monétaires normalisées. Il décrit l'unité des données retournées ; il ne remplace pas le champ à la racine de la requête. Même si votre requête utilise `MINOR`, la réponse publique revient en valeur réelle. Ne divisez pas à nouveau les montants reçus par 100.
+
+Les notifications de transaction et de souscription contiennent également les valeurs réelles. La conversion est effectuée avant l'envoi de l'événement ; le service de notification conserve les décimales et formate USD/EUR avec deux décimales. Les données brutes spécifiques au provider restent soumises au contrat de ce provider.
+
+## Présentation dans l'administration
+
+Les détails et les synthèses affichent USD/EUR en valeur réelle. Les calculs internes utilisent la plus petite unité avant l'affichage. Comparez et totalisez les montants par devise ; un total monétaire ne doit pas additionner directement USD, EUR et XAF.
+
+## Migrer un client existant
+
+- Si votre client envoie déjà `4.01` pour 4,01 USD/EUR, conservez ce montant et omettez `amount_unit`, ou indiquez `MAJOR` dans l'API.
+- Si votre client API envoie `401` pour 4,01 USD/EUR, ajoutez `amount_unit: "MINOR"` à la racine du corps, ou passez à `4.01` en supprimant l'ancienne multiplication par 100.
+- Pour la checkout hébergée, convertissez vos centimes avant de soumettre le formulaire.
+- Supprimez l'ancienne division par 100 lors de l'affichage des réponses publiques.

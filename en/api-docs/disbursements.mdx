@@ -5,6 +5,10 @@ description: "Send funds from your Mysoleas account to a customer wallet."
 
 A disbursement is a Pay-Out operation. Mysoleas checks your balance, reserves the amount and fees, executes the transfer with the provider, then releases or settles the funds depending on the result.
 
+## Amounts and units
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).
+
 ## Workflow
 
 ```mermaid

@@ -84,6 +84,10 @@ curl -X POST "https://pay.soleaspay.com" \
   }'
 ```
 
+### Montants de la checkout
+
+Soumettez `amount` en valeur réelle : `4.01` pour 4,01 USD ou EUR. La checkout hébergée ne prend pas en charge l’option API `amount_unit: "MINOR"`. Convertissez vos centimes avant de soumettre le formulaire. La checkout conserve les centimes dans les devis et les paiements, affiche USD/EUR avec deux décimales et accepte les centimes pour les liens à montant libre. Consultez [les montants et devises](/api-docs/monetary-units).
+
 ### Champs Checkout v4
 
 | Champ | Obligatoire | Description |
@@ -100,6 +104,10 @@ curl -X POST "https://pay.soleaspay.com" \
 | `line` | Non | `up` pour autoriser la conversion de devise |
 | `area` | Non | Zone ou pays souhaite pour filtrer les services |
 | `feeBearer` | Non | `CUSTOMER` si le client paie les frais, `MERCHANT` si le marchand les supporte |
+
+### Unités des appels API directs
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
 
 ### Frais plugin
 

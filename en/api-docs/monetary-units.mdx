@@ -1,0 +1,83 @@
+---
+title: "Amounts and currencies"
+description: "Send and read v4 amounts, with major units by default and the amount_unit option."
+---
+
+## V4 convention
+
+Send amounts in the currency's major units. For USD and EUR, use a JSON number with a decimal point and at most two decimal places: `4.01` means 4.01 USD or EUR. For XAF and XOF, send an integer amount.
+
+| Currency | Actual amount | Default `amount` | `amount` with `amount_unit: "MINOR"` |
+| --- | --- | --- | --- |
+| USD | 4.01 USD | `4.01` | `401` |
+| EUR | 0.99 EUR | `0.99` | `99` |
+| XAF | 2,500 XAF | `2500` | `2500` |
+| XOF | 2,500 XOF | `2500` | `2500` |
+
+The system converts USD and EUR into integer cents before internal processing: validation, fee calculation, reservation, settlement, and wallet entries. Minimum amounts and authorized service rules still apply.
+
+## Declare the unit in an API request
+
+`amount_unit` is optional. Place it at the root of the JSON body, alongside `amount` and `currency`. Do not put it in `metadata` to select the request unit.
+
+| Value | Effect |
+| --- | --- |
+| Omitted or `MAJOR` | The amount is in major units; this is the default |
+| `MINOR` | The amount is already in the smallest unit; send an integer, such as USD/EUR cents |
+
+These two bodies represent the same amount:
+
+```json
+{
+  "amount": 4.01,
+  "currency": "USD",
+  "amount_unit": "MAJOR"
+}
+```
+
+```json
+{
+  "amount": 401,
+  "currency": "USD",
+  "amount_unit": "MINOR"
+}
+```
+
+These snippets show the monetary fields. Add the required fields for your chosen endpoint.
+
+The API does not infer units from the size of a number: `401` without `amount_unit: "MINOR"` means **401 USD**, rather than 4.01 USD. Use `MINOR` to keep an API client that already sends cents.
+
+## Intents, fees, and payment links
+
+Declare the unit when creating the intent with `POST /collection/intent` or `POST /disbursement/intent`. The `execute` and `status` calls use the returned reference; they do not redefine the amount or its unit.
+
+The same convention applies to plugin collections, fee quotes, payment-link and subscription creation, and amounts supplied when paying a link. A fixed-amount link can be paid without sending `amount` again.
+
+For a payment with currency conversion, `source_amount` follows `source_currency`, and the paid amount follows the payment method's currency. In the payment-link API, root-level `amount_unit` also applies to recognized source fields. See [payment links](/en/api-docs/payment-links) for this flow.
+
+## Checkout v4
+
+Always submit a major-unit amount to the [hosted checkout](/en/api-reference/gateway/checkout-v4). For example, use `amount=4.01` and `currency=USD` in the form.
+
+The checkout form does not support the API option `amount_unit: "MINOR"`. If your application stores `401` cents, convert this to `4.01` before submitting the form. Do not rely on an `amount_unit` form field to perform that conversion.
+
+Checkout preserves cents when requesting fee quotes and submitting payments. It displays USD/EUR with two decimal places, including payment links and the status page. Free-amount USD/EUR inputs accept cents.
+
+## Read responses and notifications
+
+Public responses return major units: intent and transaction amounts, fees, details, distributions, payment links, subscriptions, and balances presented to merchants. Conversion amounts follow their source or destination currency. Exchange rates and percentages are not monetary amounts and are not rescaled.
+
+An `amount_unit: "MAJOR"` marker may appear in the response or in normalized monetary metadata. It describes the returned data's unit; it does not replace the root-level request field. Even if your request uses `MINOR`, the public response returns major units. Do not divide received amounts by 100 again.
+
+Transaction and subscription notifications also contain major-unit amounts. Conversion happens before the event is sent; the notification service preserves decimals and formats USD/EUR with two decimal places. Raw provider-specific data remains subject to that provider's contract.
+
+## Administration display
+
+Details and summaries display USD/EUR in major units. Internal calculations use the smallest unit before display. Compare and total amounts by currency; a monetary total must not directly add USD, EUR, and XAF.
+
+## Migrate an existing client
+
+- If your client already sends `4.01` for 4.01 USD/EUR, keep that amount and omit `amount_unit`, or set it to `MAJOR` in the API.
+- If your API client sends `401` for 4.01 USD/EUR, add `amount_unit: "MINOR"` at the root of the body, or switch to `4.01` and remove the old multiplication by 100.
+- For hosted checkout, convert cents before submitting the form.
+- Remove the old division by 100 when displaying public responses.

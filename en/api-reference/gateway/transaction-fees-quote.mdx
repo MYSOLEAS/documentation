@@ -15,6 +15,7 @@ For a plugin, send `origin: "PLUGIN"` and provide `feeBearer` in the payload or 
 | Field | Role |
 | --- | --- |
 | `amount` | Base amount to charge |
+| `amount_unit` | Optional, root-level JSON field: `MAJOR` by default, or `MINOR` for integer cents USD/EUR |
 | `currency` | Currency expected by the service |
 | `operation` | `COLLECTION` by default, or `DISBURSEMENT` |
 | `provider` | Service code, for example `mtn_cmr` |
@@ -22,3 +23,7 @@ For a plugin, send `origin: "PLUGIN"` and provide `feeBearer` in the payload or 
 | `feeBearer` | `CUSTOMER` or `MERCHANT` |
 
 When `feeBearer` is `CUSTOMER`, `payableAmount` includes fees. When `feeBearer` is `MERCHANT`, `merchantNetAmount` indicates the merchant net amount after fees.
+
+Send `amount` in major units by default: `4.01` for 4.01 USD/EUR. API clients that already send cents can set `amount_unit: "MINOR"` at the root of the JSON body, alongside `amount` and `currency`, rather than in `metadata`. Public responses return major units even when the request uses `MINOR`. See [amounts and currencies](/en/api-docs/monetary-units).
+
+`baseAmount`, `feeAmount`, `payableAmount`, and `merchantNetAmount` are returned in major units. Keep their decimals when displaying or comparing them.

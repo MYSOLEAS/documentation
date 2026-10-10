@@ -5,6 +5,10 @@ description: "Creer, lister et piloter des paiements recurrents."
 
 Une souscription represente un accord de paiement recurrent entre un marchand et un client. Mysoleas conserve la frequence, le montant, le client et l'etat de la souscription.
 
+## Montants et unités
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
+
 ## Frequences supportees
 
 | Frequence | Description |

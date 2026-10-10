@@ -56,3 +56,7 @@ Your webhook endpoint should return `200` as soon as the event has been received
   "received": true
 }
 ```
+
+## Monetary units in notifications
+
+Transaction and subscription notifications carry major-unit amounts: `4.01` for 4.01 USD/EUR. The core converts the amount before publishing the event. Your receiver must preserve decimals and must not divide this amount by 100 again. Raw provider callbacks retain the provider’s own contract. See [amounts and currencies](/en/api-docs/monetary-units).

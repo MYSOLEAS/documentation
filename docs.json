@@ -48,6 +48,7 @@
                   {
                     "group": "Paiements",
                     "pages": [
+                      "api-docs/monetary-units",
                       "api-docs/plugin",
                       "api-docs/payment-links",
                       "api-docs/subscriptions",
@@ -264,6 +265,7 @@
                   {
                     "group": "Payments",
                     "pages": [
+                      "en/api-docs/monetary-units",
                       "en/api-docs/plugin",
                       "en/api-docs/payment-links",
                       "en/api-docs/subscriptions",

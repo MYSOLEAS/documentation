@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "Mysoleas API",
-    "version": "3.0.0",
+    "version": "4.0.0",
     "description": "New Mysoleas architecture: business gateway, Mysoleas Identity Cloud, and SoleasPay ecosystem."
   },
   "servers": [
@@ -1193,8 +1193,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1232,6 +1233,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
                   }
                 }
               }
@@ -1312,8 +1323,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1351,6 +1363,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
                   }
                 }
               }
@@ -1431,8 +1453,9 @@
                     "example": "mtn_cmr"
                   },
                   "amount": {
-                    "type": "integer",
-                    "example": 10000
+                    "type": "number",
+                    "example": 10000,
+                    "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401)."
                   },
                   "currency": {
                     "type": "string",
@@ -1470,6 +1493,16 @@
                       "DISBURSEMENT"
                     ],
                     "example": "COLLECTION"
+                  },
+                  "amount_unit": {
+                    "type": "string",
+                    "enum": [
+                      "MAJOR",
+                      "MINOR"
+                    ],
+                    "default": "MAJOR",
+                    "example": "MAJOR",
+                    "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
                   }
                 }
               }
@@ -1982,8 +2015,9 @@
         ],
         "properties": {
           "amount": {
-            "type": "integer",
-            "example": 2500
+            "type": "number",
+            "example": 2500,
+            "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401)."
           },
           "currency": {
             "type": "string",
@@ -2029,6 +2063,16 @@
             "items": {
               "$ref": "#/components/schemas/SplitDistributionItem"
             }
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
           }
         }
       },
@@ -2147,7 +2191,8 @@
             ]
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string"
@@ -2168,10 +2213,12 @@
             ]
           },
           "fee": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "required_total": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "settlement_mode": {
             "type": "string",
@@ -2199,6 +2246,14 @@
           },
           "updated_at": {
             "type": "string"
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR"
+            ],
+            "example": "MAJOR",
+            "description": "Unit of the public response, independent of the unit sent in the request."
           }
         }
       },
@@ -2223,8 +2278,9 @@
         ],
         "properties": {
           "amount": {
-            "type": "integer",
-            "minimum": 1
+            "type": "number",
+            "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401).",
+            "exclusiveMinimum": 0
           },
           "currency": {
             "type": "string",
@@ -2283,6 +2339,16 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
           }
         }
       },
@@ -2309,7 +2375,8 @@
             "format": "uuid"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401)."
           },
           "provider": {
             "type": "string"
@@ -2328,6 +2395,30 @@
           "metadata": {
             "type": "object",
             "additionalProperties": true
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
+          },
+          "currency": {
+            "type": "string",
+            "example": "USD",
+            "description": "Currency of the selected payment; the link currency is used if this field is omitted."
+          },
+          "source_amount": {
+            "type": "number",
+            "description": "Link amount in source_currency before conversion. Follows root-level amount_unit."
+          },
+          "source_currency": {
+            "type": "string",
+            "example": "EUR",
+            "description": "Source currency of the link amount before conversion."
           }
         }
       },
@@ -2353,9 +2444,10 @@
           },
           "amount": {
             "type": [
-              "integer",
+              "number",
               "null"
-            ]
+            ],
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string"
@@ -2394,8 +2486,9 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer",
-            "minimum": 1
+            "type": "number",
+            "description": "Amount in major units by default: 4.01 for 4.01 USD/EUR. With root-level amount_unit MINOR, send integer cents (401).",
+            "exclusiveMinimum": 0
           },
           "currency": {
             "type": "string",
@@ -2420,6 +2513,16 @@
           },
           "idempotency_key": {
             "type": "string"
+          },
+          "amount_unit": {
+            "type": "string",
+            "enum": [
+              "MAJOR",
+              "MINOR"
+            ],
+            "default": "MAJOR",
+            "example": "MAJOR",
+            "description": "Unit of request amounts. Optional, MAJOR by default. Put this field at the root of the JSON body, not in metadata. MINOR preserves amounts already expressed in the smallest unit."
           }
         }
       },
@@ -2445,7 +2548,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string"
@@ -2555,7 +2659,8 @@
             "type": "string"
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string"
@@ -2641,7 +2746,8 @@
             ]
           },
           "amount": {
-            "type": "integer"
+            "type": "number",
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string"
@@ -3207,20 +3313,24 @@
         "type": "object",
         "properties": {
           "baseAmount": {
-            "type": "integer",
-            "example": 10000
+            "type": "number",
+            "example": 10000,
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "feeAmount": {
-            "type": "integer",
-            "example": 350
+            "type": "number",
+            "example": 350,
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "payableAmount": {
-            "type": "integer",
-            "example": 10350
+            "type": "number",
+            "example": 10350,
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "merchantNetAmount": {
-            "type": "integer",
-            "example": 9650
+            "type": "number",
+            "example": 9650,
+            "description": "Amount returned in major units of the indicated currency; preserve USD/EUR decimals without dividing by 100 again."
           },
           "currency": {
             "type": "string",

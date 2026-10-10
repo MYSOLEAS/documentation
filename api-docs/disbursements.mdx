@@ -5,6 +5,10 @@ description: "Envoyer des fonds depuis votre compte Mysoleas vers un wallet clie
 
 Un disbursement est une operation Pay-Out. Mysoleas verifie votre solde, reserve le montant et les frais, execute le transfert chez le provider, puis libere ou consolide les fonds selon le resultat.
 
+## Montants et unités
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
+
 ## Workflow
 
 ```mermaid

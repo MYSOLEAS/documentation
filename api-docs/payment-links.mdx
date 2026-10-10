@@ -5,6 +5,10 @@ description: "Creer une URL de paiement partageable et suivre le paiement associ
 
 Un lien de paiement permet de generer une URL publique que vous pouvez envoyer a un client par email, SMS, WhatsApp ou afficher dans votre application.
 
+## Montants et unités
+
+Envoyez `amount` en valeur réelle par défaut : `4.01` pour 4,01 USD/EUR. Les clients API qui envoient déjà des centimes peuvent préciser `amount_unit: "MINOR"` à la racine du corps JSON, au même niveau que `amount` et `currency`, et non dans `metadata`. Les réponses publiques reviennent en valeur réelle même si la requête utilise `MINOR`. Consultez [les montants et devises](/api-docs/monetary-units).
+
 ## Cas d'usage
 
 - paiement d'une facture;

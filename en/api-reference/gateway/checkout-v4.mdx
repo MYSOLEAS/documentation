@@ -25,7 +25,7 @@ Use Checkout v4 if you want to:
 | Field | Type | Required | Description |
 | --- | --- | --- | --- |
 | `apiKey` | `string` | Yes | SoleasPay merchant API key |
-| `amount` | `number` | Yes | Total amount to pay |
+| `amount` | `number` | Yes | Total amount to pay in major units; decimals supported for USD/EUR |
 | `currency` | `string` | Yes | Payment currency, for example `XAF`, `XOF`, or `USD` |
 | `orderId` | `string` | Yes | Unique reference in your system |
 | `description` | `string` | Yes | Label shown to the customer |
@@ -37,6 +37,19 @@ Use Checkout v4 if you want to:
 | `area` | `string` | No | Desired area or country used to filter payment methods |
 | `settlement_mode` | `string` | No | Settlement mode, for example `SPLIT` |
 | `distribution` | `array` | No | Fund distribution when split settlement is enabled |
+
+## Amounts and `amount_unit`
+
+Submit `amount` in major units: `4.01` for 4.01 USD or EUR. Hosted checkout does not support the API `amount_unit: "MINOR"` option. Convert stored cents before submitting the form. Checkout preserves cents in fee quotes and payment requests, displays USD/EUR with two decimals, and accepts cents for free-amount payment links. See [amounts and currencies](/en/api-docs/monetary-units).
+
+```json
+{
+  "amount": 4.01,
+  "currency": "USD"
+}
+```
+
+Add the other required checkout fields to this example.
 
 ## Example
 
